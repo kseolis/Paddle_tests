@@ -7,6 +7,7 @@ import org.junit.jupiter.api.*;
 
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
+import static im.mak.paddle.helpers.TestData.DEFAULT_FEE;
 import static im.mak.paddle.util.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -14,11 +15,10 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 class IssueNftTransactionTest {
 
     private Account alice;
-    private final long assetQuantity = 1;
 
     @BeforeEach
     void before() {
-        alice = new Account(10_00000000L);
+        alice = new Account(DEFAULT_FEE);
     }
 
     @Test
@@ -34,7 +34,6 @@ class IssueNftTransactionTest {
 
         assertAll("check 'issue transaction' result",
                 () -> assertThat(alice.getWavesBalance()).isEqualTo(initBalance - MIN_FEE),
-                () -> assertThat(alice.getAssetBalance(tx.assetId())).isEqualTo(assetQuantity),
                 () -> assertThat(transactionInfo.applicationStatus()).isEqualTo(SUCCEEDED),
                 () -> assertThat((Object) transactionInfo.tx().fee().value()).isEqualTo(MIN_FEE)
         );

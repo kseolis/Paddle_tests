@@ -1,3 +1,5 @@
+package im.mak.paddle.helpers;
+
 import java.util.Random;
 
 public class Randomizer {
