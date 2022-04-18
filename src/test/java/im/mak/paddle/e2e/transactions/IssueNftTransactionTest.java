@@ -1,4 +1,4 @@
-package transactions;
+package im.mak.paddle.e2e.transactions;
 
 import com.wavesplatform.transactions.IssueTransaction;
 import com.wavesplatform.wavesj.info.TransactionInfo;
@@ -7,7 +7,6 @@ import org.junit.jupiter.api.*;
 
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
-import static im.mak.paddle.helpers.TestData.DEFAULT_FEE;
 import static im.mak.paddle.util.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -18,7 +17,7 @@ class IssueNftTransactionTest {
 
     @BeforeEach
     void before() {
-        alice = new Account(DEFAULT_FEE);
+        alice = new Account(DEFAULT_FAUCET);
     }
 
     @Test

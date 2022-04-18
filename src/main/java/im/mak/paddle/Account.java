@@ -15,6 +15,7 @@ import im.mak.paddle.token.Asset;
 import im.mak.paddle.token.Token;
 import im.mak.paddle.util.Script;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -127,6 +128,10 @@ public class Account {
 
     public long getBalance(Token token) {
         return token.id().isWaves() ? getWavesBalance() : getAssetBalance((AssetId) token);
+    }
+
+    public long getBalance(AssetId asset) {
+        return asset.isWaves() ? getWavesBalance() : getAssetBalance(asset);
     }
 
     public List<AssetDetails> getNft(int limit, AssetId after) {
@@ -285,8 +290,12 @@ public class Account {
         return transfer(to.address(), amount, params);
     }
 
-    public TransferTransactionInfo transfer(Account to, long amount, AssetId assetId, Consumer<TransferParams> params) {
-        return transfer(to.address(), Amount.of(amount, assetId), params);
+    public TransferTransactionInfo transfer(Address address, long amount, AssetId assetId, Consumer<TransferParams> params) {
+        return transfer(address, Amount.of(amount, assetId), params);
+    }
+
+    public TransferTransactionInfo transfer(Alias alias, long amount, AssetId assetId, Consumer<TransferParams> params) {
+        return transfer(alias, Amount.of(amount, assetId), params);
     }
 
     public TransferTransactionInfo transfer(Recipient to, Amount amount) {

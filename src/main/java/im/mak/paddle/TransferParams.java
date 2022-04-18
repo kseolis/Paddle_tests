@@ -16,7 +16,7 @@ public class TransferParams extends CommonParams<TransferParams> {
     protected AssetId assetId;
     protected Base58String attachment;
 
-    protected TransferParams(Account sender) {
+    public TransferParams(Account sender) {
         super(sender, TransferTransaction.MIN_FEE);
 
         this.assetId = AssetId.WAVES;

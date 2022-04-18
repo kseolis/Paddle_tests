@@ -15,6 +15,6 @@ public class Randomizer {
                 .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
                 .toString();
         System.out.println(generatedString);
-        return generatedString;
+        return generatedString.toLowerCase();
     }
 }
