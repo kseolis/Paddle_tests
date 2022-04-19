@@ -6,7 +6,7 @@ public class Constants {
 
     public static final long MIN_FEE = 100000;
     public static final long EXTRA_FEE = 400000;
-    public static final int ONE_WAVES = 1_00000000;
+    public static final long ONE_WAVES = 1_00000000;
 
     public static final byte ASSET_DECIMALS_MIN = 0;
     public static final byte ASSET_DECIMALS_MAX = 8;

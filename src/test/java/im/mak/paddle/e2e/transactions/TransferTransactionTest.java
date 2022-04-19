@@ -56,14 +56,14 @@ public class TransferTransactionTest {
     @Test
     @DisplayName("min transfer WAVES on alias")
     void transferTransactionWavesByAliasTest() {
-        transferTransaction(Amount.of(MIN_TRANSFER_SUM, AssetId.WAVES), bob, alice, ALIAS);
+        transferTransaction(Amount.of(MIN_TRANSFER_SUM, AssetId.WAVES), alice, bob, ALIAS);
     }
 
     @Test
     @DisplayName("transfer all WAVES on address")
     void transferTransactionWavesByAddressTest() {
         Amount transferFullAliceAssetsSum = Amount.of(aliceBalance - MIN_FEE, AssetId.WAVES);
-        transferTransaction(transferFullAliceAssetsSum, bob, alice, ADDRESS);
+        transferTransaction(transferFullAliceAssetsSum, alice, bob, ADDRESS);
     }
 
     @Test
