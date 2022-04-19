@@ -13,12 +13,11 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 class IssueTransactionTest {
 
-    private Account alice;
-    private final byte assetQuantityMin = 1;
-    private final long assetQuantityMax = 9_223_372_036_854_775_807L;
+    private static Account alice;
+    private long initBalance;
 
-    @BeforeEach
-    void before() {
+    @BeforeAll
+    static void before() {
         alice = new Account(DEFAULT_FAUCET);
         System.out.println(node().uri());
         System.out.println(node().faucet());
@@ -26,38 +25,66 @@ class IssueTransactionTest {
     }
 
     @Test
-    void canIssueToken() {
-        long initBalance = alice.getWavesBalance();
+    @DisplayName("test issue minimum assets via 'issue Transaction'")
+    void issueMinimumAssetsTransactionTest() {
+        issueTransaction("T_asset_min",
+                         "Test Asset",
+                                    ASSET_QUANTITY_MINIMUM,
+                              "true",
+                                    ASSET_DECIMALS_MIN,
+                          true);
+    }
 
-        IssueTransaction txMin = alice.issue(i ->
-                i.name("T_asset_min")
-                    .description("Test Asset")
-                    .quantity(assetQuantityMin)
-                    .script("true")
-                    .decimals(ASSET_DECIMALS_MIN)
-                    .reissuable(true)).tx();
+    @Test
+    @DisplayName("test issue maximum assets via 'issue Transaction'")
+    void issueMaximumAssetsTransactionTest() {
+        issueTransaction("T_asset",
+                         "Test maximum quantity for assets",
+                                    ASSET_QUANTITY_MAXIMUM,
+                              null,
+                                    ASSET_DECIMALS_MAX,
+                          false);
+    }
 
-        IssueTransaction txMax = alice.issue(i ->
-                i.name("T_asset")
-                        .description("Test Asset")
-                        .quantity(assetQuantityMax)
-                        .script("true")
-                        .decimals(ASSET_DECIMALS_MAX)
-                        .reissuable(true)).tx();
+    @Test
+    @DisplayName("test issue NFT")
+    void issueNfrAsset() {
+        issueTransactionForNft("Crazy Black Sparrow", "Amazing NFT", null);
+    }
 
-        TransactionInfo txMinInfo = node().getTransactionInfo(txMin.id());
-        TransactionInfo txMaxInfo = node().getTransactionInfo(txMax.id());
+    private void issueTransaction
+            (String assetName, String description, long quantity, String script, byte decimals, boolean reIssuable) {
+        initBalance = alice.getWavesBalance();
+        IssueTransaction tx = alice.issue(i ->
+                i.name(assetName)
+                        .description(description)
+                        .quantity(quantity)
+                        .script(script)
+                        .decimals(decimals)
+                        .reissuable(reIssuable)).tx();
 
-        assertAll("check 'issues transaction for min / max values' result",
-            () -> assertThat(alice.getWavesBalance()).isEqualTo(initBalance - ONE_WAVES * 2),
+        TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
-            () -> assertThat(alice.getAssetBalance(txMin.assetId())).isEqualTo(assetQuantityMin),
-            () -> assertThat(txMinInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-            () -> assertThat((Object) txMinInfo.tx().fee().value()).isEqualTo(ONE_WAVES),
+        assertAll(
+                () -> assertThat(alice.getWavesBalance()).isEqualTo(initBalance - ONE_WAVES),
+                () -> assertThat(alice.getAssetBalance(tx.assetId())).isEqualTo(quantity),
+                () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(ONE_WAVES)
+        );
+    }
 
-            () -> assertThat(alice.getAssetBalance(txMax.assetId())).isEqualTo(assetQuantityMax),
-            () -> assertThat(txMaxInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-            () -> assertThat((Object) txMaxInfo.tx().fee().value()).isEqualTo(ONE_WAVES)
+    private void issueTransactionForNft(String assetName, String description, String script) {
+
+        initBalance = alice.getWavesBalance();
+
+        IssueTransaction tx = alice.issueNft(i -> i.name(assetName).description(description).script(script)).tx();
+
+        TransactionInfo transactionInfo = node().getTransactionInfo(tx.id());
+
+        assertAll(
+                () -> assertThat(alice.getWavesBalance()).isEqualTo(initBalance - MIN_FEE),
+                () -> assertThat(transactionInfo.applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat((Object) transactionInfo.tx().fee().value()).isEqualTo(MIN_FEE)
         );
     }
 }

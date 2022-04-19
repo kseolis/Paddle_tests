@@ -8,6 +8,7 @@ import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
 
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
@@ -47,24 +48,39 @@ public class TransferTransactionTest {
     }
 
     @Test
-    void transferTransactionTests() {
-        // min transfer issued asset on address and alias
+    @DisplayName("min transfer issued asset on address")
+    void transferTransactionIssuedAssetByAddressTest() {
         transferTransaction(Amount.of(MIN_TRANSFER_SUM, issuedAsset), alice, bob, ADDRESS);
-        transferTransaction(Amount.of(MIN_TRANSFER_SUM, issuedAsset), alice, bob, ALIAS);
-        // min transfer Waves on address and alias
-        transferTransaction(Amount.of(MIN_TRANSFER_SUM, AssetId.WAVES), bob, alice, ALIAS);
-        transferTransaction(Amount.of(MIN_TRANSFER_SUM, AssetId.WAVES), bob, alice, ADDRESS);
-
-        // transfer all Alice assets
-        Amount transferFullAliceAssetsSum = Amount.of(aliceBalance - MIN_FEE, issuedAsset);
-        transferTransaction(transferFullAliceAssetsSum, alice, bob, ALIAS);
-
-        // transfer all Bob assets
-        Amount transferFullBobAssetsSum = Amount.of(aliceBalance - MIN_FEE, issuedAsset);
-        transferTransaction(transferFullBobAssetsSum, bob, alice, ADDRESS);
     }
 
-    void transferTransaction(Amount transferSum, Account from, Account to, String addressOrAlias) {
+    @Test
+    @DisplayName("min transfer WAVES on alias")
+    void transferTransactionWavesByAliasTest() {
+        transferTransaction(Amount.of(MIN_TRANSFER_SUM, AssetId.WAVES), bob, alice, ALIAS);
+    }
+
+    @Test
+    @DisplayName("transfer all WAVES on address")
+    void transferTransactionWavesByAddressTest() {
+        Amount transferFullAliceAssetsSum = Amount.of(aliceBalance - MIN_FEE, AssetId.WAVES);
+        transferTransaction(transferFullAliceAssetsSum, bob, alice, ADDRESS);
+    }
+
+    @Test
+    @DisplayName("transfer all issued asset on alias")
+    void transferTransactionIssuedAssetByAliasTest() {
+        Amount transferFullAliceAssetsSum = Amount.of(aliceBalance - MIN_FEE, issuedAsset);
+        transferTransaction(transferFullAliceAssetsSum, alice, bob, ALIAS);
+    }
+
+    @Test
+    @DisplayName("transfer all WAVES alias")
+    void transferTransactionAllWavesByAliasTest() {
+        Amount transferFullBobAssetsSum = Amount.of(bobBalance - MIN_FEE, AssetId.WAVES);
+        transferTransaction(transferFullBobAssetsSum, bob, alice, ALIAS);
+    }
+
+    private void transferTransaction(Amount transferSum, Account from, Account to, String addressOrAlias) {
         AssetId asset = transferSum.assetId();
         long senderBalanceAfterTransaction = from.getBalance(asset) - transferSum.value() - (asset.isWaves() ? MIN_FEE : 0);
         long recipientBalanceAfterTransaction = to.getBalance(asset) + transferSum.value();
