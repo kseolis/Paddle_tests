@@ -365,14 +365,14 @@ public class Account {
         return burn(amount, assetId, opt -> {});
     }
 
-    public ExchangeTransactionInfo exchange(Order order1, Order order2, long amount, long price, Consumer<ExchangeParams> params) {
+    public ExchangeTransactionInfo exchange(Order buy, Order sell, long amount, long price, Consumer<ExchangeParams> params) {
         ExchangeParams ep = new ExchangeParams(this);
         params.accept(ep);
         if (ep.signers.size() == 0)
             ep.signedBy(ep.sender);
-        ep.assetPair(order1.assetPair());
+        ep.assetPair(buy.assetPair());
         Transaction signedTx = signAndGet(ep.signers,
-                ExchangeTransaction.builder(order1, order2, amount, price, ep.buyMatcherFee, ep.sellMatcherFee)
+                ExchangeTransaction.builder(buy, sell, amount, price, ep.buyMatcherFee, ep.sellMatcherFee)
                         .sender(ep.sender.publicKey())
                         .fee(Amount.of(ep.getFee(), ep.feeAssetId))
                         .timestamp(ep.timestamp == 0 ? System.currentTimeMillis() : ep.timestamp)
@@ -380,8 +380,8 @@ public class Account {
         return node.waitForTransaction(node.broadcast(signedTx).id(), ExchangeTransactionInfo.class);
     }
 
-    public ExchangeTransactionInfo exchange(Order order1, Order order2, long amount, long price) {
-        return exchange(order1, order2, amount, price, opt -> {});
+    public ExchangeTransactionInfo exchange(Order buy, Order sell, long amount, long price) {
+        return exchange(buy, sell, amount, price, opt -> {});
     }
 
     public LeaseTransactionInfo lease(Recipient to, long amount, Consumer<CommonParams<?>> params) {
