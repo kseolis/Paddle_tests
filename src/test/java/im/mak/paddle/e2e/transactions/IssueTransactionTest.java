@@ -13,12 +13,12 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 class IssueTransactionTest {
 
-    private static Account lukas;
+    private static Account alice;
     private long initBalance;
 
     @BeforeAll
     static void before() {
-        lukas = new Account(DEFAULT_FAUCET);
+        alice = new Account(DEFAULT_FAUCET);
     }
 
     @Test
@@ -51,8 +51,8 @@ class IssueTransactionTest {
 
     private void issueTransaction
             (String assetName, String description, long quantity, String script, byte decimals, boolean reIssuable) {
-        initBalance = lukas.getWavesBalance();
-        IssueTransaction tx = lukas.issue(i ->
+        initBalance = alice.getWavesBalance();
+        IssueTransaction tx = alice.issue(i ->
                 i.name(assetName)
                         .description(description)
                         .quantity(quantity)
@@ -63,24 +63,29 @@ class IssueTransactionTest {
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
-                () -> assertThat(lukas.getAssetBalance(tx.assetId())).isEqualTo(quantity),
-                () -> assertThat(lukas.getWavesBalance()).isEqualTo(initBalance - ONE_WAVES),
+                () -> assertThat(alice.getAssetBalance(tx.assetId())).isEqualTo(quantity),
+                () -> assertThat(alice.getWavesBalance()).isEqualTo(initBalance - ONE_WAVES),
                 () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat(tx.sender()).isEqualTo(alice.publicKey()),
+                () -> assertThat(tx.reissuable()).isEqualTo(reIssuable),
+                () -> assertThat(tx.type()).isEqualTo(3),
                 () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(ONE_WAVES)
         );
     }
 
     private void issueTransactionForNft(String assetName, String description, String script) {
 
-        initBalance = lukas.getWavesBalance();
+        initBalance = alice.getWavesBalance();
 
-        IssueTransaction tx = lukas.issueNft(i -> i.name(assetName).description(description).script(script)).tx();
+        IssueTransaction tx = alice.issueNft(i -> i.name(assetName).description(description).script(script)).tx();
 
         TransactionInfo transactionInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
-                () -> assertThat(lukas.getWavesBalance()).isEqualTo(initBalance - MIN_FEE),
+                () -> assertThat(alice.getWavesBalance()).isEqualTo(initBalance - MIN_FEE),
                 () -> assertThat(transactionInfo.applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat(tx.sender()).isEqualTo(alice.publicKey()),
+                () -> assertThat(tx.type()).isEqualTo(3),
                 () -> assertThat((Object) transactionInfo.tx().fee().value()).isEqualTo(MIN_FEE)
         );
     }
