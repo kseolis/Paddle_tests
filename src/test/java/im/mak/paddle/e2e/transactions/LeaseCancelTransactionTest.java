@@ -2,11 +2,13 @@ package im.mak.paddle.e2e.transactions;
 
 import com.wavesplatform.transactions.LeaseCancelTransaction;
 import com.wavesplatform.transactions.LeaseTransaction;
+import com.wavesplatform.transactions.common.Id;
 import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+
 
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
@@ -19,7 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 public class LeaseCancelTransactionTest {
 
     private static Account alice;
+    private static LeaseTransaction minLeaseTx;
     private static Account bob;
+    private static LeaseTransaction maxLeaseTx;
 
     @BeforeAll
     static void before() {
@@ -31,40 +35,35 @@ public class LeaseCancelTransactionTest {
                     bob = new Account(DEFAULT_FAUCET);
                 }
         );
-        alice.lease(bob, MIN_TRANSFER_SUM).tx();
+        minLeaseTx = alice.lease(bob, MIN_TRANSFER_SUM).tx();
+        maxLeaseTx = bob.lease(alice, MIN_TRANSFER_SUM).tx();
     }
 
     @Test
-    @DisplayName("Minimum lease sum transaction")
-    void leaseMinimumWavesAssets() {
-        leaseTransaction(bob, alice);
+    @DisplayName("cancel lease of the minimum available amount")
+    void leaseMinAssets() {
+        cancelLeaseTransaction(alice, bob, minLeaseTx.id());
     }
 
     @Test
-    @DisplayName("lease asset transaction 1 WAVES")
-    void leaseOneWavesAssets() {
-        leaseTransaction(bob, alice);
+    @DisplayName("cancel lease of the minimum available amount")
+    void leaseMaxAssets() {
+        cancelLeaseTransaction(bob, alice, maxLeaseTx.id());
     }
 
-    @Test
-    @DisplayName("Maximum lease sum transaction")
-    void leaseMaximumAssets() {
-        leaseTransaction(alice, bob);
-    }
+    private void cancelLeaseTransaction(Account from, Account to, Id index) {
+        long balanceAfterCancelLeaseAtSender = from.getWavesBalanceDetails().effective() - MIN_FEE + MIN_TRANSFER_SUM;
+        long balanceAfterCancelLeaseAtRecipient = to.getWavesBalanceDetails().effective() - MIN_TRANSFER_SUM;
 
-    private void leaseTransaction(Account from, Account to) {
-        long wavesBalanceAfterSendLeaseTransaction = from.getWavesBalanceDetails().effective() - MIN_FEE + MIN_TRANSFER_SUM;
-        long wavesBalanceAfterReceivingLease = to.getWavesBalanceDetails().effective() - MIN_TRANSFER_SUM;
-
-        LeaseCancelTransaction tx = from.cancelLease(node().getActiveLeases(alice.address()).get(0).id()).tx();
-        TransactionInfo txInfo = node().getTransactionInfo(tx.id());
+        LeaseCancelTransaction cancelTransaction = from.cancelLease(index).tx();
+        TransactionInfo txInfo = node().getTransactionInfo(cancelTransaction.id());
 
         assertAll(
-                () -> assertThat(from.getWavesBalanceDetails().effective()).isEqualTo(wavesBalanceAfterSendLeaseTransaction),
-                () -> assertThat(to.getWavesBalanceDetails().effective()).isEqualTo(wavesBalanceAfterReceivingLease),
+                () -> assertThat(from.getWavesBalanceDetails().effective()).isEqualTo(balanceAfterCancelLeaseAtSender),
+                () -> assertThat(to.getWavesBalanceDetails().effective()).isEqualTo(balanceAfterCancelLeaseAtRecipient),
                 () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat(tx.sender()).isEqualTo(from.publicKey()),
-                () -> assertThat(tx.type()).isEqualTo(9),
+                () -> assertThat(cancelTransaction.sender()).isEqualTo(from.publicKey()),
+                () -> assertThat(cancelTransaction.type()).isEqualTo(9),
                 () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(MIN_FEE)
         );
     }
