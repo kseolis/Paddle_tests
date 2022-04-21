@@ -18,16 +18,16 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class BurnTransactionTest {
-    private static Account marrie;
-    private static long marrieWavesBalance;
+    private static Account alice;
+    private static long aliceWavesBalance;
     private static AssetId issuedAsset;
 
     @BeforeAll
     static void before() {
-        marrie = new Account(DEFAULT_FAUCET);
+        alice = new Account(DEFAULT_FAUCET);
         async(
-            () -> marrie.createAlias(randomNumAndLetterString(15)),
-            () -> issuedAsset = marrie.issue(i -> i.name("Test_Asset").quantity(1000)).tx().assetId()
+            () -> alice.createAlias(randomNumAndLetterString(15)),
+            () -> issuedAsset = alice.issue(i -> i.name("Test_Asset").quantity(1000)).tx().assetId()
         );
     }
 
@@ -40,21 +40,23 @@ public class BurnTransactionTest {
     @Test
     @DisplayName("test burn maximum quantity asset")
     void burnMaximumAssets() {
-        long burnSum = marrie.getAssetBalance(issuedAsset);
+        long burnSum = alice.getAssetBalance(issuedAsset);
         burnTransaction(burnSum);
     }
 
     private void burnTransaction(long amount) {
-        marrieWavesBalance = marrie.getBalance(AssetId.WAVES);
-        long balanceAfterBurn = marrie.getBalance(issuedAsset) - amount;
-        BurnTransaction tx = marrie.burn(amount, issuedAsset).tx();
+        aliceWavesBalance = alice.getBalance(AssetId.WAVES);
+        long balanceAfterBurn = alice.getBalance(issuedAsset) - amount;
+        BurnTransaction tx = alice.burn(amount, issuedAsset).tx();
 
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
-                () -> assertThat(marrie.getAssetBalance(issuedAsset)).isEqualTo(balanceAfterBurn),
-                () -> assertThat(marrie.getWavesBalance()).isEqualTo(marrieWavesBalance - MIN_FEE),
+                () -> assertThat(alice.getAssetBalance(issuedAsset)).isEqualTo(balanceAfterBurn),
+                () -> assertThat(alice.getWavesBalance()).isEqualTo(aliceWavesBalance - MIN_FEE),
                 () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat(tx.sender()).isEqualTo(alice.publicKey()),
+                () -> assertThat(tx.type()).isEqualTo(6),
                 () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(MIN_FEE)
         );
     }
