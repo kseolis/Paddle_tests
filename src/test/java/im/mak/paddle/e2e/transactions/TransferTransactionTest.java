@@ -27,11 +27,11 @@ public class TransferTransactionTest {
     private static long bobBalance;
 
     private static AssetId issuedAsset;
-    private static Base58String base58String;
+    private static Base58String base58StringAttachment;
 
     @BeforeAll
     static void before() {
-        base58String = new Base58String("attachment");
+        base58StringAttachment = new Base58String("attachment" + randomNumAndLetterString(3));
         async(
             () -> {
                 alice = new Account(DEFAULT_FAUCET);
@@ -87,12 +87,10 @@ public class TransferTransactionTest {
         var transferTo = addressOrAlias.equals(ADDRESS) ? to.address() : to.getAliases().get(0);
 
         TransferTransaction tx = from.transfer(transferTo, transferSum,
-                i -> i.attachment(base58String)
+                i -> i.attachment(base58StringAttachment)
         ).tx();
 
         TransactionInfo transactionInfo = node().getTransactionInfo(tx.id());
-
-        System.out.println("\n Test info: transaction - " + tx);
 
         aliceBalance = alice.getWavesBalance();
         bobBalance = bob.getWavesBalance();
@@ -102,7 +100,10 @@ public class TransferTransactionTest {
                 () -> assertThat(to.getBalance(asset)).isEqualTo(recipientBalanceAfterTransaction),
                 () -> assertThat(transactionInfo.applicationStatus()).isEqualTo(SUCCEEDED),
                 () -> assertThat((Object) transactionInfo.tx().fee().value()).isEqualTo(MIN_FEE),
-                () -> assertThat((Object) transactionInfo.tx().fee().assetId()).isEqualTo(AssetId.WAVES)
+                () -> assertThat((Object) transactionInfo.tx().fee().assetId()).isEqualTo(AssetId.WAVES),
+                () -> assertThat(tx.attachment()).isEqualTo(base58StringAttachment),
+                () -> assertThat(tx.sender()).isEqualTo(from.publicKey()),
+                () -> assertThat(tx.type()).isEqualTo(4)
         );
     }
 }
