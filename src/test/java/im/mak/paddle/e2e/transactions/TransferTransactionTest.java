@@ -31,7 +31,7 @@ public class TransferTransactionTest {
 
     @BeforeAll
     static void before() {
-        base58StringAttachment = new Base58String("attachment" + randomNumAndLetterString(3));
+        base58StringAttachment = new Base58String("attachment");
         async(
             () -> {
                 alice = new Account(DEFAULT_FAUCET);

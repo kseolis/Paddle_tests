@@ -1,6 +1,5 @@
 package im.mak.paddle.e2e.transactions;
 
-import com.wavesplatform.transactions.LeaseCancelTransaction;
 import com.wavesplatform.transactions.LeaseTransaction;
 import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
