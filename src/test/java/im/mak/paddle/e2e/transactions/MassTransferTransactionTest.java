@@ -97,7 +97,6 @@ public class MassTransferTransactionTest {
 
         accountsList.forEach(a -> transfers.add(Transfer.to(a.address(), amount)));
         accountsList.forEach(a -> balancesAfterTransaction.put(a.address(), a.getBalance(assetId) + amount));
-        System.out.println(balancesAfterTransaction);
 
         int numberOfAccounts = accountsList.size();
 
