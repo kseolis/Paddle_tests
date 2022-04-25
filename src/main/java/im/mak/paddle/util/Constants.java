@@ -4,9 +4,11 @@ public class Constants {
     public static final byte ASSET_QUANTITY_MINIMUM = 1;
     public static final long ASSET_QUANTITY_MAXIMUM = 9_223_372_036_854_775_807L;
 
-    public static final long MIN_FEE = 100000L;
+    public static final long MIN_FEE = 100_000L;
     public static final long EXTRA_FEE = 400000L;
-    public static final long ONE_WAVES = 1_00000000L;
+
+    public static final long MIN_FEE_FOR_SET_SCRIPT = 1_000_000L;
+    public static final long ONE_WAVES = 100_000_000L;
 
     public static final long MIN_FEE_FOR_EXCHANGE = 300000L;
     public static final long FEE_FOR_MASS_TRANSFER = 50000L ;
