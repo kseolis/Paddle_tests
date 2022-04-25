@@ -120,7 +120,7 @@ public class MassTransferTransactionTest {
                 () -> assertThat(tx.type()).isEqualTo(11),
                 () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(transactionCommission),
                 () -> accountsList.forEach(
-                        account -> assertThat(balancesAfterTransaction).contains(account.getBalance(assetId))
+                        account -> assertThat(balancesAfterTransaction.remove(account.getBalance(assetId))).isTrue()
                 )
         );
     }
