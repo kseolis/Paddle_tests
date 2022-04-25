@@ -65,6 +65,11 @@ public class MassTransferParams extends CommonParams<MassTransferParams> {
         return this;
     }
 
+    public MassTransferParams transfers(List<Transfer> transfers) {
+        this.transfers.addAll(transfers);
+        return this;
+    }
+
     public MassTransferParams attachment(Base58String message) {
         this.attachment = message;
         return this;

@@ -27,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 public class MassTransferTransactionTest {
     private static Account alice;
 
-    private static Account account;
+    private static Account account0;
     private static Account account1;
     private static Account account2;
     private static Account account3;
@@ -45,82 +45,73 @@ public class MassTransferTransactionTest {
                 () -> {
                     alice = new Account(DEFAULT_FAUCET);
                     alice.createAlias(randomNumAndLetterString(15));
-                    issuedAsset = alice.issue(i -> i.name("Test_Asset").quantity(1000_00000000L)).tx().assetId();
+                    issuedAsset = alice.issue(i -> i.name("Test_Asset").quantity(9000_00000000L)).tx().assetId();
                 },
-                () -> {
-                    account = new Account(DEFAULT_FAUCET);
-                },
-                () -> {
-                    account1 = new Account(DEFAULT_FAUCET);
-                },
-                () -> {
-                    account2 = new Account(DEFAULT_FAUCET);
-                },
-                () -> {
-                    account3 = new Account(DEFAULT_FAUCET);
-                },
-                () -> {
-                    account4 = new Account(DEFAULT_FAUCET);
-                }
+                () -> account0 = new Account(DEFAULT_FAUCET),
+                () -> account1 = new Account(DEFAULT_FAUCET),
+                () -> account2 = new Account(DEFAULT_FAUCET),
+                () -> account3 = new Account(DEFAULT_FAUCET),
+                () -> account4 = new Account(DEFAULT_FAUCET)
         );
-    }
-
-    @Test
-    @DisplayName("one transfer in a 'mass transfer transaction'")
-    void oneTransferInMassTransfer() {
-        massTransferTransaction(WAVES, MIN_TRANSFER_SUM, account);
-    }
-
-    @Test
-    @DisplayName("transfer in a 'mass transfer transaction' for three Accounts")
-    void massTransferThreeAccounts() {
-        massTransferTransaction(WAVES, ONE_WAVES, account, account1, account2);
     }
 
     @Test
     @DisplayName("transfer in a 'mass transfer transaction' for five Accounts")
     void massTransferFiveAccounts() {
-        massTransferTransaction(WAVES, MIN_TRANSFER_SUM, account, account1, account2, account3, account4);
+        massTransferTransaction(WAVES, MIN_TRANSFER_SUM, account0, account1, account2, account3, account4);
     }
 
     @Test
-    @DisplayName("one transfer in a 'mass transfer transaction' issued asset")
-    void oneTransferInMassTransferForIssueAsset() {
-        massTransferTransaction(issuedAsset, MIN_TRANSFER_SUM, account);
+    @DisplayName("transfer in a 'mass transfer transaction' for three Accounts")
+    void massTransferThreeAccounts() {
+        massTransferTransaction(WAVES, ONE_WAVES, account0, account1, account2);
+    }
+
+    @Test
+    @DisplayName("transfer in a 'mass transfer transaction' for one Accounts")
+    void oneTransferInMassTransfer() {
+        massTransferTransaction(WAVES, MIN_TRANSFER_SUM, account0);
     }
 
     @Test
     @DisplayName("transfer in a 'mass transfer transaction' issued asset for three Accounts")
     void massTransferThreeAccountsForIssueAsset() {
-        massTransferTransaction(issuedAsset, ONE_WAVES, account, account1, account2);
+        massTransferTransaction(issuedAsset, 900, account0, account1, account2);
     }
 
     @Test
     @DisplayName("transfer in a 'mass transfer transaction' issued asset for five Accounts")
     void massTransferFiveAccountsForIssueAsset() {
-        massTransferTransaction(issuedAsset, MIN_TRANSFER_SUM, account, account1, account2, account3, account4);
+        massTransferTransaction(issuedAsset, 700, account0, account1, account2, account3, account4);
+    }
+
+    @Test
+    @DisplayName("issued asset transfer in a 'mass transfer transaction' for one Accounts")
+    void oneTransferInMassTransferForIssueAsset() {
+        massTransferTransaction(issuedAsset, 400, account0);
     }
 
     private void massTransferTransaction(AssetId assetId, long amount, Account... accounts) {
         List<Account> accountsList = Arrays.asList(accounts);
         List<Transfer> transfers = new ArrayList<>();
+        List<Long> balancesAfterTransaction = new ArrayList<>();
+
         accountsList.forEach(a -> transfers.add(Transfer.to(a.address(), amount)));
-        long recipientBalanceAfterTransaction = account.getBalance(assetId) + amount;
+        accountsList.forEach(a -> balancesAfterTransaction.add(a.getBalance(assetId) + amount));
 
         int numberOfAccounts = accountsList.size();
 
-        long balanceAfterMassTransfer = balanceAfterMassTransferCalculation(assetId, amount, numberOfAccounts);
+        long senderBalanceAfterMassTransfer = calculateSenderBalanceAfterTransfer(assetId, amount, numberOfAccounts);
 
         MassTransferTransaction tx = alice.massTransfer(i -> i
                 .attachment(base58StringAttachment)
                 .assetId(assetId)
                 .transfers(transfers)
         ).tx();
-
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
-                () -> assertThat(alice.getBalance(assetId)).isEqualTo(balanceAfterMassTransfer),
+                () -> assertThat(alice.getBalance(assetId)).isEqualTo(senderBalanceAfterMassTransfer),
                 () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
                 () -> assertThat(tx.attachment()).isEqualTo(base58StringAttachment),
                 () -> assertThat(tx.sender()).isEqualTo(alice.publicKey()),
@@ -129,15 +120,12 @@ public class MassTransferTransactionTest {
                 () -> assertThat(tx.type()).isEqualTo(11),
                 () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(transactionCommission),
                 () -> accountsList.forEach(
-                        account -> System.out.println(
-                                "account balance: " + account.getBalance(assetId) + "\n" +
-                                "recipientBalanceAfterTransaction: " + recipientBalanceAfterTransaction
-                        ) // assertThat(account.getBalance(assetId)).isEqualTo(recipientBalanceAfterTransaction)
+                        account -> assertThat(balancesAfterTransaction).contains(account.getBalance(assetId))
                 )
         );
     }
 
-    private long balanceAfterMassTransferCalculation(AssetId assetId, long amount, int numberOfAccounts) {
+    private long calculateSenderBalanceAfterTransfer(AssetId assetId, long amount, int numberOfAccounts) {
         long senderBalance = alice.getBalance(assetId);
         long numForRoundCheck = 100000;
         long additionalFeeForMassTransfer = FEE_FOR_MASS_TRANSFER * numberOfAccounts;
