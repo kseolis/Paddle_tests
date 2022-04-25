@@ -28,12 +28,8 @@ public class LeaseCancelTransactionTest {
     @BeforeAll
     static void before() {
         async(
-                () -> {
-                    alice = new Account(DEFAULT_FAUCET);
-                },
-                () -> {
-                    bob = new Account(DEFAULT_FAUCET);
-                }
+                () -> alice = new Account(DEFAULT_FAUCET),
+                () -> bob = new Account(DEFAULT_FAUCET)
         );
         minLeaseTx = alice.lease(bob, MIN_TRANSFER_SUM).tx();
         maxLeaseTx = bob.lease(alice, MIN_TRANSFER_SUM).tx();

@@ -21,12 +21,8 @@ public class LeaseTransactionTest {
     @BeforeAll
     static void before() {
         async(
-                () -> {
-                    alice = new Account(DEFAULT_FAUCET);
-                },
-                () -> {
-                    bob = new Account(DEFAULT_FAUCET);
-                }
+                () -> alice = new Account(DEFAULT_FAUCET),
+                () -> bob = new Account(DEFAULT_FAUCET)
         );
     }
 
