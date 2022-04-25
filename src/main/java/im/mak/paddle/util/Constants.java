@@ -19,6 +19,9 @@ public class Constants {
 
     public static final byte MIN_TRANSFER_SUM = 1;
 
+    public static int MIN_NUM_ACCOUNT_FOR_MASS_TRANSFER = 1;
+    public static int MAX_NUM_ACCOUNT_FOR_MASS_TRANSFER = 100;
+
     public static final String ADDRESS = "Address";
     public static final String ALIAS = "Address";
 }

@@ -11,13 +11,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-
 import java.util.*;
 
 import static com.wavesplatform.transactions.common.AssetId.WAVES;
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
-import static im.mak.paddle.helpers.Randomizer.randomNumAndLetterString;
+import static im.mak.paddle.helpers.Randomizer.accountListGenerator;
+import static im.mak.paddle.helpers.Randomizer.getRandomInt;
 import static im.mak.paddle.util.Async.async;
 import static im.mak.paddle.util.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -26,72 +26,55 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 public class MassTransferTransactionTest {
     private static Account alice;
 
-    private static Account account0;
-    private static Account account1;
-    private static Account account2;
-    private static Account account3;
-    private static Account account4;
-
     private static AssetId issuedAsset;
     private static Base58String base58StringAttachment;
+    private static List<Account> minimumAccountsForMassTransfer;
+    private static List<Account> maximumAccountsForMassTransfer;
 
     long transactionCommission;
 
     @BeforeAll
     static void before() {
-        base58StringAttachment = new Base58String("attachment");
         async(
-                () -> {
+                () ->  {
+                    base58StringAttachment = new Base58String("attachment");
                     alice = new Account(DEFAULT_FAUCET);
-                    alice.createAlias(randomNumAndLetterString(15));
                     issuedAsset = alice.issue(i -> i.name("Test_Asset").quantity(9000_00000000L)).tx().assetId();
                 },
-                () -> account0 = new Account(DEFAULT_FAUCET),
-                () -> account1 = new Account(DEFAULT_FAUCET),
-                () -> account2 = new Account(DEFAULT_FAUCET),
-                () -> account3 = new Account(DEFAULT_FAUCET),
-                () -> account4 = new Account(DEFAULT_FAUCET)
-        );
+                () -> minimumAccountsForMassTransfer = accountListGenerator(MIN_NUM_ACCOUNT_FOR_MASS_TRANSFER),
+                () -> maximumAccountsForMassTransfer = accountListGenerator(MAX_NUM_ACCOUNT_FOR_MASS_TRANSFER)
+            );
     }
 
     @Test
-    @DisplayName("transfer in a 'mass transfer transaction' for five Accounts")
-    void massTransferFiveAccounts() {
-        massTransferTransaction(WAVES, MIN_TRANSFER_SUM, account0, account1, account2, account3, account4);
+    @DisplayName("transfer in a 'mass transfer transaction' for maximum Accounts")
+    void massTransferForMaximumCountAccounts() {
+        int amount = getRandomInt(MIN_TRANSFER_SUM, 10000);
+        massTransferTransaction(WAVES, amount, maximumAccountsForMassTransfer);
     }
 
     @Test
-    @DisplayName("transfer in a 'mass transfer transaction' for three Accounts")
-    void massTransferThreeAccounts() {
-        massTransferTransaction(WAVES, ONE_WAVES, account0, account1, account2);
+    @DisplayName("transfer in a 'mass transfer transaction' for minimum Accounts")
+    void massTransferForMinimumCountAccounts() {
+        int amount = getRandomInt(MIN_TRANSFER_SUM, 10000);
+        massTransferTransaction(WAVES, amount, minimumAccountsForMassTransfer);
     }
 
     @Test
-    @DisplayName("transfer in a 'mass transfer transaction' for one Accounts")
-    void oneTransferInMassTransfer() {
-        massTransferTransaction(WAVES, MIN_TRANSFER_SUM, account0);
+    @DisplayName("transfer in a 'mass transfer transaction' issued asset for maximum Accounts")
+    void massTransferForMaximumAccountsForIssueAsset() {
+        int amount = getRandomInt(MIN_TRANSFER_SUM, 10000);
+        massTransferTransaction(issuedAsset, amount, maximumAccountsForMassTransfer);
     }
 
     @Test
-    @DisplayName("transfer in a 'mass transfer transaction' issued asset for three Accounts")
-    void massTransferThreeAccountsForIssueAsset() {
-        massTransferTransaction(issuedAsset, 900, account0, account1, account2);
+    @DisplayName("issued asset transfer in a 'mass transfer transaction' for minimum Accounts")
+    void massTransferForMinimumAccountsForIssueAsset() {
+        int amount = getRandomInt(MIN_TRANSFER_SUM, 10000);
+        massTransferTransaction(issuedAsset, amount, minimumAccountsForMassTransfer);
     }
 
-    @Test
-    @DisplayName("transfer in a 'mass transfer transaction' issued asset for five Accounts")
-    void massTransferFiveAccountsForIssueAsset() {
-        massTransferTransaction(issuedAsset, 700, account0, account1, account2, account3, account4);
-    }
-
-    @Test
-    @DisplayName("issued asset transfer in a 'mass transfer transaction' for one Accounts")
-    void oneTransferInMassTransferForIssueAsset() {
-        massTransferTransaction(issuedAsset, 400, account0);
-    }
-
-    private void massTransferTransaction(AssetId assetId, long amount, Account... accounts) {
-        List<Account> accountsList = Arrays.asList(accounts);
+    private void massTransferTransaction(AssetId assetId, long amount, List<Account> accountsList) {
         List<Transfer> transfers = new ArrayList<>();
         Map<Address, Long> balancesAfterTransaction = new HashMap<>();
 
