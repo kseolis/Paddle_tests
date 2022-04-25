@@ -1,6 +1,7 @@
 package im.mak.paddle.e2e.transactions;
 
 import com.wavesplatform.transactions.MassTransferTransaction;
+import com.wavesplatform.transactions.account.Address;
 import com.wavesplatform.transactions.common.AssetId;
 import com.wavesplatform.transactions.common.Base58String;
 import com.wavesplatform.transactions.mass.Transfer;
@@ -11,9 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import static com.wavesplatform.transactions.common.AssetId.WAVES;
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
@@ -94,10 +93,11 @@ public class MassTransferTransactionTest {
     private void massTransferTransaction(AssetId assetId, long amount, Account... accounts) {
         List<Account> accountsList = Arrays.asList(accounts);
         List<Transfer> transfers = new ArrayList<>();
-        List<Long> balancesAfterTransaction = new ArrayList<>();
+        Map<Address, Long> balancesAfterTransaction = new HashMap<>();
 
         accountsList.forEach(a -> transfers.add(Transfer.to(a.address(), amount)));
-        accountsList.forEach(a -> balancesAfterTransaction.add(a.getBalance(assetId) + amount));
+        accountsList.forEach(a -> balancesAfterTransaction.put(a.address(), a.getBalance(assetId) + amount));
+        System.out.println(balancesAfterTransaction);
 
         int numberOfAccounts = accountsList.size();
 
@@ -120,7 +120,9 @@ public class MassTransferTransactionTest {
                 () -> assertThat(tx.type()).isEqualTo(11),
                 () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(transactionCommission),
                 () -> accountsList.forEach(
-                        account -> assertThat(balancesAfterTransaction.remove(account.getBalance(assetId))).isTrue()
+                        account -> assertThat(
+                                balancesAfterTransaction.get(account.address())).isEqualTo(account.getBalance(assetId)
+                        )
                 )
         );
     }
