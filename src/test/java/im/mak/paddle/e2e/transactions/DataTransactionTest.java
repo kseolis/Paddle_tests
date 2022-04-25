@@ -1,7 +1,6 @@
 package im.mak.paddle.e2e.transactions;
 
 import com.wavesplatform.transactions.DataTransaction;
-import com.wavesplatform.transactions.account.Address;
 import com.wavesplatform.transactions.common.Base64String;
 import com.wavesplatform.transactions.data.*;
 import com.wavesplatform.wavesj.info.TransactionInfo;
@@ -25,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 public class DataTransactionTest {
 
     private static Account alice;
-    private long initBalance;
 
     private final Base64String base64String = new Base64String(randomNumAndLetterString(6));
     private final BinaryEntry binaryEntry = BinaryEntry.as("BinEntry", base64String);
@@ -69,7 +67,7 @@ public class DataTransactionTest {
     }
 
     private void dataEntryTransaction(DataEntry... dataEntries) {
-        initBalance = alice.getWavesBalance();
+        long balanceAfterTransaction = alice.getWavesBalance() - MIN_FEE;
         List<DataEntry> dataEntriesAsList = Arrays.asList(dataEntries);
         Map<String, EntryType> entryMap = new HashMap<>();
 
@@ -80,7 +78,7 @@ public class DataTransactionTest {
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
-                () -> assertThat(alice.getWavesBalance()).isEqualTo(initBalance - MIN_FEE),
+                () -> assertThat(alice.getWavesBalance()).isEqualTo(balanceAfterTransaction),
                 () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
                 () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(MIN_FEE),
                 () -> assertThat(tx.sender()).isEqualTo(alice.publicKey()),
