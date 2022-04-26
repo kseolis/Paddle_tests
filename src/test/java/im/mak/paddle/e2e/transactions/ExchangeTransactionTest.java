@@ -5,7 +5,6 @@ import com.wavesplatform.transactions.common.Amount;
 import com.wavesplatform.transactions.common.AssetId;
 import com.wavesplatform.transactions.exchange.Order;
 
-import com.wavesplatform.transactions.exchange.OrderType;
 import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
 import org.junit.jupiter.api.BeforeAll;
@@ -21,81 +20,87 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class ExchangeTransactionTest {
     private static Account alice;
-    private static long aliceWavesBalance;
-    private static AssetId aliceIssuedAsset;
-
     private static Account bob;
-    private static long bobWavesBalance;
+    private static Account cat;
 
-    private static Order buy;
-    private static Order sell;
+    private static AssetId testAssetId;
+    private static AssetId firstSmartAssetId;
+    private static AssetId secondSmartAssetId;
 
-    private Amount amount;
-    private Amount price;
+    private static Order buyerOrder;
+    private static Order sellerOrder;
 
     @BeforeAll
     static void before() {
         async(
             () -> {
                 alice = new Account(DEFAULT_FAUCET);
-                aliceIssuedAsset = alice.issue(i -> i.name("Test_Asset").quantity(1000L).decimals(8)).tx().assetId();
-                System.out.println("Alice balance " + alice.getWavesBalance());
+                testAssetId = alice.issue(i -> i.name("Test_Asset").quantity(1000L).decimals(8)).tx().assetId();
             },
             () -> {
                 bob = new Account(DEFAULT_FAUCET);
+                secondSmartAssetId = bob.issue(i -> i.name("S_Smart_Asset").script("{-# SCRIPT_TYPE ASSET #-} false")
+                        .quantity(4000L).decimals(8)).tx().assetId();
+            },
+            () -> {
+                cat = new Account(DEFAULT_FAUCET);
+                firstSmartAssetId = cat.issue(i -> i.name("F_Smart_Asset").script("{-# SCRIPT_TYPE ASSET #-} true")
+                        .quantity(4000L).decimals(8)).tx().assetId();
             }
         );
     }
 
     @Test
-    @DisplayName("Minimum ")
-    void exchangeMinimumAssets() {
-        Amount amount = Amount.of(MIN_TRANSFER_SUM);
-        Amount price = Amount.of(MIN_TRANSFER_SUM, AssetId.WAVES);
-        buy = Order.builder(OrderType.BUY, amount, price, alice.publicKey()).getSignedWith(alice.privateKey());
-        sell = Order.builder(OrderType.SELL, amount, price, alice.publicKey()).getSignedWith(bob.privateKey());
-        System.out.println("Alice balance " + alice.getWavesBalance());
-        exchangeTransaction(buy, sell, amount.value(), price.value(), MIN_FEE_FOR_EXCHANGE);
+    @DisplayName("Buying maximum tokens for maximum price")
+    void exchangeMaxAssets() {
+        long sumSellerTokens = bob.getWavesBalance() - MIN_FEE_FOR_EXCHANGE;
+        long offerForToken = 100;
+
+        Amount amountsTokensForExchange = Amount.of(sumSellerTokens, AssetId.WAVES);
+        Amount pricePerToken = Amount.of(offerForToken, testAssetId);
+
+        buyerOrder = Order.buy(amountsTokensForExchange, pricePerToken, alice.publicKey()).getSignedWith(alice.privateKey());
+        sellerOrder = Order.sell(amountsTokensForExchange, pricePerToken, alice.publicKey()).getSignedWith(bob.privateKey());
+
+        exchangeTransaction(
+            alice,
+            buyerOrder,
+            sellerOrder,
+            amountsTokensForExchange.value(),
+            pricePerToken.value(),
+            MIN_FEE_FOR_EXCHANGE
+        );
     }
 
     @Test
-    @DisplayName("Maximum ")
-    void exchangeMaximumAssets() {
-        long buyPrice = alice.getBalance(aliceIssuedAsset) * 100_000_000L;
+    @DisplayName("Buying minimum tokens, issued asset is smart")
+    void exchangeTwoSmartAssets() {
+        long sumSellerTokens = cat.getBalance(firstSmartAssetId) * 100_000 / 4;
+        Amount amountsTokensForExchange = Amount.of(MIN_TRANSFER_SUM, testAssetId);
+        Amount pricePerToken = Amount.of(sumSellerTokens, firstSmartAssetId);
+        buyerOrder = Order.buy(amountsTokensForExchange, pricePerToken, cat.publicKey()).getSignedWith(cat.privateKey());
+        sellerOrder = Order.sell(amountsTokensForExchange, pricePerToken, cat.publicKey()).getSignedWith(alice.privateKey());
 
-        amount = Amount.of(bob.getWavesBalance() - MIN_FEE_FOR_EXCHANGE);
-        System.out.println(amount);
-        price = Amount.of(buyPrice, aliceIssuedAsset);
-        buy = Order.builder(OrderType.BUY, amount, price, alice.publicKey()).getSignedWith(alice.privateKey());
-        sell = Order.builder(OrderType.SELL, amount, price, alice.publicKey()).getSignedWith(bob.privateKey());
-
-        exchangeTransaction(buy, sell, 1, price.value(), MIN_FEE_FOR_EXCHANGE);
+        exchangeTransaction(
+                cat,
+                buyerOrder,
+                sellerOrder,
+                amountsTokensForExchange.value(),
+                pricePerToken.value(),
+                FEE_FOR_EXCHANGE
+        );
     }
 
-    private void exchangeTransaction(Order buy, Order sell, long amount, long price, long fee) {
-        aliceWavesBalance = alice.getWavesBalance();
-        bobWavesBalance = bob.getWavesBalance();
-        long balanceAfterTransaction = aliceWavesBalance + MIN_TRANSFER_SUM;
+    private void exchangeTransaction
+            (Account from, Order buyerOrder, Order sellerOrder, long amount, long price, long fee) {
 
-        System.out.println("Alice balance " + alice.getWavesBalance());
-        System.out.println("Bob balance " + bobWavesBalance);
-        System.out.println("Alice asset balance " + alice.getBalance(aliceIssuedAsset));
-        System.out.println("Bob asset balance " + bob.getBalance(aliceIssuedAsset));
-
-        ExchangeTransaction tx = alice.exchange(buy, sell, amount, price).tx();
-
-        System.out.println("Alice balance " + alice.getWavesBalance());
-        System.out.println("Bob balance " + bob.getWavesBalance());
-        System.out.println("Alice asset balance " + alice.getBalance(aliceIssuedAsset));
-        System.out.println("Bob asset balance " + bob.getBalance(aliceIssuedAsset));
+        ExchangeTransaction tx = from.exchange(buyerOrder, sellerOrder, amount, price).tx();
 
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
-        System.out.println(txInfo);
-
         assertAll(
-                () -> assertThat(alice.getWavesBalance()).isEqualTo(balanceAfterTransaction),
                 () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat(tx.type()).isEqualTo(7),
                 () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(fee)
         );
     }

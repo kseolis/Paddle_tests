@@ -8,8 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static im.mak.paddle.util.Constants.MAX_NUM_ACCOUNT_FOR_MASS_TRANSFER;
-
 public class Randomizer {
 
     public static String randomNumAndLetterString(final long targetStringLength) {
