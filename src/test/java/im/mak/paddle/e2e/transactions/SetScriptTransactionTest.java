@@ -1,16 +1,11 @@
 package im.mak.paddle.e2e.transactions;
 
-import com.wavesplatform.crypto.base.Base64;
 import com.wavesplatform.transactions.SetScriptTransaction;
-import com.wavesplatform.transactions.common.Base64String;
 import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
-import org.bouncycastle.util.encoders.Base64Encoder;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-
-import java.util.Arrays;
 
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
@@ -28,12 +23,11 @@ public class SetScriptTransactionTest {
     }
 
     @Test
-    @DisplayName("setScriptTransaction")
-    void setScriptTransactionTest() {
+    @DisplayName("set script transaction")
+    void setScriptTransactionForLibV3Test() {
         String setScript =  "{-# STDLIB_VERSION 3 #-}\n" +
-                            "{-# SCRIPT_TYPE  ACCOUNT #-}\n" +
-                            "{-# CONTENT_TYPE LIBRARY #-}\n" +
-                            "func multiply(a: Int, b: Int) = a * b";
+                            "{-# SCRIPT_TYPE ACCOUNT #-}\n" +
+                            "{-# CONTENT_TYPE LIBRARY #-}\n";
         setScriptTransaction(setScript);
     }
 
