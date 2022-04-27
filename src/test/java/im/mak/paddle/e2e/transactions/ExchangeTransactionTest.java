@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
 import static im.mak.paddle.util.Async.async;
@@ -27,8 +29,13 @@ public class ExchangeTransactionTest {
     private static AssetId firstSmartAssetId;
     private static AssetId secondSmartAssetId;
 
-    private static Order buyerOrder;
-    private static Order sellerOrder;
+    private AssetId priceAsset;
+    private AssetId amountAsset;
+
+    private long buyerBalanceAfterTransactionPriceAsset;
+    private long sellerBalanceAfterTransactionPriceAsset;
+    private long buyerBalanceAfterTransactionAmountAsset;
+    private long sellerBalanceAfterTransactionAmountAsset;
 
     @BeforeAll
     static void before() {
@@ -54,16 +61,19 @@ public class ExchangeTransactionTest {
     @DisplayName("Buying maximum tokens for maximum price")
     void exchangeMaxAssets() {
         long sumSellerTokens = bob.getWavesBalance() - MIN_FEE_FOR_EXCHANGE;
-        long offerForToken = 100;
+        long offerForToken = 68;
 
         Amount amountsTokensForExchange = Amount.of(sumSellerTokens, AssetId.WAVES);
         Amount pricePerToken = Amount.of(offerForToken, testAssetId);
 
-        buyerOrder = Order.buy(amountsTokensForExchange, pricePerToken, alice.publicKey()).getSignedWith(alice.privateKey());
-        sellerOrder = Order.sell(amountsTokensForExchange, pricePerToken, alice.publicKey()).getSignedWith(bob.privateKey());
+        Order buyerOrder = Order.buy(amountsTokensForExchange, pricePerToken, alice.publicKey())
+                .getSignedWith(alice.privateKey());
+        Order sellerOrder = Order.sell(amountsTokensForExchange, pricePerToken, alice.publicKey())
+                .getSignedWith(bob.privateKey());
 
         exchangeTransaction(
             alice,
+            bob,
             buyerOrder,
             sellerOrder,
             amountsTokensForExchange.value(),
@@ -76,13 +86,18 @@ public class ExchangeTransactionTest {
     @DisplayName("Buying minimum tokens, issued asset is smart")
     void exchangeTwoSmartAssets() {
         long sumSellerTokens = cat.getBalance(firstSmartAssetId) * 100_000 / 4;
+
         Amount amountsTokensForExchange = Amount.of(MIN_TRANSFER_SUM, testAssetId);
         Amount pricePerToken = Amount.of(sumSellerTokens, firstSmartAssetId);
-        buyerOrder = Order.buy(amountsTokensForExchange, pricePerToken, cat.publicKey()).getSignedWith(cat.privateKey());
-        sellerOrder = Order.sell(amountsTokensForExchange, pricePerToken, cat.publicKey()).getSignedWith(alice.privateKey());
+
+        Order buyerOrder = Order.buy(amountsTokensForExchange, pricePerToken, cat.publicKey())
+                .getSignedWith(cat.privateKey());
+        Order sellerOrder = Order.sell(amountsTokensForExchange, pricePerToken, cat.publicKey())
+                .getSignedWith(alice.privateKey());
 
         exchangeTransaction(
                 cat,
+                alice,
                 buyerOrder,
                 sellerOrder,
                 amountsTokensForExchange.value(),
@@ -92,16 +107,47 @@ public class ExchangeTransactionTest {
     }
 
     private void exchangeTransaction
-            (Account from, Order buyerOrder, Order sellerOrder, long amount, long price, long fee) {
+            (Account from, Account to, Order buy, Order sell, long amount, long price, long fee) {
+        calculateBalancesAfterTransaction(from, to, buy, amount);
 
-        ExchangeTransaction tx = from.exchange(buyerOrder, sellerOrder, amount, price).tx();
-
+        ExchangeTransaction tx = from.exchange(buy, sell, amount, price).tx();
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
-                () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat(tx.type()).isEqualTo(7),
-                () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(fee)
+            () -> assertThat(tx.assetPair()).isEqualTo(buy.assetPair()),
+            () -> assertThat(tx.sender()).isEqualTo(from.publicKey()),
+            () -> assertThat(tx.orders()).isEqualTo(List.of(buy, sell)),
+            () -> assertThat(tx.amount()).isEqualTo(amount),
+            () -> assertThat(tx.price()).isEqualTo(buy.price().value()),
+            () -> assertThat(tx.type()).isEqualTo(7),
+            () -> assertThat(from.getBalance(priceAsset)).isEqualTo(buyerBalanceAfterTransactionPriceAsset),
+            () -> assertThat(to.getBalance(priceAsset)).isEqualTo(sellerBalanceAfterTransactionPriceAsset),
+            () -> assertThat(from.getBalance(amountAsset)).isEqualTo(buyerBalanceAfterTransactionAmountAsset),
+            () -> assertThat(to.getBalance(amountAsset)).isEqualTo(sellerBalanceAfterTransactionAmountAsset),
+
+            () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
+            () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(fee)
         );
+    }
+    private void calculateBalancesAfterTransaction(Account from, Account to, Order buy, long amount) {
+        priceAsset = buy.assetPair().left();
+        amountAsset = buy.assetPair().right();
+
+        buyerBalanceAfterTransactionPriceAsset = from.getBalance(priceAsset) + amount;
+        sellerBalanceAfterTransactionPriceAsset = to.getBalance(priceAsset) - amount;
+        buyerBalanceAfterTransactionAmountAsset = from.getBalance(amountAsset) - buy.amount().value();
+        sellerBalanceAfterTransactionAmountAsset = to.getBalance(amountAsset) + buy.amount().value();
+
+        if(priceAsset.isWaves()) {
+
+            double expression = to.getBalance(amountAsset) +
+                    (double) (to.getBalance(priceAsset) - MIN_FEE_FOR_EXCHANGE)
+                            / 100_000_000 * buy.price().value();
+
+            long result = Math.round(expression % 2 == 0 ? expression : expression - 1);
+            sellerBalanceAfterTransactionPriceAsset = to.getBalance(priceAsset) - amount - MIN_FEE_FOR_EXCHANGE;
+            buyerBalanceAfterTransactionAmountAsset = from.getBalance(amountAsset) - result;
+            sellerBalanceAfterTransactionAmountAsset = result;
+        }
     }
 }
