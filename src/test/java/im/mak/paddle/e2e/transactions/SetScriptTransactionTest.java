@@ -23,11 +23,20 @@ public class SetScriptTransactionTest {
     }
 
     @Test
-    @DisplayName("set script transaction")
-    void setScriptTransactionForLibV3Test() {
+    @DisplayName("set script transaction Account")
+    void setScriptTransactionForAccount() {
         String setScript =  "{-# STDLIB_VERSION 3 #-}\n" +
                             "{-# SCRIPT_TYPE ACCOUNT #-}\n" +
                             "{-# CONTENT_TYPE LIBRARY #-}\n";
+        setScriptTransaction(setScript);
+    }
+
+    @Test
+    @DisplayName("set script transaction dApp")
+    void setScriptTransactionForDapp() {
+        String setScript =  "{-# STDLIB_VERSION 3 #-}\n" +
+                "{-# SCRIPT_TYPE ACCOUNT #-}\n" +
+                "{-# CONTENT_TYPE DAPP #-}\n";
         setScriptTransaction(setScript);
     }
 
