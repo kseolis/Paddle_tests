@@ -15,6 +15,7 @@ import java.util.List;
 
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
+import static im.mak.paddle.helpers.Randomizer.getRandomInt;
 import static im.mak.paddle.util.Async.async;
 import static im.mak.paddle.util.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -46,7 +47,7 @@ public class ExchangeTransactionTest {
             },
             () -> {
                 bob = new Account(DEFAULT_FAUCET);
-                secondSmartAssetId = bob.issue(i -> i.name("S_Smart_Asset").script("{-# SCRIPT_TYPE ASSET #-} false")
+                secondSmartAssetId = bob.issue(i -> i.name("S_Smart_Asset").script("{-# SCRIPT_TYPE ASSET #-} true")
                         .quantity(4000L).decimals(8)).tx().assetId();
             },
             () -> {
@@ -61,21 +62,21 @@ public class ExchangeTransactionTest {
     @DisplayName("Buying maximum tokens for maximum price")
     void exchangeMaxAssets() {
         long sumSellerTokens = bob.getWavesBalance() - MIN_FEE_FOR_EXCHANGE;
-        long offerForToken = 68;
+        long offerForToken = getRandomInt(1, 50);
 
         Amount amountsTokensForExchange = Amount.of(sumSellerTokens, AssetId.WAVES);
         Amount pricePerToken = Amount.of(offerForToken, testAssetId);
 
         Order buyerOrder = Order.buy(amountsTokensForExchange, pricePerToken, alice.publicKey())
                 .getSignedWith(alice.privateKey());
-        Order sellerOrder = Order.sell(amountsTokensForExchange, pricePerToken, alice.publicKey())
+        Order sellOrder = Order.sell(amountsTokensForExchange, pricePerToken, alice.publicKey())
                 .getSignedWith(bob.privateKey());
 
         exchangeTransaction(
             alice,
             bob,
             buyerOrder,
-            sellerOrder,
+            sellOrder,
             amountsTokensForExchange.value(),
             pricePerToken.value(),
             MIN_FEE_FOR_EXCHANGE
@@ -84,25 +85,48 @@ public class ExchangeTransactionTest {
 
     @Test
     @DisplayName("Buying minimum tokens, issued asset is smart")
-    void exchangeTwoSmartAssets() {
+    void exchangeOneSmartAsset() {
         long sumSellerTokens = cat.getBalance(firstSmartAssetId) * 100_000 / 4;
 
-        Amount amountsTokensForExchange = Amount.of(MIN_TRANSFER_SUM, testAssetId);
+        Amount amountsTokensForExchange = Amount.of(50, testAssetId);
         Amount pricePerToken = Amount.of(sumSellerTokens, firstSmartAssetId);
 
         Order buyerOrder = Order.buy(amountsTokensForExchange, pricePerToken, cat.publicKey())
                 .getSignedWith(cat.privateKey());
-        Order sellerOrder = Order.sell(amountsTokensForExchange, pricePerToken, cat.publicKey())
+        Order sellOrder = Order.sell(amountsTokensForExchange, pricePerToken, cat.publicKey())
                 .getSignedWith(alice.privateKey());
 
         exchangeTransaction(
                 cat,
                 alice,
                 buyerOrder,
-                sellerOrder,
+                sellOrder,
                 amountsTokensForExchange.value(),
                 pricePerToken.value(),
                 FEE_FOR_EXCHANGE
+        );
+    }
+
+    @Test
+    @DisplayName("Buying minimum tokens, two smart assets")
+    void exchangeTwoSmartAssets() {
+        long sumBuyerTokens = cat.getBalance(firstSmartAssetId) * 100_000 / 4;
+        Amount amountsTokensForExchange = Amount.of(MIN_TRANSFER_SUM, firstSmartAssetId);
+        Amount pricePerToken = Amount.of(sumBuyerTokens, secondSmartAssetId);
+
+        Order buyerOrder = Order.buy(amountsTokensForExchange, pricePerToken, bob.publicKey())
+                .getSignedWith(bob.privateKey());
+        Order sellOrder = Order.sell(amountsTokensForExchange, pricePerToken, bob.publicKey())
+                .getSignedWith(cat.privateKey());
+
+        exchangeTransaction(
+                bob,
+                cat,
+                buyerOrder,
+                sellOrder,
+                amountsTokensForExchange.value(),
+                pricePerToken.value(),
+                MAX_FEE_FOR_EXCHANGE
         );
     }
 
@@ -122,13 +146,16 @@ public class ExchangeTransactionTest {
             () -> assertThat(tx.type()).isEqualTo(7),
             () -> assertThat(from.getBalance(priceAsset)).isEqualTo(buyerBalanceAfterTransactionPriceAsset),
             () -> assertThat(to.getBalance(priceAsset)).isEqualTo(sellerBalanceAfterTransactionPriceAsset),
+        /*
             () -> assertThat(from.getBalance(amountAsset)).isEqualTo(buyerBalanceAfterTransactionAmountAsset),
             () -> assertThat(to.getBalance(amountAsset)).isEqualTo(sellerBalanceAfterTransactionAmountAsset),
+        */
 
             () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
             () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(fee)
         );
     }
+
     private void calculateBalancesAfterTransaction(Account from, Account to, Order buy, long amount) {
         priceAsset = buy.assetPair().left();
         amountAsset = buy.assetPair().right();
