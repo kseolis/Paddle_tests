@@ -11,10 +11,6 @@ public class Constants {
     public static final long ONE_WAVES = 100_000_000L;
 
     public static final long MIN_FEE_FOR_EXCHANGE = 300000L;
-    public static final long FEE_FOR_EXCHANGE = 700000L;
-    public static final long MAX_FEE_FOR_EXCHANGE = 1100000L;
-
-
     public static final long FEE_FOR_MASS_TRANSFER = 50000L ;
 
     public static final byte ASSET_DECIMALS_MIN = 0;
@@ -27,5 +23,5 @@ public class Constants {
     public static int MAX_NUM_ACCOUNT_FOR_MASS_TRANSFER = 100;
 
     public static final String ADDRESS = "Address";
-    public static final String ALIAS = "Address";
+    public static final String ALIAS = "Alias";
 }
