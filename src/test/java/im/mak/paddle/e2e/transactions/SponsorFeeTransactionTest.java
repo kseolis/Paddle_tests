@@ -76,15 +76,12 @@ public class SponsorFeeTransactionTest {
 
         SponsorFeeTransaction sponsorTx = SponsorFeeTransaction.builder(assetId, fee)
                 .getSignedWith(assetOwner.privateKey());
-
         node().waitForTransaction(node().broadcast(sponsorTx).id());
-
         TransactionInfo sponsorTxInfo = node().getTransactionInfo(sponsorTx.id());
 
         TransferTransaction transferTx = sender.transfer(
                 recipient.address(), transferSum, assetId, i -> i.feeAssetId(assetId)
         ).tx();
-
         TransactionInfo transferTxInfo = node().getTransactionInfo(transferTx.id());
 
         assertAll(
@@ -119,11 +116,11 @@ public class SponsorFeeTransactionTest {
         }
 
         assertAll(
-                () -> assertThat(sponsorTxInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat(sponsorTx.sender()).isEqualTo(assetOwner.publicKey()),
-                () -> assertThat(sponsorTx.assetId()).isEqualTo(assetId),
-                () -> assertThat(sponsorTx.minSponsoredFee()).isEqualTo(0),
-                () -> assertThat(sponsorTx.type()).isEqualTo(14)
+            () -> assertThat(sponsorTxInfo.applicationStatus()).isEqualTo(SUCCEEDED),
+            () -> assertThat(sponsorTx.sender()).isEqualTo(assetOwner.publicKey()),
+            () -> assertThat(sponsorTx.assetId()).isEqualTo(assetId),
+            () -> assertThat(sponsorTx.minSponsoredFee()).isEqualTo(0),
+            () -> assertThat(sponsorTx.type()).isEqualTo(14)
         );
     }
 }

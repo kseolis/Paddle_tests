@@ -1,11 +1,9 @@
 package im.mak.paddle.e2e.transactions;
 
-import com.wavesplatform.transactions.IssueTransaction;
 import com.wavesplatform.transactions.SetAssetScriptTransaction;
+import com.wavesplatform.transactions.TransferTransaction;
 import com.wavesplatform.transactions.common.AssetId;
 import com.wavesplatform.transactions.common.Base64String;
-import com.wavesplatform.wavesj.info.IssueTransactionInfo;
-import com.wavesplatform.wavesj.info.SetAssetScriptTransactionInfo;
 import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
 import org.junit.jupiter.api.BeforeAll;
@@ -27,32 +25,32 @@ public class SetAssetScriptTransactionTest {
     static void before() {
         alice = new Account(DEFAULT_FAUCET);
         issuedAssetId = alice.issue(i -> i.name("Test_Asset")
-                .script("{-# SCRIPT_TYPE ASSET #-} false")
+                .script("{-# SCRIPT_TYPE ASSET #-} true")
                 .quantity(1000_00000000L)).tx().assetId();
     }
 
     @Test
-    @DisplayName("setScriptTransaction")
-    void setScriptTransactionTest() {
-        Base64String script = node().compileScript("{-# SCRIPT_TYPE ASSET #-} true").script();
-        setAssetScriptTransaction(script);
+    @DisplayName("set script to disable transactions")
+    void setAssetScriptTransactionTest() {
+        Base64String script = node().compileScript("{-# SCRIPT_TYPE ASSET #-} false").script();
+        setAssetScriptTransaction(alice, script, issuedAssetId);
     }
 
-    private void setAssetScriptTransaction(Base64String script) {
-
-        Account alice = new Account(10_00000000);
-
-        SetAssetScriptTransaction tx = SetAssetScriptTransaction.builder(issuedAssetId, script).getSignedWith(alice.privateKey());
-        node().waitForTransaction(node().broadcast(tx).id());
-
-        TransactionInfo commonInfo = node().getTransactionInfo(tx.id());
-        TransactionInfo txInfo = node().getTransactionInfo(tx.id());
+    private void setAssetScriptTransaction(Account account, Base64String script, AssetId assetId) {
+        long balanceAfterTransaction = account.getWavesBalance() - ONE_WAVES;
+        SetAssetScriptTransaction setAssetScriptTx = SetAssetScriptTransaction
+                .builder(issuedAssetId, script).getSignedWith(account.privateKey());
+        node().waitForTransaction(node().broadcast(setAssetScriptTx).id());
+        TransactionInfo setAssetScriptTxInfo = node().getTransactionInfo(setAssetScriptTx.id());
 
         assertAll(
-                () -> assertThat(tx.sender()).isEqualTo(alice.publicKey()),
-                () -> assertThat(tx.type()).isEqualTo(15),
-                () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(ONE_WAVES)
+            () -> assertThat(setAssetScriptTxInfo.applicationStatus()).isEqualTo(SUCCEEDED),
+            () -> assertThat(setAssetScriptTx.fee().value()).isEqualTo(ONE_WAVES),
+            () -> assertThat(setAssetScriptTx.sender()).isEqualTo(alice.publicKey()),
+            () -> assertThat(setAssetScriptTx.script()).isEqualTo(script),
+            () -> assertThat(setAssetScriptTx.assetId()).isEqualTo(assetId),
+            () -> assertThat(setAssetScriptTx.type()).isEqualTo(15),
+            () -> assertThat(account.getWavesBalance()).isEqualTo(balanceAfterTransaction)
         );
     }
 }
