@@ -30,7 +30,7 @@ public class InvokeScriptTransactionTest {
 
     @Test
     @DisplayName("invoke script with small complexity")
-    void invokeTest() {
+    void invokeScriptWithSmallComplexityTest() {
         Amount amount = WAVES.of(0.1);
         invokeTransaction(account, accWithDApp.setInt(getRandomInt(1, 50)), amount);
     }
@@ -43,13 +43,13 @@ public class InvokeScriptTransactionTest {
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
-                () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat(tx.dApp()).isEqualTo(dAppCall.getDApp()),
-                () -> assertThat(tx.function()).isEqualTo(dAppCall.getFunction()),
-                () -> assertThat(tx.sender()).isEqualTo(callingAcc.publicKey()),
-                () -> assertThat(tx.type()).isEqualTo(16),
-                () -> assertThat(tx.fee().value()).isEqualTo(minFee),
-                () -> assertThat(callingAcc.getWavesBalance()).isEqualTo(balanceAfterTransaction)
+            () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
+            () -> assertThat(tx.dApp()).isEqualTo(dAppCall.getDApp()),
+            () -> assertThat(tx.function()).isEqualTo(dAppCall.getFunction()),
+            () -> assertThat(tx.sender()).isEqualTo(callingAcc.publicKey()),
+            () -> assertThat(tx.type()).isEqualTo(16),
+            () -> assertThat(tx.fee().value()).isEqualTo(minFee),
+            () -> assertThat(callingAcc.getWavesBalance()).isEqualTo(balanceAfterTransaction)
         );
     }
 }
