@@ -53,14 +53,14 @@ public class LeaseTransactionTest {
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
+                () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
                 () -> assertThat(from.getWavesBalanceDetails().effective()).isEqualTo(wavesBalanceAfterSendLeaseTransaction),
                 () -> assertThat(to.getWavesBalanceDetails().effective()).isEqualTo(wavesBalanceAfterReceivingLease),
-                () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
                 () -> assertThat(tx.sender()).isEqualTo(from.publicKey()),
                 () -> assertThat(tx.amount()).isEqualTo(amount),
                 () -> assertThat(tx.recipient()).isEqualTo(to.address()),
-                () -> assertThat(tx.type()).isEqualTo(8),
-                () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(MIN_FEE)
+                () -> assertThat(tx.fee().value()).isEqualTo(MIN_FEE),
+                () -> assertThat(tx.type()).isEqualTo(8)
         );
     }
 }
