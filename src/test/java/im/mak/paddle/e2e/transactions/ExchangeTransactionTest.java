@@ -65,7 +65,7 @@ public class ExchangeTransactionTest {
     }
 
     @Test
-    @DisplayName("Buying maximum tokens for maximum price")
+    @DisplayName("Exchange maximum tokens for maximum price")
     void exchangeMaxAssets() {
         long sumSellerTokens = bob.getWavesBalance() - MIN_FEE_FOR_EXCHANGE;
         long offerForToken = getRandomInt(1, 50);
@@ -90,7 +90,7 @@ public class ExchangeTransactionTest {
     }
 
     @Test
-    @DisplayName("Buying minimum tokens, issued asset is smart")
+    @DisplayName("Exchange minimum tokens, issued asset is smart")
     void exchangeOneSmartAsset() {
         long sumSellerTokens = getRandomInt(1, 50) * (long) Math.pow(10, 8);
 
