@@ -3,6 +3,7 @@ package im.mak.paddle.e2e.transactions;
 import com.wavesplatform.transactions.IssueTransaction;
 import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
+import im.mak.paddle.dapps.AuctionDApp;
 import org.junit.jupiter.api.*;
 
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
@@ -14,45 +15,49 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 class IssueTransactionTest {
 
     private static Account alice;
+    private static Account bob;
     private long initBalance;
 
     @BeforeAll
     static void before() {
         alice = new Account(DEFAULT_FAUCET);
+        bob = new AuctionDApp(DEFAULT_FAUCET);
     }
 
     @Test
     @DisplayName("test issue minimum assets via 'issue Transaction'")
     void issueMinimumAssetsTransactionTest() {
-        issueTransaction("T_asset_min",
-                         "Test Asset",
-                                    ASSET_QUANTITY_MINIMUM,
-                              "true",
-                                    ASSET_DECIMALS_MIN,
-                          true);
+        issueTransaction(alice,
+                "T_asset_min",
+                "Test Asset",
+                ASSET_QUANTITY_MINIMUM,
+                "true",
+                ASSET_DECIMALS_MIN,
+                true);
     }
 
     @Test
     @DisplayName("test issue maximum assets via 'issue Transaction'")
     void issueMaximumAssetsTransactionTest() {
-        issueTransaction("T_asset",
-                         "Test maximum quantity for assets",
-                                    ASSET_QUANTITY_MAXIMUM,
-                              null,
-                                    ASSET_DECIMALS_MAX,
-                          false);
+        issueTransaction(bob,
+                "T_asset",
+                "Test maximum quantity for assets",
+                ASSET_QUANTITY_MAXIMUM,
+                null,
+                ASSET_DECIMALS_MAX,
+                false);
     }
 
     @Test
     @DisplayName("test issue NFT")
     void issueNfrAsset() {
-        issueTransactionForNft("Crazy_Sparrow", "Amazing NFT", null);
+        issueTransactionForNft(alice, "Crazy_Sparrow", "Amazing NFT", null);
     }
 
-    private void issueTransaction
-            (String assetName, String description, long quantity, String script, byte decimals, boolean reIssuable) {
-        initBalance = alice.getWavesBalance();
-        IssueTransaction tx = alice.issue(i ->
+    private void issueTransaction(Account account, String assetName, String description, long quantity, String script,
+                                  byte decimals, boolean reIssuable) {
+        initBalance = account.getWavesBalance();
+        IssueTransaction tx = account.issue(i ->
                 i.name(assetName)
                         .description(description)
                         .quantity(quantity)
@@ -63,30 +68,31 @@ class IssueTransactionTest {
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
-                () -> assertThat(alice.getAssetBalance(tx.assetId())).isEqualTo(quantity),
-                () -> assertThat(alice.getWavesBalance()).isEqualTo(initBalance - ONE_WAVES),
+                () -> assertThat(account.getAssetBalance(tx.assetId())).isEqualTo(quantity),
+                () -> assertThat(account.getWavesBalance()).isEqualTo(initBalance - ONE_WAVES),
                 () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat(tx.sender()).isEqualTo(alice.publicKey()),
+                () -> assertThat(tx.sender()).isEqualTo(account.publicKey()),
                 () -> assertThat(tx.reissuable()).isEqualTo(reIssuable),
-                () -> assertThat(tx.type()).isEqualTo(3),
-                () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(ONE_WAVES)
+                () -> assertThat(tx.fee().value()).isEqualTo(ONE_WAVES),
+                () -> assertThat(tx.type()).isEqualTo(3)
         );
     }
 
-    private void issueTransactionForNft(String assetName, String description, String script) {
+    private void issueTransactionForNft(Account account, String assetName, String description, String script) {
 
-        initBalance = alice.getWavesBalance();
+        initBalance = account.getWavesBalance();
 
-        IssueTransaction tx = alice.issueNft(i -> i.name(assetName).description(description).script(script)).tx();
+        IssueTransaction tx = account.issueNft(i -> i.name(assetName).description(description).script(script)).tx();
 
         TransactionInfo transactionInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
-                () -> assertThat(alice.getWavesBalance()).isEqualTo(initBalance - MIN_FEE),
+                () -> assertThat(account.getWavesBalance()).isEqualTo(initBalance - MIN_FEE),
                 () -> assertThat(transactionInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat(tx.sender()).isEqualTo(alice.publicKey()),
-                () -> assertThat(tx.type()).isEqualTo(3),
-                () -> assertThat((Object) transactionInfo.tx().fee().value()).isEqualTo(MIN_FEE)
+                () -> assertThat(tx.sender()).isEqualTo(account.publicKey()),
+                () -> assertThat(tx.fee().value()).isEqualTo(MIN_FEE),
+                () -> assertThat(tx.reissuable()).isEqualTo(false),
+                () -> assertThat(tx.type()).isEqualTo(3)
         );
     }
 }
