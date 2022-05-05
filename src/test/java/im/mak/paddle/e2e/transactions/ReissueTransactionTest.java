@@ -18,7 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class ReissueTransactionTest {
     private static Account account;
-    private static long aliceWavesBalance;
+    private static long accountWavesBalance;
     private static AssetId issuedAssetId;
     private static AssetId issuedSmartAssetId;
     long feeForSmartAssetReissue = MIN_FEE + EXTRA_FEE;
@@ -61,7 +61,7 @@ public class ReissueTransactionTest {
     }
 
     private void reissueTransaction(long amount, AssetId assetId, long fee) {
-        aliceWavesBalance = account.getBalance(AssetId.WAVES);
+        accountWavesBalance = account.getBalance(AssetId.WAVES);
         long balanceAfterReissue = account.getBalance(assetId) + amount;
         ReissueTransaction tx = account.reissue(amount, assetId, i -> i.reissuable(true)).tx();
 
@@ -70,7 +70,7 @@ public class ReissueTransactionTest {
         assertAll(
                 () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
                 () -> assertThat(account.getAssetBalance(assetId)).isEqualTo(balanceAfterReissue),
-                () -> assertThat(account.getWavesBalance()).isEqualTo(aliceWavesBalance - fee),
+                () -> assertThat(account.getWavesBalance()).isEqualTo(accountWavesBalance - fee),
                 () -> assertThat(tx.fee().value()).isEqualTo(fee),
                 () -> assertThat(tx.sender()).isEqualTo(account.publicKey()),
                 () -> assertThat(tx.reissuable()).isEqualTo(true),

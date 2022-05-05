@@ -13,51 +13,71 @@ import static im.mak.paddle.Node.node;
 import static im.mak.paddle.helpers.Randomizer.randomNumAndLetterString;
 import static im.mak.paddle.util.Async.async;
 import static im.mak.paddle.util.Constants.*;
-import static im.mak.paddle.util.Constants.MIN_FEE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class BurnTransactionTest {
-    private static Account alice;
-    private static long aliceWavesBalance;
+    private static Account account;
+    private static long accountWavesBalance;
     private static AssetId issuedAsset;
+    private static AssetId issuedSmartAssetId;
 
     @BeforeAll
     static void before() {
-        alice = new Account(DEFAULT_FAUCET);
+        account = new Account(DEFAULT_FAUCET);
         async(
-            () -> alice.createAlias(randomNumAndLetterString(15)),
-            () -> issuedAsset = alice.issue(i -> i.name("Test_Asset").quantity(1000)).tx().assetId()
+                () -> account.createAlias(randomNumAndLetterString(15)),
+                () -> issuedAsset = account.issue(i -> i.name("Test_Asset").quantity(1000)).tx().assetId(),
+                () -> issuedSmartAssetId =
+                        account.issue(i -> i.name("T_Smart_Asset").quantity(1000).script("2 * 2 == 4")).tx().assetId()
         );
     }
 
     @Test
-    @DisplayName("test burn minimum quantity asset")
+    @DisplayName("burn minimum quantity asset")
     void burnMinimumAssets() {
-        burnTransaction(ASSET_QUANTITY_MINIMUM);
+        burnTransaction(ASSET_QUANTITY_MINIMUM, issuedAsset, MIN_FEE);
     }
 
     @Test
-    @DisplayName("test burn maximum quantity asset")
+    @DisplayName("burn almost maximum quantity asset")
     void burnMaximumAssets() {
-        long burnSum = alice.getAssetBalance(issuedAsset);
-        burnTransaction(burnSum);
+        long burnSum = account.getAssetBalance(issuedAsset) - ASSET_QUANTITY_MINIMUM;
+        burnTransaction(burnSum, issuedAsset, MIN_FEE);
     }
 
-    private void burnTransaction(long amount) {
-        aliceWavesBalance = alice.getBalance(AssetId.WAVES);
-        long balanceAfterBurn = alice.getBalance(issuedAsset) - amount;
-        BurnTransaction tx = alice.burn(amount, issuedAsset).tx();
+    @Test
+    @DisplayName("burn minimum quantity smart asset")
+    void burnMinimumSmartAssets() {
+        long fee = MIN_FEE + EXTRA_FEE;
+        burnTransaction(ASSET_QUANTITY_MINIMUM, issuedSmartAssetId, fee);
+    }
+
+    @Test
+    @DisplayName("burn almost maximum quantity smart asset")
+    void burnMaximumSmartAssets() {
+        long fee = MIN_FEE + EXTRA_FEE;
+        long burnSum = account.getAssetBalance(issuedAsset) - ASSET_QUANTITY_MINIMUM;
+        burnTransaction(burnSum, issuedSmartAssetId, fee);
+    }
+
+    private void burnTransaction(long amount, AssetId assetId, long fee) {
+        accountWavesBalance = account.getBalance(AssetId.WAVES);
+        long balanceAfterBurn = account.getBalance(assetId) - amount;
+        BurnTransaction tx = account.burn(amount, assetId).tx();
 
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
-                () -> assertThat(alice.getAssetBalance(issuedAsset)).isEqualTo(balanceAfterBurn),
-                () -> assertThat(alice.getWavesBalance()).isEqualTo(aliceWavesBalance - MIN_FEE),
                 () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat(tx.sender()).isEqualTo(alice.publicKey()),
-                () -> assertThat(tx.type()).isEqualTo(6),
-                () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(MIN_FEE)
+                () -> assertThat(account.getAssetBalance(assetId)).isEqualTo(balanceAfterBurn),
+                () -> assertThat(account.getWavesBalance()).isEqualTo(accountWavesBalance - fee),
+                () -> assertThat(tx.fee().assetId()).isEqualTo(AssetId.WAVES),
+                () -> assertThat(tx.fee().value()).isEqualTo(fee),
+                () -> assertThat(tx.amount().value()).isEqualTo(amount),
+                () -> assertThat(tx.amount().assetId()).isEqualTo(assetId),
+                () -> assertThat(tx.sender()).isEqualTo(account.publicKey()),
+                () -> assertThat(tx.type()).isEqualTo(6)
         );
     }
 }
