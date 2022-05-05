@@ -3,7 +3,7 @@ package im.mak.paddle.e2e.transactions;
 import com.wavesplatform.transactions.IssueTransaction;
 import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
-import im.mak.paddle.dapps.AuctionDApp;
+import im.mak.paddle.dapps.defaultDApp420Complexity;
 import org.junit.jupiter.api.*;
 
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
@@ -21,7 +21,7 @@ class IssueTransactionTest {
     @BeforeAll
     static void before() {
         alice = new Account(DEFAULT_FAUCET);
-        bob = new AuctionDApp(DEFAULT_FAUCET);
+        bob = new defaultDApp420Complexity(DEFAULT_FAUCET);
     }
 
     @Test
@@ -33,19 +33,22 @@ class IssueTransactionTest {
                 ASSET_QUANTITY_MINIMUM,
                 "true",
                 ASSET_DECIMALS_MIN,
-                true);
+                true,
+                ONE_WAVES);
     }
 
     @Test
-    @DisplayName("test issue maximum assets via 'issue Transaction'")
+    @DisplayName("test issue maximum assets via 'issue Transaction' for smart account")
     void issueMaximumAssetsTransactionTest() {
+        long fee = ONE_WAVES + EXTRA_FEE;
         issueTransaction(bob,
                 "T_asset",
                 "Test maximum quantity for assets",
                 ASSET_QUANTITY_MAXIMUM,
                 null,
                 ASSET_DECIMALS_MAX,
-                false);
+                false,
+                fee);
     }
 
     @Test
@@ -55,7 +58,7 @@ class IssueTransactionTest {
     }
 
     private void issueTransaction(Account account, String assetName, String description, long quantity, String script,
-                                  byte decimals, boolean reIssuable) {
+                                  byte decimals, boolean reIssuable, long fee) {
         initBalance = account.getWavesBalance();
         IssueTransaction tx = account.issue(i ->
                 i.name(assetName)
@@ -69,11 +72,11 @@ class IssueTransactionTest {
 
         assertAll(
                 () -> assertThat(account.getAssetBalance(tx.assetId())).isEqualTo(quantity),
-                () -> assertThat(account.getWavesBalance()).isEqualTo(initBalance - ONE_WAVES),
+                () -> assertThat(account.getWavesBalance()).isEqualTo(initBalance - fee),
                 () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
                 () -> assertThat(tx.sender()).isEqualTo(account.publicKey()),
                 () -> assertThat(tx.reissuable()).isEqualTo(reIssuable),
-                () -> assertThat(tx.fee().value()).isEqualTo(ONE_WAVES),
+                () -> assertThat(tx.fee().value()).isEqualTo(fee),
                 () -> assertThat(tx.type()).isEqualTo(3)
         );
     }
