@@ -78,9 +78,10 @@ public class DataTransactionTest {
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
-                () -> assertThat(alice.getWavesBalance()).isEqualTo(balanceAfterTransaction),
                 () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(MIN_FEE),
+                () -> assertThat(alice.getWavesBalance()).isEqualTo(balanceAfterTransaction),
+                () -> assertThat(tx.fee().value()).isEqualTo(MIN_FEE),
+                () -> assertThat(tx.fee().value()).isEqualTo(MIN_FEE),
                 () -> assertThat(tx.sender()).isEqualTo(alice.publicKey()),
                 () -> assertThat(tx.type()).isEqualTo(12),
                 () -> tx.data().forEach(
