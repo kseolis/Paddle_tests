@@ -1,6 +1,7 @@
 package im.mak.paddle.e2e.transactions;
 
 import com.wavesplatform.transactions.SetScriptTransaction;
+import com.wavesplatform.transactions.common.Base64String;
 import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
 import org.junit.jupiter.api.BeforeAll;
@@ -9,48 +10,77 @@ import org.junit.jupiter.api.Test;
 
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
+import static im.mak.paddle.util.Async.async;
 import static im.mak.paddle.util.Constants.*;
+import static im.mak.paddle.util.ScriptUtil.fromFile;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class SetScriptTransactionTest {
 
-    private static Account alice;
+    private static Account stan;
+    private static Account eric;
+    private static Account kenny;
+    private static Account kyle;
 
     @BeforeAll
     static void before() {
-        alice = new Account(DEFAULT_FAUCET);
+        async(
+                () -> stan = new Account(DEFAULT_FAUCET),
+                () -> eric = new Account(DEFAULT_FAUCET),
+                () -> kenny = new Account(DEFAULT_FAUCET),
+                () -> kyle = new Account(DEFAULT_FAUCET)
+        );
     }
 
     @Test
     @DisplayName("set script transaction Account")
-    void setScriptTransactionForAccount() {
-        String setScript = "{-# STDLIB_VERSION 3 #-}\n" +
+    void setLibScriptTransaction() {
+        Base64String setScript = node().compileScript("{-# STDLIB_VERSION 3 #-}\n" +
                 "{-# SCRIPT_TYPE ACCOUNT #-}\n" +
-                "{-# CONTENT_TYPE LIBRARY #-}";
-        setScriptTransaction(setScript);
+                "{-# CONTENT_TYPE LIBRARY #-}").script();
+        setScriptTransaction(stan, setScript, 0);
     }
 
     @Test
     @DisplayName("set script transaction dApp")
-    void setScriptTransactionForDapp() {
-        String setScript = "{-# STDLIB_VERSION 3 #-}\n" +
+    void setDAppScriptTransaction() {
+        Base64String setScript = node().compileScript("{-# STDLIB_VERSION 4 #-}\n" +
                 "{-# SCRIPT_TYPE ACCOUNT #-}\n" +
-                "{-# CONTENT_TYPE DAPP #-}";
-        setScriptTransaction(setScript);
+                "{-# CONTENT_TYPE DAPP #-}").script();
+        setScriptTransaction(eric, setScript, 0);
     }
 
-    private void setScriptTransaction(String script) {
-        long balanceAfterTransaction = alice.getWavesBalance() - MIN_FEE_FOR_SET_SCRIPT;
-        SetScriptTransaction tx = alice.setScript(script).tx();
+    @Test
+    @DisplayName("set script transaction dApp")
+    void setScriptTransaction() {
+        Base64String setScript = node().compileScript("{-# STDLIB_VERSION 5 #-}\n" +
+                "{-# SCRIPT_TYPE ASSET #-} true").script();
+        setScriptTransaction(kenny, setScript, 0);
+    }
+
+    @Test
+    @DisplayName("set 32kb script")
+    void set32KbScript() {
+        long minimalValSetScriptFee = 2200000;
+        Base64String setScript = node().compileScript(fromFile("scriptSize32kb.ride")).script();
+        setScriptTransaction(kyle, setScript, minimalValSetScriptFee);
+    }
+
+    private void setScriptTransaction(Account account, Base64String script, long additionalFee) {
+        long fee = MIN_FEE_FOR_SET_SCRIPT + additionalFee;
+        long balanceAfterTransaction = account.getWavesBalance() - MIN_FEE_FOR_SET_SCRIPT - additionalFee;
+
+        SetScriptTransaction tx = account.setScript(script, i -> i.additionalFee(additionalFee)).tx();
+
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
-                () -> assertThat(alice.getWavesBalance()).isEqualTo(balanceAfterTransaction),
-                () -> assertThat(tx.sender()).isEqualTo(alice.publicKey()),
-                () -> assertThat(tx.type()).isEqualTo(13),
                 () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(MIN_FEE_FOR_SET_SCRIPT)
+                () -> assertThat(account.getWavesBalance()).isEqualTo(balanceAfterTransaction),
+                () -> assertThat(tx.sender()).isEqualTo(account.publicKey()),
+                () -> assertThat(tx.fee().value()).isEqualTo(fee),
+                () -> assertThat(tx.type()).isEqualTo(13)
         );
     }
 }

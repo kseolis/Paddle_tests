@@ -1,7 +1,6 @@
 package im.mak.paddle.e2e.transactions;
 
 import com.wavesplatform.transactions.LeaseCancelTransaction;
-import com.wavesplatform.transactions.LeaseTransaction;
 import com.wavesplatform.transactions.common.Id;
 import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
@@ -22,7 +21,6 @@ public class LeaseCancelTransactionTest {
 
     private static Account stan;
     private static Account eric;
-
     private static Account kenny;
     private static Account kyle;
 
@@ -30,9 +28,7 @@ public class LeaseCancelTransactionTest {
     static void before() {
         async(
                 () -> stan = new Account(DEFAULT_FAUCET),
-                () -> eric = new Account(DEFAULT_FAUCET)
-        );
-        async(
+                () -> eric = new Account(DEFAULT_FAUCET),
                 () -> kenny = new Account(DEFAULT_FAUCET),
                 () -> kyle = new Account(DEFAULT_FAUCET)
         );
