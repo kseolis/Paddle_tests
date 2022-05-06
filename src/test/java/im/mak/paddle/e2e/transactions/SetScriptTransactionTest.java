@@ -34,7 +34,7 @@ public class SetScriptTransactionTest {
     }
 
     @Test
-    @DisplayName("set script transaction Account")
+    @DisplayName("set script transaction Account STDLIB V3")
     void setLibScriptTransaction() {
         Base64String setScript = node().compileScript("{-# STDLIB_VERSION 3 #-}\n" +
                 "{-# SCRIPT_TYPE ACCOUNT #-}\n" +
@@ -43,7 +43,7 @@ public class SetScriptTransactionTest {
     }
 
     @Test
-    @DisplayName("set script transaction dApp")
+    @DisplayName("set script transaction dApp STDLIB V4")
     void setDAppScriptTransaction() {
         Base64String setScript = node().compileScript("{-# STDLIB_VERSION 4 #-}\n" +
                 "{-# SCRIPT_TYPE ACCOUNT #-}\n" +
@@ -52,7 +52,7 @@ public class SetScriptTransactionTest {
     }
 
     @Test
-    @DisplayName("set script transaction dApp")
+    @DisplayName("set script transaction SNDLIB V5")
     void setScriptTransaction() {
         Base64String setScript = node().compileScript("{-# STDLIB_VERSION 5 #-}\n" +
                 "{-# SCRIPT_TYPE ASSET #-} true").script();
