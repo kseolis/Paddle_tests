@@ -20,36 +20,42 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class LeaseCancelTransactionTest {
 
-    private static Account alice;
-    private static LeaseTransaction minLeaseTx;
-    private static Account bob;
-    private static LeaseTransaction maxLeaseTx;
+    private static Account stan;
+    private static Account eric;
+
+    private static Account kenny;
+    private static Account kyle;
 
     @BeforeAll
     static void before() {
         async(
-                () -> alice = new Account(DEFAULT_FAUCET),
-                () -> bob = new Account(DEFAULT_FAUCET)
+                () -> stan = new Account(DEFAULT_FAUCET),
+                () -> eric = new Account(DEFAULT_FAUCET)
         );
-        minLeaseTx = alice.lease(bob, MIN_TRANSFER_SUM).tx();
-        maxLeaseTx = bob.lease(alice, MIN_TRANSFER_SUM).tx();
+        async(
+                () -> kenny = new Account(DEFAULT_FAUCET),
+                () -> kyle = new Account(DEFAULT_FAUCET)
+        );
     }
 
     @Test
     @DisplayName("cancel lease of the minimum available amount")
     void leaseMinAssets() {
-        cancelLeaseTransaction(alice, bob, minLeaseTx.id());
+        Id minLeaseTx = stan.lease(eric, MIN_TRANSFER_SUM).tx().id();
+        cancelLeaseTransaction(stan, eric, minLeaseTx, MIN_TRANSFER_SUM);
     }
 
     @Test
-    @DisplayName("cancel lease of the minimum available amount")
+    @DisplayName("cancel lease of the maximum available amount")
     void leaseMaxAssets() {
-        cancelLeaseTransaction(bob, alice, maxLeaseTx.id());
+        long leaseSum = kenny.getWavesBalance() - MIN_FEE;
+        Id maxLeaseTx = kenny.lease(kyle, leaseSum).tx().id();
+        cancelLeaseTransaction(kenny, kyle, maxLeaseTx, leaseSum);
     }
 
-    private void cancelLeaseTransaction(Account from, Account to, Id index) {
-        long balanceAfterCancelLeaseAtSender = from.getWavesBalanceDetails().effective() - MIN_FEE + MIN_TRANSFER_SUM;
-        long balanceAfterCancelLeaseAtRecipient = to.getWavesBalanceDetails().effective() - MIN_TRANSFER_SUM;
+    private void cancelLeaseTransaction(Account from, Account to, Id index, long leaseSum) {
+        long balanceAfterCancelLeaseAtSender = from.getWavesBalanceDetails().effective() - MIN_FEE + leaseSum;
+        long balanceAfterCancelLeaseAtRecipient = to.getWavesBalanceDetails().effective() - leaseSum;
 
         LeaseCancelTransaction cancelTransaction = from.cancelLease(index).tx();
         TransactionInfo txInfo = node().getTransactionInfo(cancelTransaction.id());
