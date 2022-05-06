@@ -47,20 +47,20 @@ public class ExchangeTransactionTest {
     @BeforeAll
     static void before() {
         async(
-            () -> {
-                alice = new Account(DEFAULT_FAUCET);
-                testAssetId = alice.issue(i -> i.name("Test_Asset").quantity(1000L).decimals(decimals)).tx().assetId();
-            },
-            () -> {
-                bob = new Account(DEFAULT_FAUCET);
-                secondSmartAssetId = bob.issue(i -> i.name("S_Smart_Asset").script("{-# SCRIPT_TYPE ASSET #-} true")
-                        .quantity(4000L).decimals(decimals)).tx().assetId();
-            },
-            () -> {
-                cat = new Account(DEFAULT_FAUCET);
-                firstSmartAssetId = cat.issue(i -> i.name("F_Smart_Asset").script("{-# SCRIPT_TYPE ASSET #-} true")
-                        .quantity(4000L).decimals(decimals)).tx().assetId();
-            }
+                () -> {
+                    alice = new Account(DEFAULT_FAUCET);
+                    testAssetId = alice.issue(i -> i.name("Test_Asset").quantity(1000L).decimals(decimals)).tx().assetId();
+                },
+                () -> {
+                    bob = new Account(DEFAULT_FAUCET);
+                    secondSmartAssetId = bob.issue(i -> i.name("S_Smart_Asset").script("{-# SCRIPT_TYPE ASSET #-} true")
+                            .quantity(4000L).decimals(decimals)).tx().assetId();
+                },
+                () -> {
+                    cat = new Account(DEFAULT_FAUCET);
+                    firstSmartAssetId = cat.issue(i -> i.name("F_Smart_Asset").script("{-# SCRIPT_TYPE ASSET #-} true")
+                            .quantity(4000L).decimals(decimals)).tx().assetId();
+                }
         );
     }
 
@@ -79,13 +79,13 @@ public class ExchangeTransactionTest {
                 .getSignedWith(bob.privateKey());
 
         exchangeTransaction(
-            alice,
-            bob,
-            buyerOrder,
-            sellOrder,
-            amountsTokensForExchange.value(),
-            pricePerToken.value(),
-            0
+                alice,
+                bob,
+                buyerOrder,
+                sellOrder,
+                amountsTokensForExchange.value(),
+                pricePerToken.value(),
+                0
         );
     }
 
@@ -151,18 +151,18 @@ public class ExchangeTransactionTest {
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
-            () -> assertThat(tx.assetPair()).isEqualTo(buy.assetPair()),
-            () -> assertThat(tx.sender()).isEqualTo(from.publicKey()),
-            () -> assertThat(tx.orders()).isEqualTo(List.of(buy, sell)),
-            () -> assertThat(tx.amount()).isEqualTo(amount),
-            () -> assertThat(tx.price()).isEqualTo(buy.price().value()),
-            () -> assertThat(tx.type()).isEqualTo(7),
-            () -> assertThat(from.getBalance(amountAssetId)).isEqualTo(buyerBalanceAfterTransactionAmountAssetId),
-            () -> assertThat(to.getBalance(amountAssetId)).isEqualTo(sellerBalanceAfterTransactionAmountAssetId),
-            () -> assertThat(from.getBalance(priceAssetId)).isEqualTo(buyerBalanceAfterTransactionPriceAsset),
-            () -> assertThat(to.getBalance(priceAssetId)).isEqualTo(sellerBalanceAfterTransactionPriceAsset),
-            () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-            () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(fee)
+                () -> assertThat(tx.assetPair()).isEqualTo(buy.assetPair()),
+                () -> assertThat(tx.sender()).isEqualTo(from.publicKey()),
+                () -> assertThat(tx.orders()).isEqualTo(List.of(buy, sell)),
+                () -> assertThat(tx.amount()).isEqualTo(amount),
+                () -> assertThat(tx.price()).isEqualTo(buy.price().value()),
+                () -> assertThat(tx.type()).isEqualTo(7),
+                () -> assertThat(from.getBalance(amountAssetId)).isEqualTo(buyerBalanceAfterTransactionAmountAssetId),
+                () -> assertThat(to.getBalance(amountAssetId)).isEqualTo(sellerBalanceAfterTransactionAmountAssetId),
+                () -> assertThat(from.getBalance(priceAssetId)).isEqualTo(buyerBalanceAfterTransactionPriceAsset),
+                () -> assertThat(to.getBalance(priceAssetId)).isEqualTo(sellerBalanceAfterTransactionPriceAsset),
+                () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(fee)
         );
     }
 
@@ -173,15 +173,15 @@ public class ExchangeTransactionTest {
         buyerBalanceAfterTransactionAmountAssetId = from.getBalance(amountAssetId) + amount;
         sellerBalanceAfterTransactionAmountAssetId = to.getBalance(amountAssetId) - amount;
 
-        if(amountAssetId.isWaves()) {
+        if (amountAssetId.isWaves()) {
             sellerBalanceAfterTransactionAmountAssetId = to.getBalance(amountAssetId) - amount - MIN_FEE_FOR_EXCHANGE;
         }
 
-        if(!amountAssetId.isWaves() || !priceAssetId.isWaves()) {
+        if (!amountAssetId.isWaves() || !priceAssetId.isWaves()) {
             long amountOrderNormalize = buy.amount().value();
             long priceOrderNormalize = buy.price().value();
             double spendAmount = amountOrderNormalize * priceOrderNormalize * (Math.pow(10, -decimals));
-            buyerBalanceAfterTransactionPriceAsset =  from.getBalance(priceAssetId) - (long) spendAmount;
+            buyerBalanceAfterTransactionPriceAsset = from.getBalance(priceAssetId) - (long) spendAmount;
             sellerBalanceAfterTransactionPriceAsset = to.getBalance(priceAssetId) + (long) spendAmount;
         }
     }

@@ -47,7 +47,7 @@ public class SponsorFeeTransactionTest {
     @Test
     @DisplayName("Sponsor transaction with minimal sponsored fee")
     void sponsorMinAssets() {
-        sponsorTransaction(alice, bob, acc,1, 1, aliceAssetId);
+        sponsorTransaction(alice, bob, acc, 1, 1, aliceAssetId);
     }
 
     @Test
@@ -109,18 +109,18 @@ public class SponsorFeeTransactionTest {
         SponsorFeeTransaction sponsorTx = assetOwner.sponsorFee(assetId, 0).tx();
         TransactionInfo sponsorTxInfo = node().getTransactionInfo(sponsorTx.id());
 
-        try{
+        try {
             sender.transfer(recipient.address(), 1, assetId, i -> i.feeAssetId(assetId));
         } catch (ApiError e) {
             assertThat(e.getMessage()).isEqualTo("insufficient fee");
         }
 
         assertAll(
-            () -> assertThat(sponsorTxInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-            () -> assertThat(sponsorTx.sender()).isEqualTo(assetOwner.publicKey()),
-            () -> assertThat(sponsorTx.assetId()).isEqualTo(assetId),
-            () -> assertThat(sponsorTx.minSponsoredFee()).isEqualTo(0),
-            () -> assertThat(sponsorTx.type()).isEqualTo(14)
+                () -> assertThat(sponsorTxInfo.applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat(sponsorTx.sender()).isEqualTo(assetOwner.publicKey()),
+                () -> assertThat(sponsorTx.assetId()).isEqualTo(assetId),
+                () -> assertThat(sponsorTx.minSponsoredFee()).isEqualTo(0),
+                () -> assertThat(sponsorTx.type()).isEqualTo(14)
         );
     }
 }

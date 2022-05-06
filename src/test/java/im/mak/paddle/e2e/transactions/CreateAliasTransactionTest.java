@@ -23,6 +23,7 @@ public class CreateAliasTransactionTest {
     static void before() {
         alice = new Account(DEFAULT_FAUCET);
     }
+
     @Test
     @DisplayName("test create minimally short alias")
     void createMinShortAlias() {

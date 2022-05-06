@@ -44,13 +44,13 @@ public class SetAssetScriptTransactionTest {
         TransactionInfo setAssetScriptTxInfo = node().getTransactionInfo(setAssetScriptTx.id());
 
         assertAll(
-            () -> assertThat(setAssetScriptTxInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-            () -> assertThat(setAssetScriptTx.fee().value()).isEqualTo(ONE_WAVES),
-            () -> assertThat(setAssetScriptTx.sender()).isEqualTo(alice.publicKey()),
-            () -> assertThat(setAssetScriptTx.script()).isEqualTo(script),
-            () -> assertThat(setAssetScriptTx.assetId()).isEqualTo(assetId),
-            () -> assertThat(setAssetScriptTx.type()).isEqualTo(15),
-            () -> assertThat(account.getWavesBalance()).isEqualTo(balanceAfterTransaction)
+                () -> assertThat(setAssetScriptTxInfo.applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat(setAssetScriptTx.fee().value()).isEqualTo(ONE_WAVES),
+                () -> assertThat(setAssetScriptTx.sender()).isEqualTo(alice.publicKey()),
+                () -> assertThat(setAssetScriptTx.script()).isEqualTo(script),
+                () -> assertThat(setAssetScriptTx.assetId()).isEqualTo(assetId),
+                () -> assertThat(setAssetScriptTx.type()).isEqualTo(15),
+                () -> assertThat(account.getWavesBalance()).isEqualTo(balanceAfterTransaction)
         );
     }
 }

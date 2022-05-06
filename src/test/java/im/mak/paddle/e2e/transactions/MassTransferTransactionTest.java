@@ -36,14 +36,14 @@ public class MassTransferTransactionTest {
     @BeforeAll
     static void before() {
         async(
-                () ->  {
+                () -> {
                     base58StringAttachment = new Base58String("attachment");
                     alice = new Account(DEFAULT_FAUCET);
                     issuedAsset = alice.issue(i -> i.name("Test_Asset").quantity(9000_00000000L)).tx().assetId();
                 },
                 () -> minimumAccountsForMassTransfer = accountListGenerator(MIN_NUM_ACCOUNT_FOR_MASS_TRANSFER),
                 () -> maximumAccountsForMassTransfer = accountListGenerator(MAX_NUM_ACCOUNT_FOR_MASS_TRANSFER)
-            );
+        );
     }
 
     @Test
@@ -68,7 +68,7 @@ public class MassTransferTransactionTest {
     }
 
     @Test
-    @DisplayName("issued asset transfer in a 'mass transfer transaction' for minimum Accounts")
+    @DisplayName("transfer in a 'mass transfer transaction' issued asset for minimum Accounts")
     void massTransferForMinimumAccountsForIssueAsset() {
         int amount = getRandomInt(MIN_TRANSFER_SUM, 10000);
         massTransferTransaction(issuedAsset, amount, minimumAccountsForMassTransfer);
@@ -122,7 +122,7 @@ public class MassTransferTransactionTest {
         transactionCommission = MIN_FEE + additionalFeeForMassTransfer;
         long transactionSum = amount * numberOfAccounts;
 
-        if(assetId.equals(WAVES)) {
+        if (assetId.equals(WAVES)) {
             return senderBalance - transactionCommission - transactionSum;
         }
         return senderBalance - transactionSum;
