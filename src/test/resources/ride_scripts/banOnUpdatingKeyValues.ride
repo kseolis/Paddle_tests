@@ -1,0 +1,12 @@
+{-# STDLIB_VERSION 5 #-}
+{-# CONTENT_TYPE EXPRESSION #-}
+{-# SCRIPT_TYPE ACCOUNT #-}
+match (tx) {
+    # пример скрипта с запретом на обновление значений ключей
+    # read-only хранилище
+    case t:DataTransaction => {
+        if (getInteger(this, t.data[0].key).isDefined()) then throw("Key is already used")
+            else true
+        }
+    case _ => false
+  }

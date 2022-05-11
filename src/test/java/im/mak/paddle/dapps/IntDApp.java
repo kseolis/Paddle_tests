@@ -9,7 +9,7 @@ import static im.mak.paddle.util.ScriptUtil.fromFile;
 
 public class IntDApp extends DApp {
 
-    public static final String INITIAL_SCRIPT = fromFile("invoke_scripts/simpleIntScript.ride");
+    public static final String INITIAL_SCRIPT = fromFile("/simpleIntScript.ride");
 
     public IntDApp(long initialBalance) {
         super(initialBalance, INITIAL_SCRIPT);

@@ -63,7 +63,7 @@ public class SetScriptTransactionTest {
     @DisplayName("set 32kb script")
     void set32KbScript() {
         long minimalValSetScriptFee = 2200000;
-        Base64String setScript = node().compileScript(fromFile("scriptSize32kb.ride")).script();
+        Base64String setScript = node().compileScript(fromFile("/scriptSize32kb.ride")).script();
         setScriptTransaction(kyle, setScript, minimalValSetScriptFee);
     }
 
@@ -79,6 +79,7 @@ public class SetScriptTransactionTest {
                 () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
                 () -> assertThat(account.getWavesBalance()).isEqualTo(balanceAfterTransaction),
                 () -> assertThat(tx.sender()).isEqualTo(account.publicKey()),
+                () -> assertThat(tx.script()).isEqualTo(script),
                 () -> assertThat(tx.fee().value()).isEqualTo(fee),
                 () -> assertThat(tx.type()).isEqualTo(13)
         );
