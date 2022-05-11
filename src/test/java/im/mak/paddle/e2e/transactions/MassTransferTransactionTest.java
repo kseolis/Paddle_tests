@@ -24,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class MassTransferTransactionTest {
-    private static Account alice;
+    private static Account account;
 
     private static AssetId issuedAsset;
     private static Base58String base58StringAttachment;
@@ -38,8 +38,8 @@ public class MassTransferTransactionTest {
         async(
                 () -> {
                     base58StringAttachment = new Base58String("attachment");
-                    alice = new Account(DEFAULT_FAUCET);
-                    issuedAsset = alice.issue(i -> i.name("Test_Asset").quantity(9000_00000000L)).tx().assetId();
+                    account = new Account(DEFAULT_FAUCET);
+                    issuedAsset = account.issue(i -> i.name("Test_Asset").quantity(9000_00000000L)).tx().assetId();
                 },
                 () -> minimumAccountsForMassTransfer = accountListGenerator(MIN_NUM_ACCOUNT_FOR_MASS_TRANSFER),
                 () -> maximumAccountsForMassTransfer = accountListGenerator(MAX_NUM_ACCOUNT_FOR_MASS_TRANSFER)
@@ -85,7 +85,7 @@ public class MassTransferTransactionTest {
 
         long senderBalanceAfterMassTransfer = calculateSenderBalanceAfterTransfer(assetId, amount, numberOfAccounts);
 
-        MassTransferTransaction tx = alice.massTransfer(i -> i
+        MassTransferTransaction tx = account.massTransfer(i -> i
                 .attachment(base58StringAttachment)
                 .assetId(assetId)
                 .transfers(transfers)
@@ -93,14 +93,16 @@ public class MassTransferTransactionTest {
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
-                () -> assertThat(alice.getBalance(assetId)).isEqualTo(senderBalanceAfterMassTransfer),
                 () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat(account.getBalance(assetId)).isEqualTo(senderBalanceAfterMassTransfer),
                 () -> assertThat(tx.attachment()).isEqualTo(base58StringAttachment),
-                () -> assertThat(tx.sender()).isEqualTo(alice.publicKey()),
+                () -> assertThat(tx.assetId()).isEqualTo(assetId),
+                () -> assertThat(tx.fee().assetId()).isEqualTo(WAVES),
+                () -> assertThat(tx.fee().value()).isEqualTo(transactionCommission),
+                () -> assertThat(tx.sender()).isEqualTo(account.publicKey()),
                 () -> assertThat(tx.transfers().size()).isEqualTo(numberOfAccounts),
-                () -> tx.transfers().forEach(transfer -> assertThat(transfer.amount()).isEqualTo(amount)),
                 () -> assertThat(tx.type()).isEqualTo(11),
-                () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(transactionCommission),
+                () -> tx.transfers().forEach(transfer -> assertThat(transfer.amount()).isEqualTo(amount)),
                 () -> accountsList.forEach(
                         account -> assertThat(
                                 balancesAfterTransaction.get(account.address())).isEqualTo(account.getBalance(assetId)
@@ -110,7 +112,7 @@ public class MassTransferTransactionTest {
     }
 
     private long calculateSenderBalanceAfterTransfer(AssetId assetId, long amount, int numberOfAccounts) {
-        long senderBalance = alice.getBalance(assetId);
+        long senderBalance = account.getBalance(assetId);
         long numForRoundCheck = 100000;
         long additionalFeeForMassTransfer = FEE_FOR_MASS_TRANSFER * numberOfAccounts;
         if (additionalFeeForMassTransfer % numForRoundCheck != 0) { // The fee value is rounded up to three decimals.

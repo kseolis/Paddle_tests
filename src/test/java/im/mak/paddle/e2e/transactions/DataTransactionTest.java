@@ -1,6 +1,7 @@
 package im.mak.paddle.e2e.transactions;
 
 import com.wavesplatform.transactions.DataTransaction;
+import com.wavesplatform.transactions.common.AssetId;
 import com.wavesplatform.transactions.common.Base64String;
 import com.wavesplatform.transactions.data.*;
 import com.wavesplatform.wavesj.info.TransactionInfo;
@@ -23,7 +24,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class DataTransactionTest {
 
-    private static Account alice;
+    private static Account account;
 
     private final Base64String base64String = new Base64String(randomNumAndLetterString(6));
     private final BinaryEntry binaryEntry = BinaryEntry.as("BinEntry", base64String);
@@ -33,7 +34,7 @@ public class DataTransactionTest {
 
     @BeforeAll
     static void before() {
-        alice = new Account(DEFAULT_FAUCET);
+        account = new Account(DEFAULT_FAUCET);
     }
 
     @Test
@@ -67,22 +68,22 @@ public class DataTransactionTest {
     }
 
     private void dataEntryTransaction(DataEntry... dataEntries) {
-        long balanceAfterTransaction = alice.getWavesBalance() - MIN_FEE;
+        long balanceAfterTransaction = account.getWavesBalance() - MIN_FEE;
         List<DataEntry> dataEntriesAsList = Arrays.asList(dataEntries);
         Map<String, EntryType> entryMap = new HashMap<>();
 
         dataEntriesAsList.forEach(a -> entryMap.put(a.key(), a.type()));
 
-        DataTransaction tx = alice.writeData(i -> i.data(dataEntries)).tx();
+        DataTransaction tx = account.writeData(i -> i.data(dataEntries)).tx();
 
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
                 () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat(alice.getWavesBalance()).isEqualTo(balanceAfterTransaction),
+                () -> assertThat(account.getWavesBalance()).isEqualTo(balanceAfterTransaction),
                 () -> assertThat(tx.fee().value()).isEqualTo(MIN_FEE),
-                () -> assertThat(tx.fee().value()).isEqualTo(MIN_FEE),
-                () -> assertThat(tx.sender()).isEqualTo(alice.publicKey()),
+                () -> assertThat(tx.fee().assetId()).isEqualTo(AssetId.WAVES),
+                () -> assertThat(tx.sender()).isEqualTo(account.publicKey()),
                 () -> assertThat(tx.type()).isEqualTo(12),
                 () -> tx.data().forEach(
                         data -> assertThat(entryMap.get(data.key())).isEqualTo(data.type())

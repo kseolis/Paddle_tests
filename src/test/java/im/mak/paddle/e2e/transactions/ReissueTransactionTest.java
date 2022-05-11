@@ -71,6 +71,7 @@ public class ReissueTransactionTest {
                 () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
                 () -> assertThat(account.getAssetBalance(assetId)).isEqualTo(balanceAfterReissue),
                 () -> assertThat(account.getWavesBalance()).isEqualTo(accountWavesBalance - fee),
+                () -> assertThat(tx.fee().assetId()).isEqualTo(AssetId.WAVES),
                 () -> assertThat(tx.fee().value()).isEqualTo(fee),
                 () -> assertThat(tx.sender()).isEqualTo(account.publicKey()),
                 () -> assertThat(tx.reissuable()).isEqualTo(true),

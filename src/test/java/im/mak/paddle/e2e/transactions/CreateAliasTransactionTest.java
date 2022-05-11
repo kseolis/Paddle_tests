@@ -1,6 +1,7 @@
 package im.mak.paddle.e2e.transactions;
 
 import com.wavesplatform.transactions.CreateAliasTransaction;
+import com.wavesplatform.transactions.common.AssetId;
 import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
 import org.junit.jupiter.api.BeforeAll;
@@ -16,42 +17,43 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class CreateAliasTransactionTest {
-    private static Account alice;
-    private static String aliceAlias;
+    private static Account account;
+    private static String accountAlias;
 
     @BeforeAll
     static void before() {
-        alice = new Account(DEFAULT_FAUCET);
+        account = new Account(DEFAULT_FAUCET);
     }
 
     @Test
     @DisplayName("test create minimally short alias")
     void createMinShortAlias() {
-        aliceAlias = randomNumAndLetterString(4);
-        createAliasTransaction(aliceAlias);
+        accountAlias = randomNumAndLetterString(4);
+        createAliasTransaction(accountAlias);
     }
 
     @Test
     @DisplayName("test create maximum long alias")
     void createMaxLongAlias() {
-        aliceAlias = randomNumAndLetterString(30);
-        createAliasTransaction(aliceAlias);
+        accountAlias = randomNumAndLetterString(30);
+        createAliasTransaction(accountAlias);
     }
 
     private void createAliasTransaction(String alias) {
-        long aliceWavesBalance = alice.getWavesBalance();
-        long balanceAfterCreateAlias = aliceWavesBalance - MIN_FEE;
-        CreateAliasTransaction tx = alice.createAlias(alias).tx();
+        long accountWavesBalance = account.getWavesBalance();
+        long balanceAfterCreateAlias = accountWavesBalance - MIN_FEE;
+        CreateAliasTransaction tx = account.createAlias(alias).tx();
 
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
-                () -> assertThat(alice.getWavesBalance()).isEqualTo(balanceAfterCreateAlias),
                 () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat(account.getWavesBalance()).isEqualTo(balanceAfterCreateAlias),
+                () -> assertThat(tx.sender()).isEqualTo(account.publicKey()),
                 () -> assertThat(tx.alias().name()).isEqualTo(alias),
-                () -> assertThat(tx.sender()).isEqualTo(alice.publicKey()),
-                () -> assertThat(tx.type()).isEqualTo(10),
-                () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(MIN_FEE)
+                () -> assertThat(tx.fee().assetId()).isEqualTo(AssetId.WAVES),
+                () -> assertThat(tx.fee().value()).isEqualTo(MIN_FEE),
+                () -> assertThat(tx.type()).isEqualTo(10)
         );
     }
 }

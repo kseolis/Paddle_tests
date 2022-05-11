@@ -1,7 +1,6 @@
 package im.mak.paddle.e2e.transactions;
 
 import com.wavesplatform.transactions.SetAssetScriptTransaction;
-import com.wavesplatform.transactions.TransferTransaction;
 import com.wavesplatform.transactions.common.AssetId;
 import com.wavesplatform.transactions.common.Base64String;
 import com.wavesplatform.wavesj.info.TransactionInfo;
@@ -13,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
 import static im.mak.paddle.util.Constants.*;
+import static im.mak.paddle.util.ScriptUtil.fromFile;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
@@ -30,9 +30,9 @@ public class SetAssetScriptTransactionTest {
     }
 
     @Test
-    @DisplayName("set script to disable transactions")
+    @DisplayName("set asset script 'ban on updating key values'")
     void setAssetScriptTransactionTest() {
-        Base64String script = node().compileScript("{-# SCRIPT_TYPE ASSET #-} false").script();
+        Base64String script = node().compileScript(fromFile("/banOnUpdatingKeyValues.ride")).script();
         setAssetScriptTransaction(alice, script, issuedAssetId);
     }
 
@@ -46,7 +46,8 @@ public class SetAssetScriptTransactionTest {
         assertAll(
                 () -> assertThat(setAssetScriptTxInfo.applicationStatus()).isEqualTo(SUCCEEDED),
                 () -> assertThat(setAssetScriptTx.fee().value()).isEqualTo(ONE_WAVES),
-                () -> assertThat(setAssetScriptTx.sender()).isEqualTo(alice.publicKey()),
+                () -> assertThat(setAssetScriptTx.fee().value()).isEqualTo(ONE_WAVES),
+                () -> assertThat(setAssetScriptTx.sender()).isEqualTo(account.publicKey()),
                 () -> assertThat(setAssetScriptTx.script()).isEqualTo(script),
                 () -> assertThat(setAssetScriptTx.assetId()).isEqualTo(assetId),
                 () -> assertThat(setAssetScriptTx.type()).isEqualTo(15),

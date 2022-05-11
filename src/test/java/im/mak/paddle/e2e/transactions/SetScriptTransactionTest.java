@@ -1,6 +1,7 @@
 package im.mak.paddle.e2e.transactions;
 
 import com.wavesplatform.transactions.SetScriptTransaction;
+import com.wavesplatform.transactions.common.AssetId;
 import com.wavesplatform.transactions.common.Base64String;
 import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
@@ -80,6 +81,7 @@ public class SetScriptTransactionTest {
                 () -> assertThat(account.getWavesBalance()).isEqualTo(balanceAfterTransaction),
                 () -> assertThat(tx.sender()).isEqualTo(account.publicKey()),
                 () -> assertThat(tx.script()).isEqualTo(script),
+                () -> assertThat(tx.fee().assetId()).isEqualTo(AssetId.WAVES),
                 () -> assertThat(tx.fee().value()).isEqualTo(fee),
                 () -> assertThat(tx.type()).isEqualTo(13)
         );

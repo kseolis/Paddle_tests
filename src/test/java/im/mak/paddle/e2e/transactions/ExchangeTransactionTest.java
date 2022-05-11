@@ -151,6 +151,9 @@ public class ExchangeTransactionTest {
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
+                () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat(tx.fee().value()).isEqualTo(fee),
+                () -> assertThat(tx.fee().assetId()).isEqualTo(AssetId.WAVES),
                 () -> assertThat(tx.assetPair()).isEqualTo(buy.assetPair()),
                 () -> assertThat(tx.sender()).isEqualTo(from.publicKey()),
                 () -> assertThat(tx.orders()).isEqualTo(List.of(buy, sell)),
@@ -160,9 +163,7 @@ public class ExchangeTransactionTest {
                 () -> assertThat(from.getBalance(amountAssetId)).isEqualTo(buyerBalanceAfterTransactionAmountAssetId),
                 () -> assertThat(to.getBalance(amountAssetId)).isEqualTo(sellerBalanceAfterTransactionAmountAssetId),
                 () -> assertThat(from.getBalance(priceAssetId)).isEqualTo(buyerBalanceAfterTransactionPriceAsset),
-                () -> assertThat(to.getBalance(priceAssetId)).isEqualTo(sellerBalanceAfterTransactionPriceAsset),
-                () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(fee)
+                () -> assertThat(to.getBalance(priceAssetId)).isEqualTo(sellerBalanceAfterTransactionPriceAsset)
         );
     }
 

@@ -93,6 +93,7 @@ public class SponsorFeeTransactionTest {
 
                 () -> assertThat(transferTxInfo.applicationStatus()).isEqualTo(SUCCEEDED),
                 () -> assertThat(transferTx.sender()).isEqualTo(sender.publicKey()),
+                () -> assertThat(transferTx.fee().assetId()).isEqualTo(assetId),
                 () -> assertThat(transferTx.fee().value()).isEqualTo(fee),
 
                 () -> assertThat(assetOwner.getBalance(assetId)).isEqualTo(assetOwnerAssetBalanceAfterTransaction),

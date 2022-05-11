@@ -1,6 +1,7 @@
 package im.mak.paddle.e2e.transactions;
 
 import com.wavesplatform.transactions.LeaseCancelTransaction;
+import com.wavesplatform.transactions.common.AssetId;
 import com.wavesplatform.transactions.common.Id;
 import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
@@ -57,12 +58,13 @@ public class LeaseCancelTransactionTest {
         TransactionInfo txInfo = node().getTransactionInfo(cancelTransaction.id());
 
         assertAll(
+                () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat(cancelTransaction.fee().assetId()).isEqualTo(AssetId.WAVES),
+                () -> assertThat(cancelTransaction.fee().value()).isEqualTo(MIN_FEE),
+                () -> assertThat(cancelTransaction.sender()).isEqualTo(from.publicKey()),
                 () -> assertThat(from.getWavesBalanceDetails().effective()).isEqualTo(balanceAfterCancelLeaseAtSender),
                 () -> assertThat(to.getWavesBalanceDetails().effective()).isEqualTo(balanceAfterCancelLeaseAtRecipient),
-                () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat(cancelTransaction.sender()).isEqualTo(from.publicKey()),
-                () -> assertThat(cancelTransaction.type()).isEqualTo(9),
-                () -> assertThat((Object) txInfo.tx().fee().value()).isEqualTo(MIN_FEE)
+                () -> assertThat(cancelTransaction.type()).isEqualTo(9)
         );
     }
 }

@@ -1,6 +1,7 @@
 package im.mak.paddle.e2e.transactions;
 
 import com.wavesplatform.transactions.LeaseTransaction;
+import com.wavesplatform.transactions.common.AssetId;
 import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
 import org.junit.jupiter.api.BeforeAll;
@@ -54,12 +55,13 @@ public class LeaseTransactionTest {
 
         assertAll(
                 () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat(from.getWavesBalanceDetails().effective()).isEqualTo(wavesBalanceAfterSendLeaseTransaction),
-                () -> assertThat(to.getWavesBalanceDetails().effective()).isEqualTo(wavesBalanceAfterReceivingLease),
                 () -> assertThat(tx.sender()).isEqualTo(from.publicKey()),
                 () -> assertThat(tx.amount()).isEqualTo(amount),
                 () -> assertThat(tx.recipient()).isEqualTo(to.address()),
+                () -> assertThat(tx.fee().assetId()).isEqualTo(AssetId.WAVES),
                 () -> assertThat(tx.fee().value()).isEqualTo(MIN_FEE),
+                () -> assertThat(from.getWavesBalanceDetails().effective()).isEqualTo(wavesBalanceAfterSendLeaseTransaction),
+                () -> assertThat(to.getWavesBalanceDetails().effective()).isEqualTo(wavesBalanceAfterReceivingLease),
                 () -> assertThat(tx.type()).isEqualTo(8)
         );
     }

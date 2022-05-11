@@ -2,6 +2,7 @@ package im.mak.paddle.e2e.transactions;
 
 import com.wavesplatform.transactions.InvokeScriptTransaction;
 import com.wavesplatform.transactions.common.Amount;
+import com.wavesplatform.transactions.common.AssetId;
 import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
 import im.mak.paddle.dapp.DAppCall;
@@ -44,12 +45,13 @@ public class InvokeScriptTransactionTest {
 
         assertAll(
                 () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat(callingAcc.getWavesBalance()).isEqualTo(balanceAfterTransaction),
                 () -> assertThat(tx.dApp()).isEqualTo(dAppCall.getDApp()),
                 () -> assertThat(tx.function()).isEqualTo(dAppCall.getFunction()),
                 () -> assertThat(tx.sender()).isEqualTo(callingAcc.publicKey()),
-                () -> assertThat(tx.type()).isEqualTo(16),
+                () -> assertThat(tx.fee().assetId()).isEqualTo(AssetId.WAVES),
                 () -> assertThat(tx.fee().value()).isEqualTo(minFee),
-                () -> assertThat(callingAcc.getWavesBalance()).isEqualTo(balanceAfterTransaction)
+                () -> assertThat(tx.type()).isEqualTo(16)
         );
     }
 }

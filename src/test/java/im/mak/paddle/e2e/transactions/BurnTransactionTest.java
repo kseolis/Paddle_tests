@@ -29,7 +29,9 @@ public class BurnTransactionTest {
                 () -> account.createAlias(randomNumAndLetterString(15)),
                 () -> issuedAsset = account.issue(i -> i.name("Test_Asset").quantity(1000)).tx().assetId(),
                 () -> issuedSmartAssetId =
-                        account.issue(i -> i.name("T_Smart_Asset").quantity(1000).script("2 * 2 == 4")).tx().assetId()
+                        account.issue(i -> i.name("T_Smart_Asset")
+                                .quantity(1000)
+                                .script("2 * 2 == 4")).tx().assetId()
         );
     }
 
