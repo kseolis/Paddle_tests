@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
+import static com.wavesplatform.transactions.BurnTransaction.LATEST_VERSION;
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
 import static im.mak.paddle.helpers.Randomizer.getRandomInt;
@@ -23,7 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class ExchangeTransactionTest {
     private static final byte decimals = 8;
-    private static final byte exchangeVersion = 3;
     private static final byte orderV3 = 3;
     private static final byte orderV4 = 4;
 
@@ -70,23 +70,27 @@ public class ExchangeTransactionTest {
         long sumSellerTokens = bob.getWavesBalance() - MIN_FEE_FOR_EXCHANGE;
         long offerForToken = getRandomInt(1, 50);
 
-        Amount amountsTokensForExchange = Amount.of(sumSellerTokens, AssetId.WAVES);
-        Amount pricePerToken = Amount.of(offerForToken, testAssetId);
+        for (int v = 1; v < LATEST_VERSION; v++) {
+            Amount amountsTokensForExchange = Amount.of(sumSellerTokens, AssetId.WAVES);
+            Amount pricePerToken = Amount.of(offerForToken, testAssetId);
 
-        Order buyerOrder = Order.buy(amountsTokensForExchange, pricePerToken, alice.publicKey()).version(orderV3)
-                .getSignedWith(alice.privateKey());
-        Order sellOrder = Order.sell(amountsTokensForExchange, pricePerToken, alice.publicKey()).version(orderV4)
-                .getSignedWith(bob.privateKey());
+            Order buyerOrder = Order.buy(amountsTokensForExchange, pricePerToken, alice.publicKey()).version(v)
+                    .getSignedWith(alice.privateKey());
+            Order sellOrder = Order.sell(amountsTokensForExchange, pricePerToken, alice.publicKey()).version(v)
+                    .getSignedWith(bob.privateKey());
 
-        exchangeTransaction(
-                alice,
-                bob,
-                buyerOrder,
-                sellOrder,
-                amountsTokensForExchange.value(),
-                pricePerToken.value(),
-                0
-        );
+            exchangeTransaction(
+                    alice,
+                    bob,
+                    buyerOrder,
+                    sellOrder,
+                    amountsTokensForExchange.value(),
+                    pricePerToken.value(),
+                    0,
+                    v
+            );
+            node().faucet().transfer(bob, DEFAULT_FAUCET, AssetId.WAVES);
+        }
     }
 
     @Test
@@ -109,9 +113,11 @@ public class ExchangeTransactionTest {
                 sellOrder,
                 amountsTokensForExchange.value(),
                 pricePerToken.value(),
-                EXTRA_FEE
+                EXTRA_FEE,
+                LATEST_VERSION
         );
     }
+
 
     @Test
     @DisplayName("Exchange transaction two smart assets")
@@ -122,7 +128,7 @@ public class ExchangeTransactionTest {
 
         Order buyerOrder = Order.buy(amountsTokensForExchange, pricePerToken, bob.publicKey()).version(orderV3)
                 .getSignedWith(bob.privateKey());
-        Order sellOrder = Order.sell(amountsTokensForExchange, pricePerToken, bob.publicKey()).version(orderV3)
+        Order sellOrder = Order.sell(amountsTokensForExchange, pricePerToken, bob.publicKey()).version(orderV4)
                 .getSignedWith(cat.privateKey());
 
         exchangeTransaction(
@@ -132,18 +138,20 @@ public class ExchangeTransactionTest {
                 sellOrder,
                 amountsTokensForExchange.value(),
                 pricePerToken.value(),
-                EXTRA_FEE * 2
+                EXTRA_FEE * 2,
+                LATEST_VERSION
         );
     }
 
+
     private void exchangeTransaction
-            (Account from, Account to, Order buy, Order sell, long amount, long price, long extraFee) {
+            (Account from, Account to, Order buy, Order sell, long amount, long price, long extraFee, int version) {
         calculateBalancesAfterTransaction(from, to, buy, amount);
         long fee = MIN_FEE_FOR_EXCHANGE + extraFee;
         ExchangeTransaction tx = ExchangeTransaction
                 .builder(buy, sell, amount, price, MIN_FEE_FOR_EXCHANGE, MIN_FEE_FOR_EXCHANGE)
                 .extraFee(extraFee)
-                .version(exchangeVersion)
+                .version(version)
                 .getSignedWith(from.privateKey());
 
         node().waitForTransaction(node().broadcast(tx).id());
