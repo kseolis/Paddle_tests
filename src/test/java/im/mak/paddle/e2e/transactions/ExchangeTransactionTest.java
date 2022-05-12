@@ -49,7 +49,7 @@ public class ExchangeTransactionTest {
         async(
                 () -> {
                     alice = new Account(DEFAULT_FAUCET);
-                    testAssetId = alice.issue(i -> i.name("Test_Asset").quantity(1000L).decimals(decimals)).tx().assetId();
+                    testAssetId = alice.issue(i -> i.name("Test_Asset").quantity(4000L).decimals(decimals)).tx().assetId();
                 },
                 () -> {
                     bob = new Account(DEFAULT_FAUCET);
@@ -70,7 +70,7 @@ public class ExchangeTransactionTest {
         long sumSellerTokens = bob.getWavesBalance() - MIN_FEE_FOR_EXCHANGE;
         long offerForToken = getRandomInt(1, 50);
 
-        for (int v = 1; v < LATEST_VERSION; v++) {
+        for (int v = 1; v <= LATEST_VERSION; v++) {
             Amount amountsTokensForExchange = Amount.of(sumSellerTokens, AssetId.WAVES);
             Amount pricePerToken = Amount.of(offerForToken, testAssetId);
 
