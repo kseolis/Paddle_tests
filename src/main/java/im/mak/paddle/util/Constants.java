@@ -1,8 +1,8 @@
 package im.mak.paddle.util;
 
 public class Constants {
-    public static final byte ASSET_QUANTITY_MINIMUM = 1;
-    public static final long ASSET_QUANTITY_MAXIMUM = 9_223_372_036_854_775_807L;
+    public static final byte ASSET_QUANTITY_MIN = 1;
+    public static final long ASSET_QUANTITY_MAX = 9_223_372_036_854_775_807L;
 
     public static final long MIN_FEE = 100_000L;
     public static final long EXTRA_FEE = 400_000L;

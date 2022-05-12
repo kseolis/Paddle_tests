@@ -37,26 +37,26 @@ public class ReissueTransactionTest {
     @Test
     @DisplayName("reissue minimum quantity asset")
     void reissueMinimumAssets() {
-        reissueTransaction(ASSET_QUANTITY_MINIMUM, issuedAssetId, MIN_FEE);
+        reissueTransaction(ASSET_QUANTITY_MIN, issuedAssetId, MIN_FEE);
     }
 
     @Test
     @DisplayName("reissue maximum quantity asset")
     void reissueAlmostMaximumAssets() {
-        long reissueSum = ASSET_QUANTITY_MAXIMUM - account.getAssetBalance(issuedAssetId) - ASSET_QUANTITY_MINIMUM;
+        long reissueSum = ASSET_QUANTITY_MAX - account.getAssetBalance(issuedAssetId) - ASSET_QUANTITY_MIN;
         reissueTransaction(reissueSum, issuedAssetId, MIN_FEE);
     }
 
     @Test
     @DisplayName("reissue minimum quantity smart asset")
     void reissueMinimumSmartAssets() {
-        reissueTransaction(ASSET_QUANTITY_MINIMUM, issuedSmartAssetId, feeForSmartAssetReissue);
+        reissueTransaction(ASSET_QUANTITY_MIN, issuedSmartAssetId, feeForSmartAssetReissue);
     }
 
     @Test
     @DisplayName("reissue maximum quantity smart asset")
     void reissueAlmostMaximumSmartAssets() {
-        long reissueSum = ASSET_QUANTITY_MAXIMUM - account.getAssetBalance(issuedSmartAssetId) - ASSET_QUANTITY_MINIMUM;
+        long reissueSum = ASSET_QUANTITY_MAX - account.getAssetBalance(issuedSmartAssetId) - ASSET_QUANTITY_MIN;
         reissueTransaction(reissueSum, issuedSmartAssetId, feeForSmartAssetReissue);
     }
 

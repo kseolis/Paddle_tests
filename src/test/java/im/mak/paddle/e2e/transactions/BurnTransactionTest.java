@@ -38,13 +38,13 @@ public class BurnTransactionTest {
     @Test
     @DisplayName("burn minimum quantity asset")
     void burnMinimumAssets() {
-        burnTransaction(ASSET_QUANTITY_MINIMUM, issuedAsset, MIN_FEE);
+        burnTransaction(ASSET_QUANTITY_MIN, issuedAsset, MIN_FEE);
     }
 
     @Test
     @DisplayName("burn almost maximum quantity asset")
     void burnMaximumAssets() {
-        long burnSum = account.getAssetBalance(issuedAsset) - ASSET_QUANTITY_MINIMUM;
+        long burnSum = account.getAssetBalance(issuedAsset) - ASSET_QUANTITY_MIN;
         burnTransaction(burnSum, issuedAsset, MIN_FEE);
     }
 
@@ -52,14 +52,14 @@ public class BurnTransactionTest {
     @DisplayName("burn minimum quantity smart asset")
     void burnMinimumSmartAssets() {
         long fee = MIN_FEE + EXTRA_FEE;
-        burnTransaction(ASSET_QUANTITY_MINIMUM, issuedSmartAssetId, fee);
+        burnTransaction(ASSET_QUANTITY_MIN, issuedSmartAssetId, fee);
     }
 
     @Test
     @DisplayName("burn almost maximum quantity smart asset")
     void burnMaximumSmartAssets() {
         long fee = MIN_FEE + EXTRA_FEE;
-        long burnSum = account.getAssetBalance(issuedAsset) - ASSET_QUANTITY_MINIMUM;
+        long burnSum = account.getAssetBalance(issuedAsset) - ASSET_QUANTITY_MIN;
         burnTransaction(burnSum, issuedSmartAssetId, fee);
     }
 
