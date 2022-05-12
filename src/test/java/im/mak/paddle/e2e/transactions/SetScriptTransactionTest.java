@@ -78,9 +78,6 @@ public class SetScriptTransactionTest {
     private void setScriptTransaction(Account account, Base64String script, long moreFee, int version) {
         long fee = MIN_FEE_FOR_SET_SCRIPT + moreFee + EXTRA_FEE_FOR_SET_SCRIPT;
         long balanceAfterTransaction = account.getWavesBalance() - fee;
-/*
-        SetScriptTransaction tx = account.setScript(script, i -> i.moreFee(moreFee)).tx();
-*/
 
         SetScriptTransaction tx = SetScriptTransaction
                 .builder(script)
