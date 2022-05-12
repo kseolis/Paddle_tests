@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.*;
 
+import static com.wavesplatform.transactions.MassTransferTransaction.LATEST_VERSION;
 import static com.wavesplatform.transactions.common.AssetId.WAVES;
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
@@ -49,32 +50,40 @@ public class MassTransferTransactionTest {
     @Test
     @DisplayName("transfer in a 'mass transfer transaction' for maximum Accounts")
     void massTransferForMaximumCountAccounts() {
-        int amount = getRandomInt(MIN_TRANSFER_SUM, 100);
-        massTransferTransaction(WAVES, amount, maximumAccountsForMassTransfer);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            int amount = getRandomInt(MIN_TRANSFER_SUM, 100);
+            massTransferTransaction(WAVES, amount, maximumAccountsForMassTransfer, v);
+        }
     }
 
     @Test
     @DisplayName("transfer in a 'mass transfer transaction' for minimum Accounts")
     void massTransferForMinimumCountAccounts() {
-        int amount = getRandomInt(MIN_TRANSFER_SUM, 10000);
-        massTransferTransaction(WAVES, amount, minimumAccountsForMassTransfer);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            int amount = getRandomInt(MIN_TRANSFER_SUM, 100);
+            massTransferTransaction(WAVES, amount, minimumAccountsForMassTransfer, v);
+        }
     }
 
     @Test
     @DisplayName("transfer in a 'mass transfer transaction' issued asset for maximum Accounts")
     void massTransferForMaximumAccountsForIssueAsset() {
-        int amount = getRandomInt(MIN_TRANSFER_SUM, 100);
-        massTransferTransaction(issuedAsset, amount, maximumAccountsForMassTransfer);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            int amount = getRandomInt(MIN_TRANSFER_SUM, 100);
+            massTransferTransaction(issuedAsset, amount, maximumAccountsForMassTransfer, v);
+        }
     }
 
     @Test
     @DisplayName("transfer in a 'mass transfer transaction' issued asset for minimum Accounts")
     void massTransferForMinimumAccountsForIssueAsset() {
-        int amount = getRandomInt(MIN_TRANSFER_SUM, 10000);
-        massTransferTransaction(issuedAsset, amount, minimumAccountsForMassTransfer);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            int amount = getRandomInt(MIN_TRANSFER_SUM, 100);
+            massTransferTransaction(issuedAsset, amount, minimumAccountsForMassTransfer, v);
+        }
     }
 
-    private void massTransferTransaction(AssetId assetId, long amount, List<Account> accountsList) {
+    private void massTransferTransaction(AssetId assetId, long amount, List<Account> accountsList, int version) {
         List<Transfer> transfers = new ArrayList<>();
         Map<Address, Long> balancesAfterTransaction = new HashMap<>();
 
@@ -85,11 +94,15 @@ public class MassTransferTransactionTest {
 
         long senderBalanceAfterMassTransfer = calculateSenderBalanceAfterTransfer(assetId, amount, numberOfAccounts);
 
-        MassTransferTransaction tx = account.massTransfer(i -> i
-                .attachment(base58StringAttachment)
+        MassTransferTransaction tx = MassTransferTransaction
+                .builder(transfers)
                 .assetId(assetId)
-                .transfers(transfers)
-        ).tx();
+                .attachment(base58StringAttachment)
+                .version(version)
+                .getSignedWith(account.privateKey());
+
+        node().waitForTransaction(node().broadcast(tx).id());
+
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
