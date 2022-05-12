@@ -124,10 +124,6 @@ public class TransferTransactionTest {
         long recipientBalanceAfterTransaction = to.getBalance(asset) + amount.value();
         var transferTo = addressOrAlias.equals(ADDRESS) ? to.address() : to.getAliases().get(0);
 
-/*        TransferTransaction tx = from.transfer(transferTo, amount,
-                i -> i.attachment(base58StringAttachment)
-        ).tx();*/
-
         TransferTransaction tx = TransferTransaction.builder(transferTo, amount)
                 .attachment(base58StringAttachment)
                 .version(version)
