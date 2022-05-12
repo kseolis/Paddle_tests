@@ -15,6 +15,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.wavesplatform.transactions.DataTransaction.LATEST_VERSION;
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
 import static im.mak.paddle.helpers.Randomizer.randomNumAndLetterString;
@@ -40,41 +41,55 @@ public class DataTransactionTest {
     @Test
     @DisplayName("transaction of all data types on dataTransaction")
     void allTypesDataTransactionTest() {
-        dataEntryTransaction(binaryEntry, booleanEntry, integerEntry, stringEntry);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            dataEntryTransaction(v, binaryEntry, booleanEntry, integerEntry, stringEntry);
+        }
     }
 
     @Test
     @DisplayName("transaction integer dataTransaction")
     void intTypeDataTransactionTest() {
-        dataEntryTransaction(integerEntry);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            dataEntryTransaction(v, integerEntry);
+        }
     }
 
     @Test
     @DisplayName("transaction string dataTransaction")
     void stringTypeDataTransactionTest() {
-        dataEntryTransaction(stringEntry);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            dataEntryTransaction(v, stringEntry);
+        }
     }
 
     @Test
     @DisplayName("transaction binary dataTransaction")
     void binaryTypeDataTransactionTest() {
-        dataEntryTransaction(binaryEntry);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            dataEntryTransaction(v, binaryEntry);
+        }
     }
 
     @Test
     @DisplayName("transaction boolean dataTransaction")
     void booleanTypeDataTransactionTest() {
-        dataEntryTransaction(booleanEntry);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            dataEntryTransaction(v, booleanEntry);
+        }
     }
 
-    private void dataEntryTransaction(DataEntry... dataEntries) {
+    private void dataEntryTransaction(int version, DataEntry... dataEntries) {
         long balanceAfterTransaction = account.getWavesBalance() - MIN_FEE;
         List<DataEntry> dataEntriesAsList = Arrays.asList(dataEntries);
         Map<String, EntryType> entryMap = new HashMap<>();
 
         dataEntriesAsList.forEach(a -> entryMap.put(a.key(), a.type()));
 
-        DataTransaction tx = account.writeData(i -> i.data(dataEntries)).tx();
+        DataTransaction tx = DataTransaction
+                .builder(dataEntries)
+                .version(version)
+                .getSignedWith(account.privateKey());
+        node().waitForTransaction(node().broadcast(tx).id());
 
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
