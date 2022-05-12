@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static com.wavesplatform.transactions.LeaseTransaction.LATEST_VERSION;
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
 import static im.mak.paddle.util.Async.async;
@@ -30,27 +31,40 @@ public class LeaseTransactionTest {
     @Test
     @DisplayName("Minimum lease sum transaction")
     void leaseMinimumWavesAssets() {
-        leaseTransaction(MIN_TRANSFER_SUM, bob, alice);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            leaseTransaction(MIN_TRANSFER_SUM, bob, alice, v);
+        }
     }
 
     @Test
     @DisplayName("lease asset transaction 1 WAVES")
     void leaseOneWavesAssets() {
-        leaseTransaction(ONE_WAVES, bob, alice);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            leaseTransaction(ONE_WAVES, bob, alice, v);
+        }
     }
 
     @Test
     @DisplayName("Maximum lease sum transaction")
     void leaseMaximumAssets() {
         long aliceBalance = alice.getWavesBalance() - MIN_FEE;
-        leaseTransaction(aliceBalance, alice, bob);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            leaseTransaction(aliceBalance, alice, bob, v);
+            node().faucet().transfer(alice, DEFAULT_FAUCET, AssetId.WAVES);
+        }
     }
 
-    private void leaseTransaction(long amount, Account from, Account to) {
+    private void leaseTransaction(long amount, Account from, Account to, int version) {
         long wavesBalanceAfterSendLeaseTransaction = from.getWavesBalanceDetails().effective() - MIN_FEE - amount;
         long wavesBalanceAfterReceivingLease = to.getWavesBalanceDetails().effective() + amount;
 
-        LeaseTransaction tx = from.lease(to, amount).tx();
+        LeaseTransaction tx = LeaseTransaction
+                .builder(to.address(), amount)
+                .version(version)
+                .getSignedWith(from.privateKey());
+
+        node().waitForTransaction(node().broadcast(tx).id());
+
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
