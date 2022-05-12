@@ -11,6 +11,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static com.wavesplatform.transactions.TransferTransaction.LATEST_VERSION;
+import static com.wavesplatform.transactions.common.AssetId.WAVES;
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
 import static im.mak.paddle.helpers.Randomizer.randomNumAndLetterString;
@@ -39,7 +41,7 @@ public class TransferTransactionTest {
                 () -> {
                     alice = new Account(DEFAULT_FAUCET);
                     alice.createAlias(randomNumAndLetterString(15));
-                    issuedAssetId = alice.issue(i -> i.name("Test_Asset").quantity(1000_00000000L)).tx().assetId();
+                    issuedAssetId = alice.issue(i -> i.name("Test_Asset").quantity(1000).decimals(8)).tx().assetId();
                     aliceBalance = alice.getWavesBalance();
                 },
                 () -> {
@@ -61,34 +63,41 @@ public class TransferTransactionTest {
     @Test
     @DisplayName("min transfer issued asset on address")
     void transferTransactionIssuedAssetByAddressTest() {
-        transferTransaction(Amount.of(MIN_TRANSFER_SUM, issuedAssetId), alice, bob, ADDRESS, MIN_FEE);
+        Amount amount = Amount.of(MIN_TRANSFER_SUM, issuedAssetId);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            transferTransaction(amount, alice, bob, ADDRESS, MIN_FEE, v);
+        }
     }
 
     @Test
     @DisplayName("min transfer WAVES on alias")
     void transferTransactionWavesByAliasTest() {
-        transferTransaction(Amount.of(MIN_TRANSFER_SUM, AssetId.WAVES), alice, bob, ALIAS, MIN_FEE);
+        Amount amount = Amount.of(MIN_TRANSFER_SUM, WAVES);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            transferTransaction(amount, alice, bob, ALIAS, MIN_FEE, v);
+        }
     }
 
     @Test
     @DisplayName("transfer all WAVES on address")
     void transferTransactionWavesByAddressTest() {
-        Amount amount = Amount.of(aliceBalance - MIN_FEE, AssetId.WAVES);
-        transferTransaction(amount, alice, bob, ADDRESS, MIN_FEE);
+        node().faucet().transfer(alice, DEFAULT_FAUCET, WAVES);
+        Amount amount = Amount.of(aliceBalance - MIN_FEE, WAVES);
+        transferTransaction(amount, alice, bob, ADDRESS, MIN_FEE, 1);
     }
 
     @Test
     @DisplayName("transfer all issued asset on alias")
     void transferTransactionIssuedAssetByAliasTest() {
         Amount amount = Amount.of(alice.getBalance(issuedAssetId), issuedAssetId);
-        transferTransaction(amount, alice, bob, ALIAS, MIN_FEE);
+        transferTransaction(amount, alice, bob, ALIAS, MIN_FEE, 3);
     }
 
     @Test
     @DisplayName("transfer all WAVES on alias")
     void transferTransactionAllWavesByAliasTest() {
-        Amount amount = Amount.of(bobBalance - MIN_FEE, AssetId.WAVES);
-        transferTransaction(amount, bob, alice, ALIAS, MIN_FEE);
+        Amount amount = Amount.of(bobBalance - MIN_FEE, WAVES);
+        transferTransaction(amount, bob, alice, ALIAS, MIN_FEE, LATEST_VERSION);
     }
 
     @Test
@@ -96,7 +105,7 @@ public class TransferTransactionTest {
     void transferMinSmartAsset() {
         long fee = MIN_FEE + EXTRA_FEE;
         Amount amount = Amount.of(MIN_TRANSFER_SUM, issuedSmartAssetId);
-        transferTransaction(amount, acc, alice, ADDRESS, fee);
+        transferTransaction(amount, acc, alice, ADDRESS, fee, 2);
     }
 
     @Test
@@ -105,19 +114,27 @@ public class TransferTransactionTest {
         long transferSum = acc.getBalance(issuedSmartAssetId) - MIN_TRANSFER_SUM;
         long fee = MIN_FEE + EXTRA_FEE;
         Amount amount = Amount.of(transferSum, issuedSmartAssetId);
-        transferTransaction(amount, acc, alice, ALIAS, fee);
+        transferTransaction(amount, acc, alice, ALIAS, fee, 1);
     }
 
-    private void transferTransaction(Amount amount, Account from, Account to, String addressOrAlias, long fee) {
+    private void transferTransaction
+            (Amount amount, Account from, Account to, String addressOrAlias, long fee, int version) {
         AssetId asset = amount.assetId();
         long senderBalanceAfterTransaction = from.getBalance(asset) - amount.value() - (asset.isWaves() ? MIN_FEE : 0);
         long recipientBalanceAfterTransaction = to.getBalance(asset) + amount.value();
         var transferTo = addressOrAlias.equals(ADDRESS) ? to.address() : to.getAliases().get(0);
 
-        TransferTransaction tx = from.transfer(transferTo, amount,
+/*        TransferTransaction tx = from.transfer(transferTo, amount,
                 i -> i.attachment(base58StringAttachment)
-        ).tx();
+        ).tx();*/
 
+        TransferTransaction tx = TransferTransaction.builder(transferTo, amount)
+                .attachment(base58StringAttachment)
+                .version(version)
+                .sender(from.publicKey())
+                .fee(fee)
+                .getSignedWith(from.privateKey());
+        node().waitForTransaction(node().broadcast(tx).id());
         TransactionInfo transactionInfo = node().getTransactionInfo(tx.id());
 
         aliceBalance = alice.getWavesBalance();
@@ -128,7 +145,7 @@ public class TransferTransactionTest {
                 () -> assertThat(from.getBalance(asset)).isEqualTo(senderBalanceAfterTransaction),
                 () -> assertThat(to.getBalance(asset)).isEqualTo(recipientBalanceAfterTransaction),
                 () -> assertThat(tx.fee().value()).isEqualTo(fee),
-                () -> assertThat(tx.fee().assetId()).isEqualTo(AssetId.WAVES),
+                () -> assertThat(tx.fee().assetId()).isEqualTo(WAVES),
                 () -> assertThat(tx.attachment()).isEqualTo(base58StringAttachment),
                 () -> assertThat(tx.sender()).isEqualTo(from.publicKey()),
                 () -> assertThat(tx.amount()).isEqualTo(amount),
