@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static com.wavesplatform.transactions.SetScriptTransaction.LATEST_VERSION;
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
 import static im.mak.paddle.util.Async.async;
@@ -37,42 +38,56 @@ public class SetScriptTransactionTest {
     @Test
     @DisplayName("set script transaction Account STDLIB V3")
     void setLibScriptTransaction() {
-        Base64String setScript = node().compileScript("{-# STDLIB_VERSION 3 #-}\n" +
-                "{-# SCRIPT_TYPE ACCOUNT #-}\n" +
-                "{-# CONTENT_TYPE LIBRARY #-}").script();
-        setScriptTransaction(stan, setScript, 0);
+            Base64String setScript = node().compileScript("{-# STDLIB_VERSION 3 #-}\n" +
+                    "{-# SCRIPT_TYPE ACCOUNT #-}\n" +
+                    "{-# CONTENT_TYPE LIBRARY #-}").script();
+            setScriptTransaction(stan, setScript, 0, LATEST_VERSION);
     }
 
     @Test
     @DisplayName("set script transaction dApp STDLIB V4")
     void setDAppScriptTransaction() {
-        Base64String setScript = node().compileScript("{-# STDLIB_VERSION 4 #-}\n" +
-                "{-# SCRIPT_TYPE ACCOUNT #-}\n" +
-                "{-# CONTENT_TYPE DAPP #-}").script();
-        setScriptTransaction(eric, setScript, 0);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            Base64String setScript = node().compileScript("{-# STDLIB_VERSION 4 #-}\n" +
+                    "{-# SCRIPT_TYPE ACCOUNT #-}\n" +
+                    "{-# CONTENT_TYPE DAPP #-}").script();
+            setScriptTransaction(eric, setScript, 0, v);
+        }
     }
 
     @Test
     @DisplayName("set script transaction SNDLIB V5")
     void setScriptTransaction() {
-        Base64String setScript = node().compileScript("{-# STDLIB_VERSION 5 #-}\n" +
-                "{-# SCRIPT_TYPE ASSET #-} true").script();
-        setScriptTransaction(kenny, setScript, 0);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            Base64String setScript = node().compileScript("{-# STDLIB_VERSION 5 #-}\n" +
+                    "{-# SCRIPT_TYPE ASSET #-} true").script();
+            setScriptTransaction(kenny, setScript, 0, v);
+        }
     }
 
     @Test
     @DisplayName("set 32kb script")
     void set32KbScript() {
-        long minimalValSetScriptFee = 2200000;
-        Base64String setScript = node().compileScript(fromFile("/scriptSize32kb.ride")).script();
-        setScriptTransaction(kyle, setScript, minimalValSetScriptFee);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            long minimalValSetScriptFee = 2200000;
+            Base64String setScript = node().compileScript(fromFile("/scriptSize32kb.ride")).script();
+            setScriptTransaction(kyle, setScript, minimalValSetScriptFee, v);
+        }
     }
 
-    private void setScriptTransaction(Account account, Base64String script, long additionalFee) {
-        long fee = MIN_FEE_FOR_SET_SCRIPT + additionalFee;
-        long balanceAfterTransaction = account.getWavesBalance() - MIN_FEE_FOR_SET_SCRIPT - additionalFee;
+    private void setScriptTransaction(Account account, Base64String script, long moreFee, int version) {
+        long fee = MIN_FEE_FOR_SET_SCRIPT + moreFee + EXTRA_FEE_FOR_SET_SCRIPT;
+        long balanceAfterTransaction = account.getWavesBalance() - fee;
+/*
+        SetScriptTransaction tx = account.setScript(script, i -> i.moreFee(moreFee)).tx();
+*/
 
-        SetScriptTransaction tx = account.setScript(script, i -> i.additionalFee(additionalFee)).tx();
+        SetScriptTransaction tx = SetScriptTransaction
+                .builder(script)
+                .fee(fee)
+                .version(version)
+                .getSignedWith(account.privateKey());
+        node().waitForTransaction(node().broadcast(tx).id());
 
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
