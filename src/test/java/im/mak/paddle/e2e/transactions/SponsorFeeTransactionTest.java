@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static com.wavesplatform.transactions.SponsorFeeTransaction.LATEST_VERSION;
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
 import static im.mak.paddle.helpers.Randomizer.getRandomInt;
@@ -47,25 +48,34 @@ public class SponsorFeeTransactionTest {
     @Test
     @DisplayName("Sponsor transaction with minimal sponsored fee")
     void sponsorMinAssets() {
-        sponsorTransaction(alice, bob, acc, 1, 1, aliceAssetId);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            sponsorTransaction(alice, bob, acc, 1, 1, aliceAssetId, v);
+        }
     }
 
     @Test
     @DisplayName("Sponsor transaction with maximum sponsored fee")
     void sponsorMaxAssets() {
-        long fee = getRandomInt(10, 50);
-        long transferSum = acc.getBalance(bobAssetId) - fee;
-        sponsorTransaction(bob, acc, alice, fee, transferSum, bobAssetId);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            long fee = getRandomInt(10, 50);
+            long transferSum = acc.getBalance(bobAssetId) - fee;
+            sponsorTransaction(bob, acc, alice, fee, transferSum, bobAssetId, v);
+            bob.reissue(500, bobAssetId);
+            bob.transfer(acc, bob.getBalance(bobAssetId) / 2, bobAssetId);
+        }
     }
 
     @Test
     @DisplayName("Cancel sponsored fee")
     void cancelAliceSponsorFee() {
-        transactionCancelSponsorFee(alice, bob, acc, aliceAssetId);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            transactionCancelSponsorFee(alice, bob, acc, aliceAssetId, v);
+        }
     }
 
     private void sponsorTransaction
-            (Account assetOwner, Account sender, Account recipient, long fee, long transferSum, AssetId assetId) {
+            (Account assetOwner, Account sender, Account recipient,
+             long fee, long transferSum, AssetId assetId, int version) {
         long assetOwnerAssetBalanceAfterTransaction = assetOwner.getBalance(assetId) + fee;
         long fromAssetBalanceAfterTransaction = sender.getBalance(assetId) - fee - transferSum;
         long toAssetBalanceAfterTransaction = recipient.getAssetBalance(assetId) + transferSum;
@@ -74,7 +84,7 @@ public class SponsorFeeTransactionTest {
         long fromWavesBalance = sender.getWavesBalance();
         long toWavesBalance = recipient.getWavesBalance();
 
-        SponsorFeeTransaction sponsorTx = SponsorFeeTransaction.builder(assetId, fee)
+        SponsorFeeTransaction sponsorTx = SponsorFeeTransaction.builder(assetId, fee).version(version)
                 .getSignedWith(assetOwner.privateKey());
         node().waitForTransaction(node().broadcast(sponsorTx).id());
         TransactionInfo sponsorTxInfo = node().getTransactionInfo(sponsorTx.id());
@@ -106,8 +116,13 @@ public class SponsorFeeTransactionTest {
         );
     }
 
-    private void transactionCancelSponsorFee(Account assetOwner, Account sender, Account recipient, AssetId assetId) {
-        SponsorFeeTransaction sponsorTx = assetOwner.sponsorFee(assetId, 0).tx();
+    private void transactionCancelSponsorFee
+            (Account assetOwner, Account sender, Account recipient, AssetId assetId, int version) {
+
+        SponsorFeeTransaction sponsorTx = SponsorFeeTransaction.builder(assetId, 0).version(version)
+                .getSignedWith(assetOwner.privateKey());
+        node().waitForTransaction(node().broadcast(sponsorTx).id());
+
         TransactionInfo sponsorTxInfo = node().getTransactionInfo(sponsorTx.id());
 
         try {
