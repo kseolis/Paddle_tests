@@ -9,7 +9,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-
+import static com.wavesplatform.transactions.LeaseCancelTransaction.LATEST_VERSION;
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
 import static im.mak.paddle.util.Async.async;
@@ -38,33 +38,42 @@ public class LeaseCancelTransactionTest {
     @Test
     @DisplayName("cancel lease of the minimum available amount")
     void leaseMinAssets() {
-        Id minLeaseTx = stan.lease(eric, MIN_TRANSFER_SUM).tx().id();
-        cancelLeaseTransaction(stan, eric, minLeaseTx, MIN_TRANSFER_SUM);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            Id minLeaseTx = stan.lease(eric, MIN_TRANSFER_SUM).tx().id();
+            cancelLeaseTransaction(stan, eric, minLeaseTx, MIN_TRANSFER_SUM, v);
+        }
     }
 
     @Test
     @DisplayName("cancel lease of the maximum available amount")
     void leaseMaxAssets() {
-        long leaseSum = kenny.getWavesBalance() - MIN_FEE;
-        Id maxLeaseTx = kenny.lease(kyle, leaseSum).tx().id();
-        cancelLeaseTransaction(kenny, kyle, maxLeaseTx, leaseSum);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            long leaseSum = kenny.getWavesBalance() - MIN_FEE;
+            Id maxLeaseTx = kenny.lease(kyle, leaseSum).tx().id();
+            cancelLeaseTransaction(kenny, kyle, maxLeaseTx, leaseSum, v);
+        }
     }
 
-    private void cancelLeaseTransaction(Account from, Account to, Id index, long leaseSum) {
+    private void cancelLeaseTransaction(Account from, Account to, Id index, long leaseSum, int version) {
         long balanceAfterCancelLeaseAtSender = from.getWavesBalanceDetails().effective() - MIN_FEE + leaseSum;
         long balanceAfterCancelLeaseAtRecipient = to.getWavesBalanceDetails().effective() - leaseSum;
 
-        LeaseCancelTransaction cancelTransaction = from.cancelLease(index).tx();
-        TransactionInfo txInfo = node().getTransactionInfo(cancelTransaction.id());
+        LeaseCancelTransaction tx = LeaseCancelTransaction
+                .builder(index)
+                .version(version)
+                .getSignedWith(from.privateKey());
+
+        node().waitForTransaction(node().broadcast(tx).id());
+        TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
                 () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat(cancelTransaction.fee().assetId()).isEqualTo(AssetId.WAVES),
-                () -> assertThat(cancelTransaction.fee().value()).isEqualTo(MIN_FEE),
-                () -> assertThat(cancelTransaction.sender()).isEqualTo(from.publicKey()),
+                () -> assertThat(tx.fee().assetId()).isEqualTo(AssetId.WAVES),
+                () -> assertThat(tx.fee().value()).isEqualTo(MIN_FEE),
+                () -> assertThat(tx.sender()).isEqualTo(from.publicKey()),
                 () -> assertThat(from.getWavesBalanceDetails().effective()).isEqualTo(balanceAfterCancelLeaseAtSender),
                 () -> assertThat(to.getWavesBalanceDetails().effective()).isEqualTo(balanceAfterCancelLeaseAtRecipient),
-                () -> assertThat(cancelTransaction.type()).isEqualTo(9)
+                () -> assertThat(tx.type()).isEqualTo(9)
         );
     }
 }
