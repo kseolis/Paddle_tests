@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static com.wavesplatform.transactions.CreateAliasTransaction.LATEST_VERSION;
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
 import static im.mak.paddle.helpers.Randomizer.randomNumAndLetterString;
@@ -28,22 +29,31 @@ public class CreateAliasTransactionTest {
     @Test
     @DisplayName("test create minimally short alias")
     void createMinShortAlias() {
-        accountAlias = randomNumAndLetterString(4);
-        createAliasTransaction(accountAlias);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            accountAlias = randomNumAndLetterString(4);
+            createAliasTransaction(accountAlias, v);
+        }
     }
 
     @Test
     @DisplayName("test create maximum long alias")
     void createMaxLongAlias() {
-        accountAlias = randomNumAndLetterString(30);
-        createAliasTransaction(accountAlias);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            accountAlias = randomNumAndLetterString(30);
+            createAliasTransaction(accountAlias, v);
+        }
     }
 
-    private void createAliasTransaction(String alias) {
+    private void createAliasTransaction(String alias, int version) {
         long accountWavesBalance = account.getWavesBalance();
         long balanceAfterCreateAlias = accountWavesBalance - MIN_FEE;
-        CreateAliasTransaction tx = account.createAlias(alias).tx();
 
+        CreateAliasTransaction tx = CreateAliasTransaction
+                .builder(alias)
+                .version(version)
+                .getSignedWith(account.privateKey());
+
+        node().waitForTransaction(node().broadcast(tx).id());
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
