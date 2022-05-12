@@ -1,6 +1,10 @@
 package im.mak.paddle.e2e.transactions;
 
 import com.wavesplatform.transactions.ReissueTransaction;
+
+import static com.wavesplatform.transactions.ReissueTransaction.LATEST_VERSION;
+
+import com.wavesplatform.transactions.common.Amount;
 import com.wavesplatform.transactions.common.AssetId;
 import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
@@ -37,33 +41,52 @@ public class ReissueTransactionTest {
     @Test
     @DisplayName("reissue minimum quantity asset")
     void reissueMinimumAssets() {
-        reissueTransaction(ASSET_QUANTITY_MIN, issuedAssetId, MIN_FEE);
+        Amount amount = Amount.of(ASSET_QUANTITY_MIN, issuedAssetId);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            reissueTransaction(amount, issuedAssetId, MIN_FEE, v);
+        }
     }
 
     @Test
     @DisplayName("reissue maximum quantity asset")
     void reissueAlmostMaximumAssets() {
         long reissueSum = ASSET_QUANTITY_MAX - account.getAssetBalance(issuedAssetId) - ASSET_QUANTITY_MIN;
-        reissueTransaction(reissueSum, issuedAssetId, MIN_FEE);
+        Amount amount = Amount.of(reissueSum, issuedAssetId);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            reissueTransaction(amount, issuedAssetId, MIN_FEE, v);
+            account.burn(reissueSum, issuedAssetId);
+        }
     }
 
     @Test
     @DisplayName("reissue minimum quantity smart asset")
     void reissueMinimumSmartAssets() {
-        reissueTransaction(ASSET_QUANTITY_MIN, issuedSmartAssetId, feeForSmartAssetReissue);
+        Amount amount = Amount.of(ASSET_QUANTITY_MIN, issuedSmartAssetId);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            reissueTransaction(amount, issuedSmartAssetId, feeForSmartAssetReissue, v);
+        }
     }
 
     @Test
     @DisplayName("reissue maximum quantity smart asset")
     void reissueAlmostMaximumSmartAssets() {
-        long reissueSum = ASSET_QUANTITY_MAX - account.getAssetBalance(issuedSmartAssetId) - ASSET_QUANTITY_MIN;
-        reissueTransaction(reissueSum, issuedSmartAssetId, feeForSmartAssetReissue);
+        long reissueSum = ASSET_QUANTITY_MAX - account.getAssetBalance(issuedSmartAssetId);
+        Amount amount = Amount.of(reissueSum, issuedSmartAssetId);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            reissueTransaction(amount, issuedSmartAssetId, feeForSmartAssetReissue, v);
+            account.burn(reissueSum, issuedSmartAssetId);
+        }
     }
 
-    private void reissueTransaction(long amount, AssetId assetId, long fee) {
+    private void reissueTransaction(Amount amount, AssetId assetId, long fee, int version) {
         accountWavesBalance = account.getBalance(AssetId.WAVES);
-        long balanceAfterReissue = account.getBalance(assetId) + amount;
-        ReissueTransaction tx = account.reissue(amount, assetId, i -> i.reissuable(true)).tx();
+        long balanceAfterReissue = account.getBalance(assetId) + amount.value();
+
+        ReissueTransaction tx = ReissueTransaction.builder(amount)
+                .version(version)
+                .fee(fee)
+                .getSignedWith(account.privateKey());
+        node().waitForTransaction(node().broadcast(tx).id());
 
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
@@ -74,9 +97,9 @@ public class ReissueTransactionTest {
                 () -> assertThat(tx.fee().assetId()).isEqualTo(AssetId.WAVES),
                 () -> assertThat(tx.fee().value()).isEqualTo(fee),
                 () -> assertThat(tx.sender()).isEqualTo(account.publicKey()),
-                () -> assertThat(tx.reissuable()).isEqualTo(true),
-                () -> assertThat(tx.amount().value()).isEqualTo(amount),
+                () -> assertThat(tx.amount().value()).isEqualTo(amount.value()),
                 () -> assertThat(tx.amount().assetId()).isEqualTo(assetId),
+                () -> assertThat(tx.version()).isEqualTo(version),
                 () -> assertThat(tx.type()).isEqualTo(5)
         );
     }
