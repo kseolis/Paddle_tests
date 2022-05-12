@@ -39,7 +39,7 @@ public class MassTransferTransactionTest {
                 () -> {
                     base58StringAttachment = new Base58String("attachment");
                     account = new Account(DEFAULT_FAUCET);
-                    issuedAsset = account.issue(i -> i.name("Test_Asset").quantity(9000_00000000L)).tx().assetId();
+                    issuedAsset = account.issue(i -> i.name("Test_Asset").quantity(900_000_000_000L)).tx().assetId();
                 },
                 () -> minimumAccountsForMassTransfer = accountListGenerator(MIN_NUM_ACCOUNT_FOR_MASS_TRANSFER),
                 () -> maximumAccountsForMassTransfer = accountListGenerator(MAX_NUM_ACCOUNT_FOR_MASS_TRANSFER)
@@ -49,7 +49,7 @@ public class MassTransferTransactionTest {
     @Test
     @DisplayName("transfer in a 'mass transfer transaction' for maximum Accounts")
     void massTransferForMaximumCountAccounts() {
-        int amount = getRandomInt(MIN_TRANSFER_SUM, 10000);
+        int amount = getRandomInt(MIN_TRANSFER_SUM, 100);
         massTransferTransaction(WAVES, amount, maximumAccountsForMassTransfer);
     }
 
@@ -63,7 +63,7 @@ public class MassTransferTransactionTest {
     @Test
     @DisplayName("transfer in a 'mass transfer transaction' issued asset for maximum Accounts")
     void massTransferForMaximumAccountsForIssueAsset() {
-        int amount = getRandomInt(MIN_TRANSFER_SUM, 10000);
+        int amount = getRandomInt(MIN_TRANSFER_SUM, 100);
         massTransferTransaction(issuedAsset, amount, maximumAccountsForMassTransfer);
     }
 
