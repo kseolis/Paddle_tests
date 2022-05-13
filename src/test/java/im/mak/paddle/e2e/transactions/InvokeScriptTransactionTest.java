@@ -1,7 +1,6 @@
 package im.mak.paddle.e2e.transactions;
 
 import com.wavesplatform.transactions.InvokeScriptTransaction;
-import com.wavesplatform.transactions.LeaseCancelTransaction;
 import com.wavesplatform.transactions.common.Amount;
 import com.wavesplatform.transactions.common.AssetId;
 import com.wavesplatform.wavesj.info.TransactionInfo;
