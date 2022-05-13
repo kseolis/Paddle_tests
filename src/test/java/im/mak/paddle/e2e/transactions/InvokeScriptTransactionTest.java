@@ -1,6 +1,7 @@
 package im.mak.paddle.e2e.transactions;
 
 import com.wavesplatform.transactions.InvokeScriptTransaction;
+import com.wavesplatform.transactions.LeaseCancelTransaction;
 import com.wavesplatform.transactions.common.Amount;
 import com.wavesplatform.transactions.common.AssetId;
 import com.wavesplatform.wavesj.info.TransactionInfo;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import static com.wavesplatform.transactions.InvokeScriptTransaction.LATEST_VERSION;
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
 import static im.mak.paddle.helpers.Randomizer.getRandomInt;
@@ -32,15 +34,25 @@ public class InvokeScriptTransactionTest {
     @Test
     @DisplayName("invoke script with small complexity")
     void invokeScriptWithSmallComplexityTest() {
-        Amount amount = WAVES.of(0.1);
-        invokeTransaction(account, accWithDApp.setInt(getRandomInt(1, 50)), amount);
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            Amount amount = WAVES.of(0.1);
+            invokeTransaction(account, accWithDApp, amount, v);
+        }
     }
 
-    private void invokeTransaction(Account callingAcc, DAppCall dAppCall, Amount amount) {
+    private void invokeTransaction(Account callingAcc, IntDApp dAppAccount, Amount amount, int version) {
         long minFee = MIN_FEE + EXTRA_FEE;
         long balanceAfterTransaction = callingAcc.getWavesBalance() - minFee - amount.value();
+        DAppCall dAppCall = dAppAccount.setInt(getRandomInt(1, 50));
 
-        InvokeScriptTransaction tx = callingAcc.invoke(dAppCall, amount).tx();
+        InvokeScriptTransaction tx = InvokeScriptTransaction
+                .builder(dAppAccount.address(), dAppCall.getFunction())
+                .payments(amount)
+                .version(version)
+                .getSignedWith(callingAcc.privateKey());
+
+        node().waitForTransaction(node().broadcast(tx).id());
+
         TransactionInfo txInfo = node().getTransactionInfo(tx.id());
 
         assertAll(
