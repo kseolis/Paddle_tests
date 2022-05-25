@@ -70,7 +70,7 @@ public class SetScriptTransactionTest {
     void set32KbScript() {
         for (int v = 1; v <= LATEST_VERSION; v++) {
             long minimalValSetScriptFee = 2200000;
-            Base64String setScript = node().compileScript(fromFile("/scriptSize32kb.ride")).script();
+            Base64String setScript = node().compileScript(fromFile("ride_scripts/scriptSize32kb.ride")).script();
             setScriptTransaction(kyle, setScript, minimalValSetScriptFee, v);
         }
     }

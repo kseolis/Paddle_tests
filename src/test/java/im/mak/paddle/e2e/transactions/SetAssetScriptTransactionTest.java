@@ -34,7 +34,7 @@ public class SetAssetScriptTransactionTest {
     @DisplayName("set asset script 'ban on updating key values'")
     void setAssetScriptTransactionTest() {
         for (int v = 1; v <= LATEST_VERSION; v++) {
-            Base64String script = node().compileScript(fromFile("/permissionOnUpdatingKeyValues.ride")).script();
+            Base64String script = node().compileScript(fromFile("ride_scripts/permissionOnUpdatingKeyValues.ride")).script();
             setAssetScriptTransaction(alice, script, issuedAssetId, v);
         }
     }

@@ -31,7 +31,7 @@ class IssueTransactionTest {
     @Test
     @DisplayName("min assets, for all script version")
     void issueMinimumAssetsTransactionTest() {
-        Base64String script = node().compileScript(fromFile("/permissionOnUpdatingKeyValues.ride")).script();
+        Base64String script = node().compileScript(fromFile("ride_scripts/permissionOnUpdatingKeyValues.ride")).script();
         long fee = ONE_WAVES;
         boolean isReissue = true;
 
