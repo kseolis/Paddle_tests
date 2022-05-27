@@ -45,7 +45,9 @@
 
     <build>
         <plugins>
+
             <plugin>
+
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.8.1</version>
@@ -208,6 +210,11 @@
             <artifactId>docker-client</artifactId>
             <version>8.16.0</version>
         </dependency>
+        <dependency>
+            <groupId>com.googlecode.protobuf-java-format</groupId>
+            <artifactId>protobuf-java-format</artifactId>
+            <version>1.4</version>
+        </dependency>
 
         <!-- Configuration -->
         <dependency>
@@ -227,7 +234,6 @@
             <artifactId>assertj-core</artifactId>
             <version>3.22.0</version>
         </dependency>
-
         <dependency>
             <groupId>com.google.truth.extensions</groupId>
             <artifactId>truth-proto-extension</artifactId>
