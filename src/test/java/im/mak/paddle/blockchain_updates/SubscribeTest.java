@@ -1,7 +1,7 @@
 package im.mak.paddle.blockchain_updates;
 
+import com.wavesplatform.crypto.base.Base58;
 import com.wavesplatform.transactions.IssueTransaction;
-import com.wavesplatform.transactions.common.Id;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -30,8 +30,8 @@ public class SubscribeTest extends BaseTest {
                 () -> assertThat(getTransaction().getFee().getAmount()).isEqualTo(MIN_FEE),
 
                 () -> assertThat(getAddressFromSubscribeEvent()).isEqualTo(address),
-                () -> assertThat(getBalanceUpdate().getAmountBefore()).isEqualTo(DEFAULT_FAUCET),
-                () -> assertThat(getBalanceUpdate().getAmountAfter().getAmount()).isEqualTo(amountAfter),
+                () -> assertThat(getBalanceUpdate(0).getAmountBefore()).isEqualTo(DEFAULT_FAUCET),
+                () -> assertThat(getBalanceUpdate(0).getAmountAfter().getAmount()).isEqualTo(amountAfter),
                 () -> assertThat(getTransactionId()).isEqualTo(txId)
         );
     }
@@ -39,15 +39,21 @@ public class SubscribeTest extends BaseTest {
     @Test
     @DisplayName("Check information on the issue transaction in the subscription")
     void subscribeTestForIssueTransaction() {
-        account.issue(i -> i
+        IssueTransaction tx = account.issue(i -> i
                 .name(assetName)
                 .quantity(assetQuantity)
                 .description(assetDescription)
                 .decimals(assetDecimals)
                 .reissuable(true)
-                .script(SCRIPT_PERMITTING_OPERATIONS));
+                .script(SCRIPT_PERMITTING_OPERATIONS)).tx();
         height = node().getHeight();
+        String assetId = tx.assetId().toString();
+        String publicKey = account.publicKey().toString();
+        long amountAfter = DEFAULT_FAUCET - ONE_WAVES;
+
         subscribeResponseHandler(channel, account, height, height);
+
+        System.out.println(getAppend());
 
         assertAll(
                 () -> assertThat(getTransaction().getIssue().getName()).isEqualTo(assetName),
@@ -57,7 +63,29 @@ public class SubscribeTest extends BaseTest {
                 () -> assertThat(getTransaction().getIssue().getDecimals()).isEqualTo(assetDecimals),
                 () -> assertThat(getTransaction().getIssue().getScript().toByteArray()).isEqualTo(compileScript),
                 () -> assertThat(getTransaction().getVersion()).isEqualTo(IssueTransaction.LATEST_VERSION),
-                () -> assertThat(getTransaction().getFee().getAmount()).isEqualTo(ONE_WAVES)
+                () -> assertThat(getTransaction().getFee().getAmount()).isEqualTo(ONE_WAVES),
+
+                () -> assertThat(getTransactionId()).isEqualTo(tx.id().toString()),
+
+                // check waves balance from balances
+                () -> assertThat(getBalanceUpdate(0).getAmountBefore()).isEqualTo(DEFAULT_FAUCET),
+                () -> assertThat(getBalanceUpdate(0).getAmountAfter().getAmount()).isEqualTo(amountAfter),
+                // check assetId and balance from balances
+                () -> assertThat(getIssuedAssetIdFromBalance(0, 1)).isEqualTo(assetId),
+                () -> assertThat(getBalanceUpdate(1).getAmountAfter().getAmount()).isEqualTo(assetQuantity),
+                // check from assets
+                () -> assertThat(getAssetIdFromAssets(0, 0)).isEqualTo(assetId),
+                () -> assertThat(getIssuerFromAssets(0, 0)).isEqualTo(publicKey),
+
+                () -> assertThat(getAssets(0, 0).getName()).isEqualTo(assetName),
+                () -> assertThat(getAssets(0, 0).getDescription()).isEqualTo(assetDescription),
+                () -> assertThat(getAssets(0, 0).getVolume()).isEqualTo(assetQuantity),
+                () -> assertThat(getAssets(0, 0).getDecimals()).isEqualTo(assetDecimals),
+                () -> assertThat(getAssets(0, 0).getReissuable()).isEqualTo(true),
+                () -> assertThat(getAssets(0, 0).getLastUpdated()).isEqualTo(height),
+                () -> assertThat(getAssets(0, 0).getScriptInfo().getScript().toByteArray()).isEqualTo(compileScript)
+
+
         );
     }
 }

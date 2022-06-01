@@ -19,7 +19,6 @@ public class SubscribeHandlers {
     private static TransactionOuterClass.Transaction transaction;
     private static String transactionId;
     private static Events.BlockchainUpdated.Append append;
-    private static Events.StateUpdate.BalanceUpdate balanceUpdate;
     private static String addressFromSubscribeEvent;
 
     public static void subscribeResponseHandler(Channel channel, Account account, int fromHeight, int toHeight) {
@@ -49,7 +48,6 @@ public class SubscribeHandlers {
 
 
         if (microBlockInfo.getTransactionsCount() > 0) {
-            balanceUpdate = append.getTransactionStateUpdates(0).getBalances(0);
 
             String senderPublicKey = Base58.encode(microBlockInfo
                     .getTransactions(0)
@@ -57,7 +55,9 @@ public class SubscribeHandlers {
                     .getSenderPublicKey()
                     .toByteArray());
 
-            addressFromSubscribeEvent = Base58.encode(balanceUpdate
+            addressFromSubscribeEvent = Base58.encode(getAppend()
+                    .getTransactionStateUpdates(0)
+                    .getBalances(0)
                     .getAddress()
                     .toByteArray());
 
@@ -77,8 +77,33 @@ public class SubscribeHandlers {
         return append;
     }
 
-    public static Events.StateUpdate.BalanceUpdate getBalanceUpdate() {
-        return balanceUpdate;
+    public static Events.StateUpdate getTransactionStateUpdate(int index) {
+        return append.getTransactionStateUpdates(index);
+    }
+
+    public static Events.StateUpdate.BalanceUpdate getBalanceUpdate(int index) {
+        return append.getTransactionStateUpdates(0).getBalances(index);
+    }
+
+    public static String getIssuedAssetIdFromBalance(int txStateUpdIndex, int balanceUpdIndex) {
+        return Base58.encode(append
+                .getTransactionStateUpdates(txStateUpdIndex)
+                .getBalances(balanceUpdIndex)
+                .getAmountAfter().getAssetId().toByteArray());
+    }
+
+    public static Events.StateUpdate.AssetDetails getAssets(int txStateUpdIndex, int assetIndex) {
+        return append.getTransactionStateUpdates(txStateUpdIndex)
+                .getAssets(assetIndex)
+                .getAfter();
+    }
+
+    public static String getAssetIdFromAssets(int txStateUpdIndex, int assetIndex) {
+       return Base58.encode(getAssets(txStateUpdIndex, assetIndex).getAssetId().toByteArray());
+    }
+
+    public static String getIssuerFromAssets(int txStateUpdIndex, int assetIndex) {
+        return Base58.encode(getAssets(txStateUpdIndex, assetIndex).getIssuer().toByteArray());
     }
 
     public static String getAddressFromSubscribeEvent() {
