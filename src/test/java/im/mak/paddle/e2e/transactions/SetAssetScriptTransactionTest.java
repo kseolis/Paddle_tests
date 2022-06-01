@@ -26,7 +26,7 @@ public class SetAssetScriptTransactionTest {
     static void before() {
         alice = new Account(DEFAULT_FAUCET);
         issuedAssetId = alice.issue(i -> i.name("Test_Asset")
-                .script("{-# SCRIPT_TYPE ASSET #-} true")
+                .script(SCRIPT_PERMITTING_OPERATIONS)
                 .quantity(1000_00000000L)).tx().assetId();
     }
 

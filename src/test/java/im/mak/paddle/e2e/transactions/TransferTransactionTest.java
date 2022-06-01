@@ -55,7 +55,7 @@ public class TransferTransactionTest {
                     issuedSmartAssetId = acc.issue(i -> i.name("T_smart")
                             .quantity(1000)
                             .decimals(8)
-                            .script("{-# SCRIPT_TYPE ASSET #-} true")).tx().assetId();
+                            .script(SCRIPT_PERMITTING_OPERATIONS)).tx().assetId();
                 }
         );
     }

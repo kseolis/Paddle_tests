@@ -14,8 +14,8 @@ class GetBlockUpdatesRangeTest extends BaseTest {
     void getBlockUpdatesRangeTest() {
         GetBlockUpdatesRangeRequest request = GetBlockUpdatesRangeRequest
                 .newBuilder()
-                .setFromHeight(getHeight() - 10)
-                .setToHeight(getHeight())
+                .setFromHeight(height - 10)
+                .setToHeight(height)
                 .build();
 
         BlockchainUpdatesApiBlockingStub stub = newBlockingStub(channel);

@@ -15,7 +15,7 @@ class GetBlockUpdateTest extends BaseTest {
     void getBlockUpdateBaseTest() throws UnsupportedOperationException {
         GetBlockUpdateRequest request = GetBlockUpdateRequest
                 .newBuilder()
-                .setHeight(getHeight())
+                .setHeight(height)
                 .build();
 
         BlockchainUpdatesApiBlockingStub stub = newBlockingStub(channel);

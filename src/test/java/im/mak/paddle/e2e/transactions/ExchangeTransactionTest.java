@@ -53,12 +53,12 @@ public class ExchangeTransactionTest {
                 },
                 () -> {
                     bob = new Account(DEFAULT_FAUCET);
-                    secondSmartAssetId = bob.issue(i -> i.name("S_Smart_Asset").script("{-# SCRIPT_TYPE ASSET #-} true")
+                    secondSmartAssetId = bob.issue(i -> i.name("S_Smart_Asset").script(SCRIPT_PERMITTING_OPERATIONS)
                             .quantity(4000L).decimals(decimals)).tx().assetId();
                 },
                 () -> {
                     cat = new Account(DEFAULT_FAUCET);
-                    firstSmartAssetId = cat.issue(i -> i.name("F_Smart_Asset").script("{-# SCRIPT_TYPE ASSET #-} true")
+                    firstSmartAssetId = cat.issue(i -> i.name("F_Smart_Asset").script(SCRIPT_PERMITTING_OPERATIONS)
                             .quantity(4000L).decimals(decimals)).tx().assetId();
                 }
         );

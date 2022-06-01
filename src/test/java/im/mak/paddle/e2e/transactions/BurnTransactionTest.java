@@ -87,10 +87,6 @@ public class BurnTransactionTest {
         accountWavesBalance = account.getBalance(AssetId.WAVES);
         long balanceAfterBurn = account.getBalance(assetId) - amount.value();
 
-/*
-        BurnTransaction tx = account.burn(amount, assetId).tx();
-*/
-
         BurnTransaction tx = BurnTransaction.builder(amount)
                 .version(version)
                 .sender(account.publicKey())
