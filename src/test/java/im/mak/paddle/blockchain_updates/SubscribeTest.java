@@ -1,6 +1,10 @@
 package im.mak.paddle.blockchain_updates;
 
+import com.wavesplatform.crypto.base.Base58;
 import com.wavesplatform.transactions.IssueTransaction;
+import com.wavesplatform.transactions.TransferTransaction;
+import com.wavesplatform.transactions.common.Amount;
+import im.mak.paddle.Account;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -18,7 +22,6 @@ public class SubscribeTest extends BaseTest {
     @DisplayName("Check information on the alias creation transaction in the subscription")
     void subscribeTestForCreateAlias() {
         long amountAfter = DEFAULT_FAUCET - MIN_FEE;
-        String address = account.address().toString();
         String txId = account.createAlias(newAlias).tx().id().toString();
         height = node().getHeight();
         subscribeResponseHandler(channel, account, height, height);
@@ -28,7 +31,7 @@ public class SubscribeTest extends BaseTest {
                 () -> assertThat(getTransaction().getVersion()).isEqualTo(LATEST_VERSION),
                 () -> assertThat(getTransaction().getFee().getAmount()).isEqualTo(MIN_FEE),
 
-                () -> assertThat(getAddressFromSubscribeEvent()).isEqualTo(address),
+                () -> assertThat(getAddressFromTransactionState(0, 0)).isEqualTo(address),
                 () -> assertThat(getBalanceUpdate(0).getAmountBefore()).isEqualTo(DEFAULT_FAUCET),
                 () -> assertThat(getBalanceUpdate(0).getAmountAfter().getAmount()).isEqualTo(amountAfter),
                 () -> assertThat(getTransactionId()).isEqualTo(txId)
@@ -64,6 +67,7 @@ public class SubscribeTest extends BaseTest {
                 () -> assertThat(getTransaction().getVersion()).isEqualTo(IssueTransaction.LATEST_VERSION),
                 () -> assertThat(getTransaction().getFee().getAmount()).isEqualTo(ONE_WAVES),
                 () -> assertThat(getTransactionId()).isEqualTo(tx.id().toString()),
+                () -> assertThat(getAddressFromTransactionState(0, 0)).isEqualTo(address),
                 // check waves balance from balances
                 () -> assertThat(getBalanceUpdate(0).getAmountBefore()).isEqualTo(DEFAULT_FAUCET),
                 () -> assertThat(getBalanceUpdate(0).getAmountAfter().getAmount()).isEqualTo(amountAfter),
@@ -81,6 +85,37 @@ public class SubscribeTest extends BaseTest {
                 () -> assertThat(getAssets(0, 0).getReissuable()).isEqualTo(true),
                 () -> assertThat(getAssets(0, 0).getLastUpdated()).isEqualTo(height),
                 () -> assertThat(getAssets(0, 0).getScriptInfo().getScript().toByteArray()).isEqualTo(compileScript)
+        );
+    }
+
+    @Test
+    @DisplayName("Check information on the transfer transaction in the subscription")
+    void subscribeTestForTransferTransaction() {
+        Account recipient = new Account();
+        String recipientAddress = recipient.address().toString();
+        Amount amount = Amount.of(1);
+        String recipientPublicKeyHash = Base58.encode(recipient.address().publicKeyHash());
+        TransferTransaction tx = account.transfer(recipient, Amount.of(1)).tx();
+        height = node().getHeight();
+        subscribeResponseHandler(channel, account, height, height);
+        long amountAfter = DEFAULT_FAUCET - MIN_FEE - amount.value();
+
+        System.out.println(getAppend());
+
+        assertAll(
+                () -> assertThat(getTransaction().getTransfer().getAmount().getAmount()).isEqualTo(amount.value()),
+                () -> assertThat(getTransaction().getVersion()).isEqualTo(TransferTransaction.LATEST_VERSION),
+                () -> assertThat(getTransaction().getFee().getAmount()).isEqualTo(MIN_FEE),
+                () -> assertThat(getTransactionId()).isEqualTo(tx.id().toString()),
+                () -> assertThat(getTransferTransactionPublicKeyHash()).isEqualTo(recipientPublicKeyHash),
+                // check sender balance
+                () -> assertThat(getAddressFromTransactionState(0, 0)).isEqualTo(address),
+                () -> assertThat(getBalanceUpdate(0).getAmountBefore()).isEqualTo(DEFAULT_FAUCET),
+                () -> assertThat(getBalanceUpdate(0).getAmountAfter().getAmount()).isEqualTo(amountAfter),
+                // check recipient balance
+                () -> assertThat(getAddressFromTransactionState(0, 1)).isEqualTo(recipientAddress),
+                () -> assertThat(getBalanceUpdate(1).getAmountBefore()).isEqualTo(0),
+                () -> assertThat(getBalanceUpdate(1).getAmountAfter().getAmount()).isEqualTo(amount.value())
         );
     }
 }

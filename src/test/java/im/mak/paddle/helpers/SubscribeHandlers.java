@@ -19,7 +19,6 @@ public class SubscribeHandlers {
     private static TransactionOuterClass.Transaction transaction;
     private static String transactionId;
     private static Events.BlockchainUpdated.Append append;
-    private static String addressFromSubscribeEvent;
 
     public static void subscribeResponseHandler(Channel channel, Account account, int fromHeight, int toHeight) {
         BlockchainUpdates.SubscribeRequest request = BlockchainUpdates.SubscribeRequest
@@ -53,12 +52,6 @@ public class SubscribeHandlers {
                     .getTransactions(0)
                     .getTransaction()
                     .getSenderPublicKey()
-                    .toByteArray());
-
-            addressFromSubscribeEvent = Base58.encode(getAppend()
-                    .getTransactionStateUpdates(0)
-                    .getBalances(0)
-                    .getAddress()
                     .toByteArray());
 
             transactionId = Base58.encode(append.getTransactionIds(0).toByteArray());
@@ -106,8 +99,20 @@ public class SubscribeHandlers {
         return Base58.encode(getAssets(txStateUpdIndex, assetIndex).getIssuer().toByteArray());
     }
 
-    public static String getAddressFromSubscribeEvent() {
-        return addressFromSubscribeEvent;
+    public static String getTransferTransactionPublicKeyHash() {
+        return Base58.encode(getTransaction()
+                .getTransfer()
+                .getRecipient()
+                .getPublicKeyHash()
+                .toByteArray());
+    }
+
+    public static String getAddressFromTransactionState(int txStateUpdIndex, int balancesIndex) {
+        return Base58.encode(getAppend()
+                .getTransactionStateUpdates(txStateUpdIndex)
+                .getBalances(balancesIndex)
+                .getAddress()
+                .toByteArray());
     }
 
     public static String getTransactionId() {
