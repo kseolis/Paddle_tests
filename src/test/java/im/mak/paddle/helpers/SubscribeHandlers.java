@@ -17,8 +17,9 @@ import static com.wavesplatform.events.api.grpc.protobuf.BlockchainUpdatesApiGrp
 public class SubscribeHandlers {
 
     private static TransactionOuterClass.Transaction transaction;
+    private static String transactionId;
     private static Events.BlockchainUpdated.Append append;
-    private static String senderPublicKey;
+    private static Events.StateUpdate.BalanceUpdate balanceUpdate;
     private static String addressFromSubscribeEvent;
 
     public static void subscribeResponseHandler(Channel channel, Account account, int fromHeight, int toHeight) {
@@ -33,7 +34,6 @@ public class SubscribeHandlers {
 
         try {
             while (subscribe.hasNext()) {
-                System.out.println(fromHeight);
                 subscribeEventHandler(subscribe.next().getUpdate(), account);
             }
         } catch (StatusRuntimeException ignored) {
@@ -41,26 +41,27 @@ public class SubscribeHandlers {
     }
 
     private static void subscribeEventHandler(Events.BlockchainUpdated subscribeEventUpdate, Account account) {
-        BlockOuterClass.MicroBlock microBlockInfo = subscribeEventUpdate
-                .getAppend()
+        append = subscribeEventUpdate.getAppend();
+        BlockOuterClass.MicroBlock microBlockInfo = append
                 .getMicroBlock()
                 .getMicroBlock()
                 .getMicroBlock();
 
-        append = subscribeEventUpdate.getAppend();
 
         if (microBlockInfo.getTransactionsCount() > 0) {
-            senderPublicKey = Base58.encode(microBlockInfo
+            balanceUpdate = append.getTransactionStateUpdates(0).getBalances(0);
+
+            String senderPublicKey = Base58.encode(microBlockInfo
                     .getTransactions(0)
                     .getTransaction()
                     .getSenderPublicKey()
                     .toByteArray());
 
-            addressFromSubscribeEvent = Base58.encode(append
-                    .getTransactionStateUpdates(0)
-                    .getBalances(0)
+            addressFromSubscribeEvent = Base58.encode(balanceUpdate
                     .getAddress()
                     .toByteArray());
+
+            transactionId = Base58.encode(append.getTransactionIds(0).toByteArray());
 
             if (senderPublicKey.equalsIgnoreCase(account.publicKey().toString())) {
                 transaction = microBlockInfo.getTransactions(0).getTransaction();
@@ -76,12 +77,16 @@ public class SubscribeHandlers {
         return append;
     }
 
-    public static String getSenderPublicKey() {
-        return senderPublicKey;
+    public static Events.StateUpdate.BalanceUpdate getBalanceUpdate() {
+        return balanceUpdate;
     }
 
     public static String getAddressFromSubscribeEvent() {
         return addressFromSubscribeEvent;
+    }
+
+    public static String getTransactionId() {
+        return transactionId;
     }
 
 }
