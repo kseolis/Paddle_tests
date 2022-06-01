@@ -1,6 +1,5 @@
 package im.mak.paddle.blockchain_updates;
 
-import com.wavesplatform.crypto.base.Base58;
 import com.wavesplatform.transactions.IssueTransaction;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -46,14 +45,14 @@ public class SubscribeTest extends BaseTest {
                 .decimals(assetDecimals)
                 .reissuable(true)
                 .script(SCRIPT_PERMITTING_OPERATIONS)).tx();
+
         height = node().getHeight();
+
         String assetId = tx.assetId().toString();
         String publicKey = account.publicKey().toString();
         long amountAfter = DEFAULT_FAUCET - ONE_WAVES;
 
         subscribeResponseHandler(channel, account, height, height);
-
-        System.out.println(getAppend());
 
         assertAll(
                 () -> assertThat(getTransaction().getIssue().getName()).isEqualTo(assetName),
@@ -64,9 +63,7 @@ public class SubscribeTest extends BaseTest {
                 () -> assertThat(getTransaction().getIssue().getScript().toByteArray()).isEqualTo(compileScript),
                 () -> assertThat(getTransaction().getVersion()).isEqualTo(IssueTransaction.LATEST_VERSION),
                 () -> assertThat(getTransaction().getFee().getAmount()).isEqualTo(ONE_WAVES),
-
                 () -> assertThat(getTransactionId()).isEqualTo(tx.id().toString()),
-
                 // check waves balance from balances
                 () -> assertThat(getBalanceUpdate(0).getAmountBefore()).isEqualTo(DEFAULT_FAUCET),
                 () -> assertThat(getBalanceUpdate(0).getAmountAfter().getAmount()).isEqualTo(amountAfter),
@@ -76,7 +73,7 @@ public class SubscribeTest extends BaseTest {
                 // check from assets
                 () -> assertThat(getAssetIdFromAssets(0, 0)).isEqualTo(assetId),
                 () -> assertThat(getIssuerFromAssets(0, 0)).isEqualTo(publicKey),
-
+                // check asset info
                 () -> assertThat(getAssets(0, 0).getName()).isEqualTo(assetName),
                 () -> assertThat(getAssets(0, 0).getDescription()).isEqualTo(assetDescription),
                 () -> assertThat(getAssets(0, 0).getVolume()).isEqualTo(assetQuantity),
@@ -84,8 +81,6 @@ public class SubscribeTest extends BaseTest {
                 () -> assertThat(getAssets(0, 0).getReissuable()).isEqualTo(true),
                 () -> assertThat(getAssets(0, 0).getLastUpdated()).isEqualTo(height),
                 () -> assertThat(getAssets(0, 0).getScriptInfo().getScript().toByteArray()).isEqualTo(compileScript)
-
-
         );
     }
 }
