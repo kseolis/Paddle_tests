@@ -1,5 +1,6 @@
 package im.mak.paddle.helpers;
 
+import com.google.common.base.Functions;
 import com.wavesplatform.crypto.base.Base58;
 import com.wavesplatform.events.api.grpc.protobuf.BlockchainUpdates;
 import com.wavesplatform.events.api.grpc.protobuf.BlockchainUpdatesApiGrpc;
@@ -19,6 +20,7 @@ public class SubscribeHandlers {
     private static TransactionOuterClass.Transaction transaction;
     private static String transactionId;
     private static Events.BlockchainUpdated.Append append;
+    private static BlockOuterClass.MicroBlock microBlockInfo;
 
     public static void subscribeResponseHandler(Channel channel, Account account, int fromHeight, int toHeight) {
         BlockchainUpdates.SubscribeRequest request = BlockchainUpdates.SubscribeRequest
@@ -40,7 +42,7 @@ public class SubscribeHandlers {
 
     private static void subscribeEventHandler(Events.BlockchainUpdated subscribeEventUpdate, Account account) {
         append = subscribeEventUpdate.getAppend();
-        BlockOuterClass.MicroBlock microBlockInfo = append
+        microBlockInfo = append
                 .getMicroBlock()
                 .getMicroBlock()
                 .getMicroBlock();
@@ -48,7 +50,7 @@ public class SubscribeHandlers {
 
         if (microBlockInfo.getTransactionsCount() > 0) {
 
-            String senderPublicKey = Base58.encode(microBlockInfo
+            String transactionSenderPublicKey = Base58.encode(microBlockInfo
                     .getTransactions(0)
                     .getTransaction()
                     .getSenderPublicKey()
@@ -56,18 +58,26 @@ public class SubscribeHandlers {
 
             transactionId = Base58.encode(append.getTransactionIds(0).toByteArray());
 
-            if (senderPublicKey.equalsIgnoreCase(account.publicKey().toString())) {
+            if (transactionSenderPublicKey.equalsIgnoreCase(account.publicKey().toString())) {
                 transaction = microBlockInfo.getTransactions(0).getTransaction();
             }
         }
+    }
+
+    public static Events.BlockchainUpdated.Append getAppend() {
+        return append;
+    }
+
+    public static BlockOuterClass.MicroBlock getMicroBlockInfo() {
+        return microBlockInfo;
     }
 
     public static TransactionOuterClass.Transaction getTransaction() {
         return transaction;
     }
 
-    public static Events.BlockchainUpdated.Append getAppend() {
-        return append;
+    public static String getTransactionId() {
+        return transactionId;
     }
 
     public static Events.StateUpdate getTransactionStateUpdate(int index) {
@@ -115,8 +125,14 @@ public class SubscribeHandlers {
                 .toByteArray());
     }
 
-    public static String getTransactionId() {
-        return transactionId;
+    public static Events.TransactionMetadata getElementTransactionMetadata(int metadataIndex) {
+        return getAppend().getTransactionsMetadata(metadataIndex);
     }
 
+    public static String getTransferRecipientFromTransactionMetadata(int index) {
+        return Base58.encode(getElementTransactionMetadata(index)
+                .getTransfer()
+                .getRecipientAddress()
+                .toByteArray());
+    }
 }

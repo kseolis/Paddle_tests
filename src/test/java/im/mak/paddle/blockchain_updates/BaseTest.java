@@ -22,6 +22,7 @@ public class BaseTest {
     protected final int assetDecimals = getRandomInt(0, 8);
     protected Account account;
     protected String address;
+    protected String publicKey;
     protected final byte[] compileScript = node().compileScript(SCRIPT_PERMITTING_OPERATIONS).script().bytes();
 
     protected final Channel channel = ManagedChannelBuilder
@@ -33,5 +34,6 @@ public class BaseTest {
     void setUp() {
         account = new Account(DEFAULT_FAUCET);
         address = account.address().toString();
+        publicKey = account.publicKey().toString();
     }
 }
