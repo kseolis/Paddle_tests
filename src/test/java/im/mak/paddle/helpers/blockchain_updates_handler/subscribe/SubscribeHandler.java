@@ -56,7 +56,6 @@ public class SubscribeHandler {
                     .toByteArray());
 
             transactionId = Base58.encode(append.getTransactionIds(0).toByteArray());
-            System.out.println(append);
             if (transactionSenderPublicKey.equalsIgnoreCase(account.publicKey().toString())) {
                 firstTransaction = microBlockInfo.getTransactions(0).getTransaction();
             }

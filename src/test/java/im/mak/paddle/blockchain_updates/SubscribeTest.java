@@ -1,6 +1,7 @@
 package im.mak.paddle.blockchain_updates;
 
 import com.wavesplatform.crypto.base.Base58;
+import com.wavesplatform.transactions.BurnTransaction;
 import com.wavesplatform.transactions.IssueTransaction;
 import com.wavesplatform.transactions.ReissueTransaction;
 import com.wavesplatform.transactions.TransferTransaction;
@@ -16,10 +17,12 @@ import static im.mak.paddle.helpers.Randomizer.getRandomInt;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transaction_state_updates.Assets.*;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transaction_state_updates.Balances.*;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.TransferTransactionMetadata.getTransferRecipientAddressFromTransactionMetadata;
+import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.BurnTransaction.getBurnAssetAmount;
+import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.BurnTransaction.getBurnAssetId;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.ReissueTransaction.getReissueAssetAmount;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.ReissueTransaction.getReissueAssetId;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.Transactions.*;
-import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.TransferTransaction.getTransferTransactionPublicKeyHash;
+import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.TransferTransaction.*;
 import static im.mak.paddle.util.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -27,7 +30,7 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 public class SubscribeTest extends BaseTest {
 
     @Test
-    @DisplayName("Check information on the alias creation transaction in the subscription")
+    @DisplayName("Check subscription on alias transaction")
     void subscribeTestForCreateAlias() {
         long amountAfter = DEFAULT_FAUCET - MIN_FEE;
         String txId = account.createAlias(newAlias).tx().id().toString();
@@ -39,15 +42,15 @@ public class SubscribeTest extends BaseTest {
                 () -> assertThat(getFirstTransaction().getVersion()).isEqualTo(LATEST_VERSION),
                 () -> assertThat(getFirstTransaction().getFee().getAmount()).isEqualTo(MIN_FEE),
 
-                () -> assertThat(getAddressFromTransactionState(0, 0)).isEqualTo(address),
-                () -> assertThat(getBalanceUpdateFromBalances(0, 0).getAmountBefore()).isEqualTo(DEFAULT_FAUCET),
-                () -> assertThat(getBalanceUpdateFromBalances(0, 0).getAmountAfter().getAmount()).isEqualTo(amountAfter),
+                () -> assertThat(getAddress(0, 0)).isEqualTo(address),
+                () -> assertThat(getAmountBefore(0,0)).isEqualTo(DEFAULT_FAUCET),
+                () -> assertThat(getAmountAfter(0,0)).isEqualTo(amountAfter),
                 () -> assertThat(getTransactionId()).isEqualTo(txId)
         );
     }
 
     @Test
-    @DisplayName("Check information on the issue transaction in the subscription")
+    @DisplayName("Check subscription on issue transaction")
     void subscribeTestForIssueTransaction() {
         IssueTransaction tx = account.issue(i -> i
                 .name(assetName)
@@ -74,29 +77,29 @@ public class SubscribeTest extends BaseTest {
                 () -> assertThat(getFirstTransaction().getVersion()).isEqualTo(IssueTransaction.LATEST_VERSION),
                 () -> assertThat(getFirstTransaction().getFee().getAmount()).isEqualTo(ONE_WAVES),
                 () -> assertThat(getTransactionId()).isEqualTo(tx.id().toString()),
-                () -> assertThat(getAddressFromTransactionState(0, 0)).isEqualTo(address),
+                () -> assertThat(getAddress(0, 0)).isEqualTo(address),
                 // check waves balance from balances
-                () -> assertThat(getBalanceUpdateFromBalances(0, 0).getAmountBefore()).isEqualTo(DEFAULT_FAUCET),
-                () -> assertThat(getBalanceUpdateFromBalances(0, 0).getAmountAfter().getAmount()).isEqualTo(amountAfter),
+                () -> assertThat(getAmountBefore(0, 0)).isEqualTo(DEFAULT_FAUCET),
+                () -> assertThat(getAmountAfter(0, 0)).isEqualTo(amountAfter),
                 // check assetId and balance from balances
-                () -> assertThat(getIssuedAssetIdFromBalance(0, 1)).isEqualTo(assetId),
-                () -> assertThat(getBalanceUpdateFromBalances(0, 1).getAmountAfter().getAmount()).isEqualTo(assetQuantity),
+                () -> assertThat(getIssuedAssetId(0, 1)).isEqualTo(assetId),
+                () -> assertThat(getAmountBefore(0, 1)).isEqualTo(0),
+                () -> assertThat(getAmountAfter(0, 1)).isEqualTo(assetQuantity),
                 // check from assets
                 () -> assertThat(getAssetIdFromAssetAfter(0, 0)).isEqualTo(assetId),
-                () -> assertThat(getIssuerFromAssetAfter(0, 0)).isEqualTo(publicKey),
+                () -> assertThat(getIssuerAfter(0, 0)).isEqualTo(publicKey),
                 // check asset info
-                () -> assertThat(getAfterAsset(0, 0).getName()).isEqualTo(assetName),
-                () -> assertThat(getAfterAsset(0, 0).getDescription()).isEqualTo(assetDescription),
-                () -> assertThat(getAfterAsset(0, 0).getVolume()).isEqualTo(assetQuantity),
-                () -> assertThat(getAfterAsset(0, 0).getDecimals()).isEqualTo(assetDecimals),
-                () -> assertThat(getAfterAsset(0, 0).getReissuable()).isEqualTo(true),
-                () -> assertThat(getAfterAsset(0, 0).getLastUpdated()).isEqualTo(height),
-                () -> assertThat(getAfterAsset(0, 0).getScriptInfo().getScript().toByteArray()).isEqualTo(compileScript)
+                () -> assertThat(getNameAfter(0, 0)).isEqualTo(assetName),
+                () -> assertThat(getDescriptionAfter(0, 0)).isEqualTo(assetDescription),
+                () -> assertThat(getQuantityAfter(0, 0)).isEqualTo(assetQuantity),
+                () -> assertThat(getDecimalsAfter(0, 0)).isEqualTo(assetDecimals),
+                () -> assertThat(getReissuableAfter(0, 0)).isEqualTo(true),
+                () -> assertThat(getScriptAfter(0, 0)).isEqualTo(compileScript)
         );
     }
 
     @Test
-    @DisplayName("Check information on the transfer transaction in the subscription")
+    @DisplayName("Check subscription on transfer transaction")
     void subscribeTestForTransferTransaction() {
         Account recipient = new Account();
         String recipientAddress = recipient.address().toString();
@@ -112,29 +115,34 @@ public class SubscribeTest extends BaseTest {
         subscribeResponseHandler(channel, account, height, height);
 
         assertAll(
-                () -> assertThat(getFirstTransaction().getTransfer().getAmount().getAmount()).isEqualTo(amountVal),
-                () -> assertThat(getFirstTransaction().getVersion()).isEqualTo(TransferTransaction.LATEST_VERSION),
-                () -> assertThat(getFirstTransaction().getFee().getAmount()).isEqualTo(MIN_FEE),
+                () -> assertThat(getTransferAssetAmount(0)).isEqualTo(amountVal),
+                () -> assertThat(getTransactionVersion(0)).isEqualTo(TransferTransaction.LATEST_VERSION),
+                () -> assertThat(getTransactionFeeAmount(0)).isEqualTo(MIN_FEE),
+                () -> assertThat(getTransferAssetId(0)).isEqualTo(""),
                 () -> assertThat(getTransferTransactionPublicKeyHash(0)).isEqualTo(recipientPublicKeyHash),
                 () -> assertThat(getTransactionId()).isEqualTo(tx.id().toString()),
                 // check sender balance
-                () -> assertThat(getAddressFromTransactionState(0, 0)).isEqualTo(address),
-                () -> assertThat(getBalanceUpdateFromBalances(0, 0).getAmountBefore()).isEqualTo(DEFAULT_FAUCET),
-                () -> assertThat(getBalanceUpdateFromBalances(0, 0).getAmountAfter().getAmount()).isEqualTo(amountAfter),
+                () -> assertThat(getAddress(0, 0)).isEqualTo(address),
+                () -> assertThat(getAmountBefore(0, 0)).isEqualTo(DEFAULT_FAUCET),
+                () -> assertThat(getAmountAfter(0, 0)).isEqualTo(amountAfter),
                 // check recipient balance
-                () -> assertThat(getAddressFromTransactionState(0, 1)).isEqualTo(recipientAddress),
-                () -> assertThat(getBalanceUpdateFromBalances(0, 1).getAmountBefore()).isEqualTo(0),
-                () -> assertThat(getBalanceUpdateFromBalances(0, 1).getAmountAfter().getAmount()).isEqualTo(amountVal),
+                () -> assertThat(getAddress(0, 1)).isEqualTo(recipientAddress),
+                () -> assertThat(getAmountBefore(0, 1)).isEqualTo(0),
+                () -> assertThat(getAmountAfter(0, 1)).isEqualTo(amountVal),
                 // check recipient address
                 () -> assertThat(getTransferRecipientAddressFromTransactionMetadata(0)).isEqualTo(recipientAddress)
         );
     }
 
     @Test
-    @DisplayName("Check information on the reissue transaction in the subscription")
+    @DisplayName("Check subscription on reissue smart asset transaction")
     void subscribeTestForReissueTransaction() {
         long amount = getRandomInt(100, 10000000);
         long reissueFee = MIN_FEE + EXTRA_FEE;
+        long wavesAmountBeforeReissue = DEFAULT_FAUCET - ONE_WAVES;
+        long wavesAmountAfterReissue = wavesAmountBeforeReissue - reissueFee;
+        long quantityAfterReissue = assetQuantity + amount;
+
         IssueTransaction issueTx = account.issue(i -> i
                 .name(assetName)
                 .quantity(assetQuantity)
@@ -146,13 +154,9 @@ public class SubscribeTest extends BaseTest {
         ReissueTransaction reissueTx = account.reissue(amount, issueTx.assetId(), i -> i.reissuable(false)).tx();
 
         height = node().getHeight();
-        long amountAfterVal = assetQuantity + amount;
         String assetId = issueTx.assetId().toString();
-        long amountAfter = DEFAULT_FAUCET - ONE_WAVES;
 
         subscribeResponseHandler(channel, account, height, height);
-
-        System.out.println(getAppend());
 
         assertAll(
                 () -> assertThat(getTransactionFeeAmount(0)).isEqualTo(reissueFee),
@@ -161,9 +165,151 @@ public class SubscribeTest extends BaseTest {
                 () -> assertThat(getReissueAssetAmount(0)).isEqualTo(amount),
                 () -> assertThat(getReissueAssetId(0)).isEqualTo(assetId),
                 () -> assertThat(getTransactionId()).isEqualTo(reissueTx.id().toString()),
-
+                // check waves balance
+                () -> assertThat(getAddress(0, 0)).isEqualTo(address),
+                () -> assertThat(getAmountBefore(0, 0)).isEqualTo(wavesAmountBeforeReissue),
+                () -> assertThat(getAmountAfter(0, 0)).isEqualTo(wavesAmountAfterReissue),
+                // check asset balance
+                () -> assertThat(getAddress(0, 1)).isEqualTo(address),
+                () -> assertThat(getIssuedAssetId(0, 1)).isEqualTo(assetId),
+                () -> assertThat(getAmountBefore(0, 1)).isEqualTo(assetQuantity),
+                () -> assertThat(getAmountAfter(0, 1)).isEqualTo(quantityAfterReissue),
+                // check asset before reissue
+                () -> assertThat(getAssetIdFromAssetBefore(0, 0)).isEqualTo(assetId),
+                () -> assertThat(getIssuerBefore(0, 0)).isEqualTo(publicKey),
+                () -> assertThat(getQuantityBefore(0, 0)).isEqualTo(assetQuantity),
+                () -> assertThat(getReissuableBefore(0, 0)).isEqualTo(true),
+                () -> assertThat(getNameBefore(0, 0)).isEqualTo(assetName),
+                () -> assertThat(getDescriptionBefore(0, 0)).isEqualTo(assetDescription),
+                () -> assertThat(getDecimalsBefore(0, 0)).isEqualTo(assetDecimals),
+                () -> assertThat(getScriptBefore(0, 0)).isEqualTo(compileScript),
+                // check asset after reissue
                 () -> assertThat(getAssetIdFromAssetAfter(0, 0)).isEqualTo(assetId),
-                () -> assertThat(getIssuerFromAssetAfter(0, 0)).isEqualTo(publicKey)
+                () -> assertThat(getIssuerAfter(0, 0)).isEqualTo(publicKey),
+                () -> assertThat(getQuantityAfter(0, 0)).isEqualTo(quantityAfterReissue),
+                () -> assertThat(getReissuableAfter(0, 0)).isEqualTo(false),
+                () -> assertThat(getNameAfter(0, 0)).isEqualTo(assetName),
+                () -> assertThat(getDescriptionAfter(0, 0)).isEqualTo(assetDescription),
+                () -> assertThat(getDecimalsAfter(0, 0)).isEqualTo(assetDecimals),
+                () -> assertThat(getScriptAfter(0, 0)).isEqualTo(compileScript)
+        );
+    }
+
+    @Test
+    @DisplayName("Check subscription on burn smart asset transaction")
+    void subscribeTestForBurnSmartAssetTransaction() {
+        long amount = getRandomInt(100, 10000000);
+        long burnSmartAssetFee = MIN_FEE + EXTRA_FEE;
+        long wavesAmountBeforeBurn = DEFAULT_FAUCET - ONE_WAVES;
+        long wavesAmountAfterBurn = wavesAmountBeforeBurn - burnSmartAssetFee;
+        long quantityAfterBurn = assetQuantity - amount;
+
+        IssueTransaction issueTx = account.issue(i -> i
+                .name(assetName)
+                .quantity(assetQuantity)
+                .description(assetDescription)
+                .decimals(assetDecimals)
+                .reissuable(true)
+                .script(SCRIPT_PERMITTING_OPERATIONS)).tx();
+
+        BurnTransaction burnTx = account.burn(amount, issueTx.assetId()).tx();
+
+        height = node().getHeight();
+        String assetId = issueTx.assetId().toString();
+
+        subscribeResponseHandler(channel, account, height, height);
+
+        assertAll(
+                () -> assertThat(getTransactionFeeAmount(0)).isEqualTo(burnSmartAssetFee),
+                () -> assertThat(getSenderPublicKeyFromTransaction(0)).isEqualTo(publicKey),
+                () -> assertThat(getTransactionVersion(0)).isEqualTo(BurnTransaction.LATEST_VERSION),
+                () -> assertThat(getBurnAssetId(0)).isEqualTo(assetId),
+                () -> assertThat(getBurnAssetAmount(0)).isEqualTo(amount),
+                () -> assertThat(getTransactionId()).isEqualTo(burnTx.id().toString()),
+                // check waves balance
+                () -> assertThat(getAddress(0, 0)).isEqualTo(address),
+                () -> assertThat(getAmountBefore(0, 0)).isEqualTo(wavesAmountBeforeBurn),
+                () -> assertThat(getAmountAfter(0, 0)).isEqualTo(wavesAmountAfterBurn),
+                // check asset balance
+                () -> assertThat(getAddress(0, 1)).isEqualTo(address),
+                () -> assertThat(getIssuedAssetId(0, 1)).isEqualTo(assetId),
+                () -> assertThat(getAmountBefore(0, 1)).isEqualTo(assetQuantity),
+                () -> assertThat(getAmountAfter(0, 1)).isEqualTo(quantityAfterBurn),
+                // check asset before burn
+                () -> assertThat(getAssetIdFromAssetBefore(0, 0)).isEqualTo(assetId),
+                () -> assertThat(getIssuerBefore(0, 0)).isEqualTo(publicKey),
+                () -> assertThat(getQuantityBefore(0, 0)).isEqualTo(assetQuantity),
+                () -> assertThat(getReissuableBefore(0, 0)).isEqualTo(true),
+                () -> assertThat(getNameBefore(0, 0)).isEqualTo(assetName),
+                () -> assertThat(getDescriptionBefore(0, 0)).isEqualTo(assetDescription),
+                () -> assertThat(getDecimalsBefore(0, 0)).isEqualTo(assetDecimals),
+                () -> assertThat(getScriptBefore(0, 0)).isEqualTo(compileScript),
+                // check asset after burn
+                () -> assertThat(getAssetIdFromAssetAfter(0, 0)).isEqualTo(assetId),
+                () -> assertThat(getIssuerAfter(0, 0)).isEqualTo(publicKey),
+                () -> assertThat(getQuantityAfter(0, 0)).isEqualTo(quantityAfterBurn),
+                () -> assertThat(getReissuableAfter(0, 0)).isEqualTo(true),
+                () -> assertThat(getNameAfter(0, 0)).isEqualTo(assetName),
+                () -> assertThat(getDescriptionAfter(0, 0)).isEqualTo(assetDescription),
+                () -> assertThat(getDecimalsAfter(0, 0)).isEqualTo(assetDecimals),
+                () -> assertThat(getScriptAfter(0, 0)).isEqualTo(compileScript)
+        );
+    }
+
+    @Test
+    @DisplayName("Check subscription on burn asset transaction")
+    void subscribeTestForBurnAssetTransaction() {
+        long amount = getRandomInt(100, 10000000);
+        long wavesAmountBeforeBurn = DEFAULT_FAUCET - ONE_WAVES;
+        long wavesAmountAfterBurn = wavesAmountBeforeBurn - MIN_FEE;
+        long quantityAfterBurn = assetQuantity - amount;
+
+        IssueTransaction issueTx = account.issue(i -> i
+                .name(assetName)
+                .quantity(assetQuantity)
+                .description(assetDescription)
+                .decimals(assetDecimals)
+                .reissuable(true)).tx();
+
+        BurnTransaction burnTx = account.burn(amount, issueTx.assetId()).tx();
+
+        height = node().getHeight();
+        String assetId = issueTx.assetId().toString();
+
+        subscribeResponseHandler(channel, account, height, height);
+
+        assertAll(
+                () -> assertThat(getTransactionFeeAmount(0)).isEqualTo(MIN_FEE),
+                () -> assertThat(getSenderPublicKeyFromTransaction(0)).isEqualTo(publicKey),
+                () -> assertThat(getTransactionVersion(0)).isEqualTo(BurnTransaction.LATEST_VERSION),
+                () -> assertThat(getBurnAssetId(0)).isEqualTo(assetId),
+                () -> assertThat(getBurnAssetAmount(0)).isEqualTo(amount),
+                () -> assertThat(getTransactionId()).isEqualTo(burnTx.id().toString()),
+                // check waves balance
+                () -> assertThat(getAddress(0, 0)).isEqualTo(address),
+                () -> assertThat(getAmountBefore(0, 0)).isEqualTo(wavesAmountBeforeBurn),
+                () -> assertThat(getAmountAfter(0, 0)).isEqualTo(wavesAmountAfterBurn),
+                // check asset balance
+                () -> assertThat(getAddress(0, 1)).isEqualTo(address),
+                () -> assertThat(getIssuedAssetId(0, 1)).isEqualTo(assetId),
+                () -> assertThat(getAmountBefore(0, 1)).isEqualTo(assetQuantity),
+                () -> assertThat(getAmountAfter(0, 1)).isEqualTo(quantityAfterBurn),
+                // check asset before burn
+                () -> assertThat(getAssetIdFromAssetBefore(0, 0)).isEqualTo(assetId),
+                () -> assertThat(getIssuerBefore(0, 0)).isEqualTo(publicKey),
+                () -> assertThat(getQuantityBefore(0, 0)).isEqualTo(assetQuantity),
+                () -> assertThat(getReissuableBefore(0, 0)).isEqualTo(true),
+                () -> assertThat(getNameBefore(0, 0)).isEqualTo(assetName),
+                () -> assertThat(getDescriptionBefore(0, 0)).isEqualTo(assetDescription),
+                () -> assertThat(getDecimalsBefore(0, 0)).isEqualTo(assetDecimals),
+                // check asset after burn
+                () -> assertThat(getAssetIdFromAssetAfter(0, 0)).isEqualTo(assetId),
+                () -> assertThat(getIssuerAfter(0, 0)).isEqualTo(publicKey),
+                () -> assertThat(getQuantityAfter(0, 0)).isEqualTo(quantityAfterBurn),
+                () -> assertThat(getReissuableAfter(0, 0)).isEqualTo(true),
+                () -> assertThat(getNameAfter(0, 0)).isEqualTo(assetName),
+                () -> assertThat(getDescriptionAfter(0, 0)).isEqualTo(assetDescription),
+                () -> assertThat(getDecimalsAfter(0, 0)).isEqualTo(assetDecimals)
         );
     }
 }
