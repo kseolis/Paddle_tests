@@ -80,4 +80,12 @@ public class Assets extends TransactionStateUpdates {
     public static byte[] getScriptAfter(int txStateUpdIndex, int assetIndex) {
         return getAssetAfter(txStateUpdIndex, assetIndex).getScriptInfo().getScript().toByteArray();
     }
+
+    public static long getScriptComplexityBefore(int txStateUpdIndex, int assetIndex) {
+        return getAssetBefore(txStateUpdIndex, assetIndex).getScriptInfo().getComplexity();
+    }
+
+    public static long getScriptComplexityAfter(int txStateUpdIndex, int assetIndex) {
+        return getAssetAfter(txStateUpdIndex, assetIndex).getScriptInfo().getComplexity();
+    }
 }
