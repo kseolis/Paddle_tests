@@ -10,4 +10,16 @@ public class TransferTransaction extends Transactions {
                 .getPublicKeyHash()
                 .toByteArray());
     }
+
+    public static long getTransferAssetAmount(int txIndex) {
+        return getTransactionAtIndex(txIndex).getTransfer().getAmount().getAmount();
+    }
+
+    public static String getTransferAssetId(int txIndex) {
+        return Base58.encode(getTransactionAtIndex(txIndex)
+                .getTransfer()
+                .getAmount()
+                .getAssetId()
+                .toByteArray());
+    }
 }
