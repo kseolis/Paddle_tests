@@ -23,7 +23,8 @@ import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transac
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.ReissueTransaction.getReissueAssetId;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.SetAssetScriptTransaction.getAssetIdFromSetAssetScript;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.SetAssetScriptTransaction.getScriptFromSetAssetScript;
-import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.Transactions.*;
+import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.SponsorFeeTransaction.getAssetIdFromSponsorFee;
+import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.SponsorFeeTransaction.getAmountFromSponsorFee;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.TransferTransaction.*;
 import static im.mak.paddle.util.Constants.*;
 import static im.mak.paddle.util.ScriptUtil.fromFile;
@@ -449,8 +450,42 @@ public class SubscribeTest extends BaseTest {
     }
 
     @Test
-    @DisplayName("Check subscription on setAssetScript smart asset transaction")
+    @DisplayName("Check subscription on sponsorFee smart asset transaction")
     void subscribeTestForSponsorFeeTransaction() {
+        final long wavesAmountBefore = DEFAULT_FAUCET - ONE_WAVES;
+        final long transactionFee = MIN_FEE + EXTRA_FEE;
+        final long wavesAmountAfter = wavesAmountBefore - transactionFee;
+        final long sponsorFee = getRandomInt(100, 100000);
+        final int assetQuantity = getRandomInt(1000, 999_999_999);
+        final int assetDecimals = getRandomInt(0, 8);
 
+        IssueTransaction issueTx = account.issue(i -> i
+                .name(assetName)
+                .quantity(assetQuantity)
+                .description(assetDescription)
+                .decimals(assetDecimals)
+                .reissuable(true)).tx();
+        AssetId assetId = issueTx.assetId();
+        String assetIdToString = assetId.toString();
+
+        SponsorFeeTransaction sponsorFeeTx = account.sponsorFee(assetId, sponsorFee, i -> i.additionalFee(EXTRA_FEE)).tx();
+
+        height = node().getHeight();
+
+        subscribeResponseHandler(channel, account, height, height);
+
+        System.out.println(getAppend());
+        assertAll(
+                () -> assertThat(getSenderPublicKeyFromTransaction(0)).isEqualTo(publicKey),
+                () -> assertThat(getTransactionFeeAmount(0)).isEqualTo(transactionFee),
+                () -> assertThat(getTransactionVersion(0)).isEqualTo(SponsorFeeTransaction.LATEST_VERSION),
+                () -> assertThat(getAssetIdFromSponsorFee(0)).isEqualTo(assetIdToString),
+                () -> assertThat(getAmountFromSponsorFee(0)).isEqualTo(sponsorFee),
+                () -> assertThat(getTransactionId()).isEqualTo(sponsorFeeTx.id().toString())
+                // check waves balance
+/*                () -> assertThat(getAddress(0, 0)).isEqualTo(address),
+                () -> assertThat(getAmountBefore(0, 0)).isEqualTo(wavesAmountBefore),
+                () -> assertThat(getAmountAfter(0, 0)).isEqualTo(wavesAmountAfter)*/
+        );
     }
 }
