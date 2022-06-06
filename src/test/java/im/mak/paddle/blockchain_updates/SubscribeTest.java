@@ -9,13 +9,12 @@ import im.mak.paddle.Account;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static com.wavesplatform.transactions.CreateAliasTransaction.LATEST_VERSION;
-
 import static im.mak.paddle.Node.node;
 import static im.mak.paddle.helpers.Randomizer.getRandomInt;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transaction_state_updates.Assets.*;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transaction_state_updates.Balances.*;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.TransferTransactionMetadata.getTransferRecipientAddressFromTransactionMetadata;
+import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.AliasTransaction.getAliasFromAliasTransaction;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.BurnTransaction.getBurnAssetAmount;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.BurnTransaction.getBurnAssetId;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.IssueTransaction.*;
@@ -41,14 +40,16 @@ public class SubscribeTest extends BaseTest {
         height = node().getHeight();
         subscribeResponseHandler(channel, account, height, height);
 
+        System.out.println(getAppend());
         assertAll(
-                () -> assertThat(getFirstTransaction().getCreateAlias().getAlias()).isEqualTo(newAlias),
-                () -> assertThat(getFirstTransaction().getVersion()).isEqualTo(LATEST_VERSION),
-                () -> assertThat(getFirstTransaction().getFee().getAmount()).isEqualTo(MIN_FEE),
+                () -> assertThat(getSenderPublicKeyFromTransaction(0)).isEqualTo(publicKey),
+                () -> assertThat(getAliasFromAliasTransaction(0)).isEqualTo(newAlias),
+                () -> assertThat(getTransactionVersion(0)).isEqualTo(CreateAliasTransaction.LATEST_VERSION),
+                () -> assertThat(getTransactionFeeAmount(0)).isEqualTo(MIN_FEE),
 
                 () -> assertThat(getAddress(0, 0)).isEqualTo(address),
-                () -> assertThat(getAmountBefore(0,0)).isEqualTo(DEFAULT_FAUCET),
-                () -> assertThat(getAmountAfter(0,0)).isEqualTo(amountAfter),
+                () -> assertThat(getAmountBefore(0, 0)).isEqualTo(DEFAULT_FAUCET),
+                () -> assertThat(getAmountAfter(0, 0)).isEqualTo(amountAfter),
                 () -> assertThat(getTransactionId()).isEqualTo(txId)
         );
     }
@@ -76,6 +77,7 @@ public class SubscribeTest extends BaseTest {
         subscribeResponseHandler(channel, account, height, height);
 
         assertAll(
+                () -> assertThat(getSenderPublicKeyFromTransaction(0)).isEqualTo(publicKey),
                 () -> assertThat(getAssetName(0)).isEqualTo(assetName),
                 () -> assertThat(getAssetDescription(0)).isEqualTo(assetDescription),
                 () -> assertThat(getAssetAmount(0)).isEqualTo(assetQuantity),
@@ -124,6 +126,7 @@ public class SubscribeTest extends BaseTest {
 
         assertAll(
                 () -> assertThat(getTransferAssetAmount(0)).isEqualTo(amountVal),
+                () -> assertThat(getSenderPublicKeyFromTransaction(0)).isEqualTo(publicKey),
                 () -> assertThat(getTransactionVersion(0)).isEqualTo(TransferTransaction.LATEST_VERSION),
                 () -> assertThat(getTransactionFeeAmount(0)).isEqualTo(MIN_FEE),
                 () -> assertThat(getTransferAssetId(0)).isEqualTo(""),
@@ -436,7 +439,7 @@ public class SubscribeTest extends BaseTest {
                 () -> assertThat(getDecimalsBefore(0, 0)).isEqualTo(assetDecimals),
                 () -> assertThat(getScriptBefore(0, 0)).isEqualTo(firstScript),
                 () -> assertThat(getScriptComplexityBefore(0, 0)).isEqualTo(0),
-                // check asset before set asset script
+                // check asset after set asset script
                 () -> assertThat(getAssetIdFromAssetAfter(0, 0)).isEqualTo(assetIdToString),
                 () -> assertThat(getIssuerAfter(0, 0)).isEqualTo(publicKey),
                 () -> assertThat(getQuantityAfter(0, 0)).isEqualTo(assetQuantity),
@@ -450,12 +453,12 @@ public class SubscribeTest extends BaseTest {
     }
 
     @Test
-    @DisplayName("Check subscription on sponsorFee smart asset transaction")
+    @DisplayName("Check subscription on sponsorFee asset transaction")
     void subscribeTestForSponsorFeeTransaction() {
-        final long wavesAmountBefore = DEFAULT_FAUCET - ONE_WAVES;
         final long transactionFee = MIN_FEE + EXTRA_FEE;
+        final long wavesAmountBefore = DEFAULT_FAUCET - ONE_WAVES;
         final long wavesAmountAfter = wavesAmountBefore - transactionFee;
-        final long sponsorFee = getRandomInt(100, 100000);
+        final long sponsorFeeAmount = getRandomInt(100, 100000);
         final int assetQuantity = getRandomInt(1000, 999_999_999);
         final int assetDecimals = getRandomInt(0, 8);
 
@@ -468,24 +471,48 @@ public class SubscribeTest extends BaseTest {
         AssetId assetId = issueTx.assetId();
         String assetIdToString = assetId.toString();
 
-        SponsorFeeTransaction sponsorFeeTx = account.sponsorFee(assetId, sponsorFee, i -> i.additionalFee(EXTRA_FEE)).tx();
+        SponsorFeeTransaction sponsorFeeTx = account.sponsorFee(assetId, sponsorFeeAmount,
+                i -> i.additionalFee(EXTRA_FEE)).tx();
 
         height = node().getHeight();
 
         subscribeResponseHandler(channel, account, height, height);
 
-        System.out.println(getAppend());
         assertAll(
                 () -> assertThat(getSenderPublicKeyFromTransaction(0)).isEqualTo(publicKey),
                 () -> assertThat(getTransactionFeeAmount(0)).isEqualTo(transactionFee),
                 () -> assertThat(getTransactionVersion(0)).isEqualTo(SponsorFeeTransaction.LATEST_VERSION),
                 () -> assertThat(getAssetIdFromSponsorFee(0)).isEqualTo(assetIdToString),
-                () -> assertThat(getAmountFromSponsorFee(0)).isEqualTo(sponsorFee),
-                () -> assertThat(getTransactionId()).isEqualTo(sponsorFeeTx.id().toString())
+                () -> assertThat(getAmountFromSponsorFee(0)).isEqualTo(sponsorFeeAmount),
+                () -> assertThat(getTransactionId()).isEqualTo(sponsorFeeTx.id().toString()),
                 // check waves balance
-/*                () -> assertThat(getAddress(0, 0)).isEqualTo(address),
+                () -> assertThat(getAddress(0, 0)).isEqualTo(address),
                 () -> assertThat(getAmountBefore(0, 0)).isEqualTo(wavesAmountBefore),
-                () -> assertThat(getAmountAfter(0, 0)).isEqualTo(wavesAmountAfter)*/
+                () -> assertThat(getAmountAfter(0, 0)).isEqualTo(wavesAmountAfter),
+                // check asset before sponsor fee transaction
+                () -> assertThat(getAssetIdFromAssetBefore(0, 0)).isEqualTo(assetIdToString),
+                () -> assertThat(getIssuerBefore(0, 0)).isEqualTo(publicKey),
+                () -> assertThat(getDecimalsBefore(0, 0)).isEqualTo(assetDecimals),
+                () -> assertThat(getNameBefore(0, 0)).isEqualTo(assetName),
+                () -> assertThat(getDescriptionBefore(0, 0)).isEqualTo(assetDescription),
+                () -> assertThat(getReissuableBefore(0, 0)).isEqualTo(true),
+                () -> assertThat(getQuantityBefore(0, 0)).isEqualTo(assetQuantity),
+                () -> assertThat(getScriptComplexityBefore(0, 0)).isEqualTo(0),
+                // check asset after sponsor fee transaction
+                () -> assertThat(getAssetIdFromAssetAfter(0, 0)).isEqualTo(assetIdToString),
+                () -> assertThat(getIssuerAfter(0, 0)).isEqualTo(publicKey),
+                () -> assertThat(getDecimalsAfter(0, 0)).isEqualTo(assetDecimals),
+                () -> assertThat(getNameAfter(0, 0)).isEqualTo(assetName),
+                () -> assertThat(getDescriptionAfter(0, 0)).isEqualTo(assetDescription),
+                () -> assertThat(getReissuableAfter(0, 0)).isEqualTo(true),
+                () -> assertThat(getQuantityAfter(0, 0)).isEqualTo(assetQuantity),
+                () -> assertThat(getScriptComplexityAfter(0, 0)).isEqualTo(0)
         );
+    }
+
+    @Test
+    @DisplayName("Check subscription on Exchange transaction")
+    void subscribeTestForExchangeTransaction() {
+
     }
 }
