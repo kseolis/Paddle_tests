@@ -13,9 +13,10 @@ import org.junit.jupiter.api.Test;
 
 import java.util.List;
 
-import static com.wavesplatform.transactions.BurnTransaction.LATEST_VERSION;
+import static com.wavesplatform.transactions.ExchangeTransaction.LATEST_VERSION;
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
+import static im.mak.paddle.helpers.Calculations.*;
 import static im.mak.paddle.helpers.Randomizer.getRandomInt;
 import static im.mak.paddle.util.Async.async;
 import static im.mak.paddle.util.Constants.*;
@@ -23,7 +24,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class ExchangeTransactionTest {
-    private static final byte decimals = 8;
+    private static final int decimals = 8;
 
     private static Account alice;
     private static Account bob;
@@ -32,15 +33,6 @@ public class ExchangeTransactionTest {
     private static AssetId testAssetId;
     private static AssetId firstSmartAssetId;
     private static AssetId secondSmartAssetId;
-
-    private AssetId amountAssetId;
-    private AssetId priceAssetId;
-
-
-    private long buyerBalanceAfterTransactionAmountAssetId;
-    private long sellerBalanceAfterTransactionAmountAssetId;
-    private long buyerBalanceAfterTransactionPriceAsset;
-    private long sellerBalanceAfterTransactionPriceAsset;
 
     @BeforeAll
     static void before() {
@@ -144,7 +136,7 @@ public class ExchangeTransactionTest {
 
     private void exchangeTransaction
             (Account from, Account to, Order buy, Order sell, long amount, long price, long extraFee, int version) {
-        calculateBalancesAfterTransaction(from, to, buy, amount);
+        calculateBalancesAfterTransaction(from, to, buy, amount, decimals);
         long fee = MIN_FEE_FOR_EXCHANGE + extraFee;
         ExchangeTransaction tx = ExchangeTransaction
                 .builder(buy, sell, amount, price, MIN_FEE_FOR_EXCHANGE, MIN_FEE_FOR_EXCHANGE)
@@ -166,30 +158,10 @@ public class ExchangeTransactionTest {
                 () -> assertThat(tx.amount()).isEqualTo(amount),
                 () -> assertThat(tx.price()).isEqualTo(buy.price().value()),
                 () -> assertThat(tx.type()).isEqualTo(7),
-                () -> assertThat(from.getBalance(amountAssetId)).isEqualTo(buyerBalanceAfterTransactionAmountAssetId),
-                () -> assertThat(to.getBalance(amountAssetId)).isEqualTo(sellerBalanceAfterTransactionAmountAssetId),
-                () -> assertThat(from.getBalance(priceAssetId)).isEqualTo(buyerBalanceAfterTransactionPriceAsset),
-                () -> assertThat(to.getBalance(priceAssetId)).isEqualTo(sellerBalanceAfterTransactionPriceAsset)
+                () -> assertThat(from.getBalance(getAmountAssetId())).isEqualTo(getBuyerBalanceAfterTransactionAmountAssetId()),
+                () -> assertThat(to.getBalance(getAmountAssetId())).isEqualTo(getSellerBalanceAfterTransactionAmountAssetId()),
+                () -> assertThat(from.getBalance(getPriceAssetId())).isEqualTo(getBuyerBalanceAfterTransactionPriceAsset()),
+                () -> assertThat(to.getBalance(getPriceAssetId())).isEqualTo(getSellerBalanceAfterTransactionPriceAsset())
         );
-    }
-
-    private void calculateBalancesAfterTransaction(Account from, Account to, Order buy, long amount) {
-        amountAssetId = buy.assetPair().left();
-        priceAssetId = buy.assetPair().right();
-
-        buyerBalanceAfterTransactionAmountAssetId = from.getBalance(amountAssetId) + amount;
-        sellerBalanceAfterTransactionAmountAssetId = to.getBalance(amountAssetId) - amount;
-
-        if (amountAssetId.isWaves()) {
-            sellerBalanceAfterTransactionAmountAssetId = to.getBalance(amountAssetId) - amount - MIN_FEE_FOR_EXCHANGE;
-        }
-
-        if (!amountAssetId.isWaves() || !priceAssetId.isWaves()) {
-            long amountOrderNormalize = buy.amount().value();
-            long priceOrderNormalize = buy.price().value();
-            double spendAmount = amountOrderNormalize * priceOrderNormalize * (Math.pow(10, -decimals));
-            buyerBalanceAfterTransactionPriceAsset = from.getBalance(priceAssetId) - (long) spendAmount;
-            sellerBalanceAfterTransactionPriceAsset = to.getBalance(priceAssetId) + (long) spendAmount;
-        }
     }
 }
