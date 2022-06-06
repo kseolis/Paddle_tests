@@ -19,6 +19,8 @@ public class Constants {
     public static final int DEFAULT_FAUCET = 10_00000000;
 
     public static final byte MIN_TRANSFER_SUM = 1;
+    public static final byte ORDER_V_3 = 3;
+    public static final byte ORDER_V_4 = 4;
 
     public static int MIN_NUM_ACCOUNT_FOR_MASS_TRANSFER = 1;
     public static int MAX_NUM_ACCOUNT_FOR_MASS_TRANSFER = 100;

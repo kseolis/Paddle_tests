@@ -24,8 +24,6 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class ExchangeTransactionTest {
     private static final byte decimals = 8;
-    private static final byte orderV3 = 3;
-    private static final byte orderV4 = 4;
 
     private static Account alice;
     private static Account bob;
@@ -52,13 +50,13 @@ public class ExchangeTransactionTest {
                     testAssetId = alice.issue(i -> i.name("Test_Asset").quantity(4000L).decimals(decimals)).tx().assetId();
                 },
                 () -> {
-                    bob = new Account(DEFAULT_FAUCET);
-                    secondSmartAssetId = bob.issue(i -> i.name("S_Smart_Asset").script(SCRIPT_PERMITTING_OPERATIONS)
+                    cat = new Account(DEFAULT_FAUCET);
+                    firstSmartAssetId = cat.issue(i -> i.name("F_Smart_Asset").script(SCRIPT_PERMITTING_OPERATIONS)
                             .quantity(4000L).decimals(decimals)).tx().assetId();
                 },
                 () -> {
-                    cat = new Account(DEFAULT_FAUCET);
-                    firstSmartAssetId = cat.issue(i -> i.name("F_Smart_Asset").script(SCRIPT_PERMITTING_OPERATIONS)
+                    bob = new Account(DEFAULT_FAUCET);
+                    secondSmartAssetId = bob.issue(i -> i.name("S_Smart_Asset").script(SCRIPT_PERMITTING_OPERATIONS)
                             .quantity(4000L).decimals(decimals)).tx().assetId();
                 }
         );
@@ -101,9 +99,9 @@ public class ExchangeTransactionTest {
         Amount amountsTokensForExchange = Amount.of(50, testAssetId);
         Amount pricePerToken = Amount.of(sumSellerTokens, firstSmartAssetId);
 
-        Order buyerOrder = Order.buy(amountsTokensForExchange, pricePerToken, cat.publicKey()).version(orderV4)
+        Order buyerOrder = Order.buy(amountsTokensForExchange, pricePerToken, cat.publicKey()).version(ORDER_V_4)
                 .getSignedWith(cat.privateKey());
-        Order sellOrder = Order.sell(amountsTokensForExchange, pricePerToken, cat.publicKey()).version(orderV3)
+        Order sellOrder = Order.sell(amountsTokensForExchange, pricePerToken, cat.publicKey()).version(ORDER_V_3)
                 .getSignedWith(alice.privateKey());
 
         exchangeTransaction(
@@ -126,9 +124,9 @@ public class ExchangeTransactionTest {
         Amount amountsTokensForExchange = Amount.of(MIN_TRANSFER_SUM, firstSmartAssetId);
         Amount pricePerToken = Amount.of(sumBuyerTokens, secondSmartAssetId);
 
-        Order buyerOrder = Order.buy(amountsTokensForExchange, pricePerToken, bob.publicKey()).version(orderV3)
+        Order buyerOrder = Order.buy(amountsTokensForExchange, pricePerToken, bob.publicKey()).version(ORDER_V_3)
                 .getSignedWith(bob.privateKey());
-        Order sellOrder = Order.sell(amountsTokensForExchange, pricePerToken, bob.publicKey()).version(orderV4)
+        Order sellOrder = Order.sell(amountsTokensForExchange, pricePerToken, bob.publicKey()).version(ORDER_V_4)
                 .getSignedWith(cat.privateKey());
 
         exchangeTransaction(
