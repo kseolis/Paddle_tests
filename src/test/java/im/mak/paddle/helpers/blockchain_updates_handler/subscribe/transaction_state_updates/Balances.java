@@ -9,16 +9,16 @@ public class Balances extends TransactionStateUpdates {
         return getTransactionStateUpdate(txStateUpdIndex).getBalances(index);
     }
 
-    public static String getIssuedAssetId(int txStateUpdIndex, int balanceUpdIndex) {
-        return Base58.encode(getBalanceUpdate(txStateUpdIndex, balanceUpdIndex)
-                .getAmountAfter()
-                .getAssetId()
-                .toByteArray());
-    }
-
     public static String getAddress(int txStateUpdIndex, int balancesIndex) {
         return Base58.encode(getBalanceUpdate(txStateUpdIndex, balancesIndex)
                 .getAddress()
+                .toByteArray());
+    }
+
+    public static String getIssuedAssetIdAmountAfter(int txStateUpdIndex, int balanceUpdIndex) {
+        return Base58.encode(getBalanceUpdate(txStateUpdIndex, balanceUpdIndex)
+                .getAmountAfter()
+                .getAssetId()
                 .toByteArray());
     }
 

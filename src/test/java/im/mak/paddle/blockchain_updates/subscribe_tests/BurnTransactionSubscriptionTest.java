@@ -88,7 +88,7 @@ public class BurnTransactionSubscriptionTest extends BaseTest {
                 () -> assertThat(getAmountAfter(0, 0)).isEqualTo(wavesAmountAfterBurn),
                 // check asset balance
                 () -> assertThat(getAddress(0, 1)).isEqualTo(address),
-                () -> assertThat(getIssuedAssetId(0, 1)).isEqualTo(assetId),
+                () -> assertThat(getIssuedAssetIdAmountAfter(0, 1)).isEqualTo(assetId),
                 () -> assertThat(getAmountBefore(0, 1)).isEqualTo(assetQuantity),
                 () -> assertThat(getAmountAfter(0, 1)).isEqualTo(quantityAfterBurn),
                 // check asset before burn
@@ -139,7 +139,7 @@ public class BurnTransactionSubscriptionTest extends BaseTest {
                 () -> assertThat(getAmountAfter(0, 0)).isEqualTo(wavesAmountAfterBurn),
                 // check asset balance
                 () -> assertThat(getAddress(0, 1)).isEqualTo(address),
-                () -> assertThat(getIssuedAssetId(0, 1)).isEqualTo(assetId),
+                () -> assertThat(getIssuedAssetIdAmountAfter(0, 1)).isEqualTo(assetId),
                 () -> assertThat(getAmountBefore(0, 1)).isEqualTo(assetQuantity),
                 () -> assertThat(getAmountAfter(0, 1)).isEqualTo(quantityAfterBurn),
                 // check asset before burn

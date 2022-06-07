@@ -80,7 +80,7 @@ public class IssueTransactionSubscriptionTest extends BaseTest {
                 () -> assertThat(getAmountBefore(0, 0)).isEqualTo(DEFAULT_FAUCET),
                 () -> assertThat(getAmountAfter(0, 0)).isEqualTo(amountAfter),
                 // check assetId and balance from balances
-                () -> assertThat(getIssuedAssetId(0, 1)).isEqualTo(assetId),
+                () -> assertThat(getIssuedAssetIdAmountAfter(0, 1)).isEqualTo(assetId),
                 () -> assertThat(getAmountBefore(0, 1)).isEqualTo(0),
                 () -> assertThat(getAmountAfter(0, 1)).isEqualTo(assetQuantity),
                 // check from assets
