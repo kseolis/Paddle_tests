@@ -5,8 +5,13 @@ import com.wavesplatform.protobuf.transaction.TransactionOuterClass;
 import im.mak.paddle.helpers.blockchain_updates_handler.subscribe.SubscribeHandler;
 
 public class Transactions extends SubscribeHandler {
+
     public static TransactionOuterClass.Transaction getTransactionAtIndex(int index) {
         return getMicroBlockInfo().getTransactions(index).getTransaction();
+    }
+
+    public static long getChainId(int index) {
+        return getTransactionAtIndex(index).getChainId();
     }
 
     public static String getSenderPublicKeyFromTransaction(int txIndex) {

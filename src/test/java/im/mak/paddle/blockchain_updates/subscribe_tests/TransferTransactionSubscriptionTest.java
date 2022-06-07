@@ -13,7 +13,7 @@ import static im.mak.paddle.Node.node;
 import static im.mak.paddle.helpers.Randomizer.getRandomInt;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.SubscribeHandler.getTransactionId;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.SubscribeHandler.subscribeResponseHandler;
-import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.TransferTransactionMetadata.getTransferRecipientAddressFromTransactionMetadata;
+import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.TransactionMetadata.getTransferRecipientAddressFromTransactionMetadata;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transaction_state_updates.Balances.*;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transaction_state_updates.Balances.getAmountAfter;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.Transactions.*;

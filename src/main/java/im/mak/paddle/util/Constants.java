@@ -29,4 +29,6 @@ public class Constants {
     public static final String ALIAS = "Alias";
 
     public static final String SCRIPT_PERMITTING_OPERATIONS = "{-# STDLIB_VERSION 5 #-} {-# SCRIPT_TYPE ASSET #-} true";
+
+    public static final long DEVNET_CHAIN_ID = 68;
 }
