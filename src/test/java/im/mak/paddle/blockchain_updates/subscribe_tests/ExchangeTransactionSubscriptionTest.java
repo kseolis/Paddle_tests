@@ -92,6 +92,7 @@ public class ExchangeTransactionSubscriptionTest extends BaseTest {
         subscribeResponseHandler(channel, buyer, height, height);
 
         assertAll(
+                () -> assertThat(getChainId(0)).isEqualTo(DEVNET_CHAIN_ID),
                 () -> assertThat(getSenderPublicKeyFromTransaction(0)).isEqualTo(buyerPublicKey),
                 () -> assertThat(getTransactionFeeAmount(0)).isEqualTo(MIN_FEE_FOR_EXCHANGE),
                 () -> assertThat(getTransactionVersion(0)).isEqualTo(ExchangeTransaction.LATEST_VERSION),

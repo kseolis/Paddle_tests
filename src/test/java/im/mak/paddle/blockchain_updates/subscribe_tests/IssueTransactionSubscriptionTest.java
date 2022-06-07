@@ -65,6 +65,7 @@ public class IssueTransactionSubscriptionTest extends BaseTest {
         subscribeResponseHandler(channel, account, height, height);
 
         assertAll(
+                () -> assertThat(getChainId(0)).isEqualTo(DEVNET_CHAIN_ID),
                 () -> assertThat(getSenderPublicKeyFromTransaction(0)).isEqualTo(publicKey),
                 () -> assertThat(getAssetName(0)).isEqualTo(assetName),
                 () -> assertThat(getAssetDescription(0)).isEqualTo(assetDescription),

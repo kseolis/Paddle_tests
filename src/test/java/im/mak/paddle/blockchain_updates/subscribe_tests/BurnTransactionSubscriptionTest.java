@@ -36,9 +36,9 @@ public class BurnTransactionSubscriptionTest extends BaseTest {
     private String assetName;
     private String assetDescription;
     private long quantityAfterBurn;
-    private final long burnSmartAssetFee = MIN_FEE + EXTRA_FEE;
+    private final long burnAssetFee = MIN_FEE + EXTRA_FEE;
     private final long wavesAmountBeforeBurn = DEFAULT_FAUCET - ONE_WAVES;
-    private final long wavesAmountAfterBurn = wavesAmountBeforeBurn - burnSmartAssetFee;
+    private final long wavesAmountAfterBurn = wavesAmountBeforeBurn - burnAssetFee;
     private final byte[] compileScript = node().compileScript(SCRIPT_PERMITTING_OPERATIONS).script().bytes();
 
     @BeforeEach
@@ -76,7 +76,8 @@ public class BurnTransactionSubscriptionTest extends BaseTest {
 
         subscribeResponseHandler(channel, account, height, height);
         assertAll(
-                () -> assertThat(getTransactionFeeAmount(0)).isEqualTo(burnSmartAssetFee),
+                () -> assertThat(getChainId(0)).isEqualTo(DEVNET_CHAIN_ID),
+                () -> assertThat(getTransactionFeeAmount(0)).isEqualTo(burnAssetFee),
                 () -> assertThat(getSenderPublicKeyFromTransaction(0)).isEqualTo(publicKey),
                 () -> assertThat(getTransactionVersion(0)).isEqualTo(BurnTransaction.LATEST_VERSION),
                 () -> assertThat(getBurnAssetId(0)).isEqualTo(assetId),
@@ -127,6 +128,7 @@ public class BurnTransactionSubscriptionTest extends BaseTest {
 
         subscribeResponseHandler(channel, account, height, height);
         assertAll(
+                () -> assertThat(getChainId(0)).isEqualTo(DEVNET_CHAIN_ID),
                 () -> assertThat(getTransactionFeeAmount(0)).isEqualTo(MIN_FEE),
                 () -> assertThat(getSenderPublicKeyFromTransaction(0)).isEqualTo(publicKey),
                 () -> assertThat(getTransactionVersion(0)).isEqualTo(BurnTransaction.LATEST_VERSION),

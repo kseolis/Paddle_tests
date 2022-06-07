@@ -18,8 +18,7 @@ import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transac
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transaction_state_updates.Balances.getAmountAfter;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.Transactions.*;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.TransferTransaction.*;
-import static im.mak.paddle.util.Constants.DEFAULT_FAUCET;
-import static im.mak.paddle.util.Constants.MIN_FEE;
+import static im.mak.paddle.util.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
@@ -52,6 +51,7 @@ public class TransferTransactionSubscriptionTest extends BaseTest {
         subscribeResponseHandler(channel, account, height, height);
 
         assertAll(
+                () -> assertThat(getChainId(0)).isEqualTo(DEVNET_CHAIN_ID),
                 () -> assertThat(getTransferAssetAmount(0)).isEqualTo(amountVal),
                 () -> assertThat(getSenderPublicKeyFromTransaction(0)).isEqualTo(publicKey),
                 () -> assertThat(getTransactionVersion(0)).isEqualTo(TransferTransaction.LATEST_VERSION),

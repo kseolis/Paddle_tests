@@ -79,6 +79,7 @@ public class SetAssetScriptTransactionSubscriptionTest extends BaseTest {
         subscribeResponseHandler(channel, account, height, height);
 
         assertAll(
+                () -> assertThat(getChainId(0)).isEqualTo(DEVNET_CHAIN_ID),
                 () -> assertThat(getSenderPublicKeyFromTransaction(0)).isEqualTo(publicKey),
                 () -> assertThat(getTransactionFeeAmount(0)).isEqualTo(ONE_WAVES),
                 () -> assertThat(getTransactionVersion(0)).isEqualTo(SetAssetScriptTransaction.LATEST_VERSION),

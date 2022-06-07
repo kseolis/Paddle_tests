@@ -79,6 +79,7 @@ public class ReissueTransactionSubscriptionTest extends BaseTest {
         subscribeResponseHandler(channel, account, height, height);
 
         assertAll(
+                () -> assertThat(getChainId(0)).isEqualTo(DEVNET_CHAIN_ID),
                 () -> assertThat(getTransactionFeeAmount(0)).isEqualTo(MIN_FEE),
                 () -> assertThat(getSenderPublicKeyFromTransaction(0)).isEqualTo(publicKey),
                 () -> assertThat(getTransactionVersion(0)).isEqualTo(ReissueTransaction.LATEST_VERSION),
@@ -135,6 +136,7 @@ public class ReissueTransactionSubscriptionTest extends BaseTest {
         subscribeResponseHandler(channel, account, height, height);
 
         assertAll(
+                () -> assertThat(getChainId(0)).isEqualTo(DEVNET_CHAIN_ID),
                 () -> assertThat(getTransactionFeeAmount(0)).isEqualTo(reissueFee),
                 () -> assertThat(getSenderPublicKeyFromTransaction(0)).isEqualTo(publicKey),
                 () -> assertThat(getTransactionVersion(0)).isEqualTo(ReissueTransaction.LATEST_VERSION),
