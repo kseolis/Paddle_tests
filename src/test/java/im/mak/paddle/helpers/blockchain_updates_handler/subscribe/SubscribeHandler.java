@@ -39,6 +39,22 @@ public class SubscribeHandler {
         }
     }
 
+    public static Events.BlockchainUpdated.Append getAppend() {
+        return append;
+    }
+
+    public static BlockOuterClass.MicroBlock getMicroBlockInfo() {
+        return microBlockInfo;
+    }
+
+    public static TransactionOuterClass.Transaction getFirstTransaction() {
+        return firstTransaction;
+    }
+
+    public static String getTransactionId() {
+        return transactionId;
+    }
+
     private static void subscribeEventHandler(Events.BlockchainUpdated subscribeEventUpdate, Account account) {
         append = subscribeEventUpdate.getAppend();
         microBlockInfo = append
@@ -60,21 +76,5 @@ public class SubscribeHandler {
                 firstTransaction = microBlockInfo.getTransactions(0).getTransaction();
             }
         }
-    }
-
-    public static Events.BlockchainUpdated.Append getAppend() {
-        return append;
-    }
-
-    public static BlockOuterClass.MicroBlock getMicroBlockInfo() {
-        return microBlockInfo;
-    }
-
-    public static TransactionOuterClass.Transaction getFirstTransaction() {
-        return firstTransaction;
-    }
-
-    public static String getTransactionId() {
-        return transactionId;
     }
 }

@@ -3,8 +3,9 @@ package im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transaction_s
 import com.wavesplatform.crypto.base.Base58;
 import com.wavesplatform.events.protobuf.Events;
 
-public class Assets extends TransactionStateUpdates {
+import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transaction_state_updates.TransactionStateUpdates.getTransactionStateUpdate;
 
+public class Assets {
     public static Events.StateUpdate.AssetDetails getAssetBefore(int txStateUpdIndex, int assetIndex) {
         return getTransactionStateUpdate(txStateUpdIndex)
                 .getAssets(assetIndex)

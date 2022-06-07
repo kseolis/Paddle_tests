@@ -2,7 +2,9 @@ package im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions;
 
 import com.wavesplatform.crypto.base.Base58;
 
-public class SponsorFeeTransaction extends Transactions {
+import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.Transactions.getTransactionAtIndex;
+
+public class SponsorFeeTransaction {
     public static String getAssetIdFromSponsorFee(int txIndex) {
         return Base58.encode(getTransactionAtIndex(txIndex)
                 .getSponsorFee()

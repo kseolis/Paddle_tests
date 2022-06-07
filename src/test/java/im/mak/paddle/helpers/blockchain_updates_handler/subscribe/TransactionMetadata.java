@@ -3,7 +3,9 @@ package im.mak.paddle.helpers.blockchain_updates_handler.subscribe;
 import com.wavesplatform.crypto.base.Base58;
 import com.wavesplatform.events.protobuf.Events;
 
-public class TransactionMetadata extends SubscribeHandler {
+import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.SubscribeHandler.getAppend;
+
+public class TransactionMetadata {
     public static Events.TransactionMetadata getElementTransactionMetadata(int metadataIndex) {
         return getAppend().getTransactionsMetadata(metadataIndex);
     }

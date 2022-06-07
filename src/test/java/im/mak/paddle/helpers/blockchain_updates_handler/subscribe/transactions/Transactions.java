@@ -2,9 +2,10 @@ package im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions;
 
 import com.wavesplatform.crypto.base.Base58;
 import com.wavesplatform.protobuf.transaction.TransactionOuterClass;
-import im.mak.paddle.helpers.blockchain_updates_handler.subscribe.SubscribeHandler;
 
-public class Transactions extends SubscribeHandler {
+import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.SubscribeHandler.getMicroBlockInfo;
+
+public class Transactions {
 
     public static TransactionOuterClass.Transaction getTransactionAtIndex(int index) {
         return getMicroBlockInfo().getTransactions(index).getTransaction();

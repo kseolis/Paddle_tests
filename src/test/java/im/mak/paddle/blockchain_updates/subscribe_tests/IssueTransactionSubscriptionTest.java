@@ -18,6 +18,7 @@ import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transac
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transaction_state_updates.Balances.getAmountAfter;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.IssueTransaction.*;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.IssueTransaction.getAssetScript;
+import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.Transactions.getChainId;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.Transactions.getSenderPublicKeyFromTransaction;
 import static im.mak.paddle.util.Constants.*;
 import static im.mak.paddle.util.Constants.DEFAULT_FAUCET;
@@ -60,7 +61,7 @@ public class IssueTransactionSubscriptionTest extends BaseTest {
 
         height = node().getHeight();
 
-        String assetId = tx.assetId().toString();
+        final String assetId = tx.assetId().toString();
 
         subscribeResponseHandler(channel, account, height, height);
 

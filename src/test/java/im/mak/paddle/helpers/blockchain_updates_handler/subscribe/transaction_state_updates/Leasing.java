@@ -3,13 +3,23 @@ package im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transaction_s
 import com.wavesplatform.crypto.base.Base58;
 import com.wavesplatform.events.protobuf.Events;
 
-public class Leasing extends TransactionStateUpdates {
+import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transaction_state_updates.TransactionStateUpdates.getTransactionStateUpdate;
+
+public class Leasing {
     public static Events.StateUpdate.LeasingUpdate getLeasingForAddress(int txStateUpdIndex, int index) {
         return getTransactionStateUpdate(txStateUpdIndex).getLeasingForAddress(index);
     }
 
     public static String getAddressFromLeasingForAddress(int txStateUpdIndex, int index) {
         return Base58.encode(getLeasingForAddress(txStateUpdIndex, index).getAddress().toByteArray());
+    }
+
+    public static long getOutBeforeFromLeasingForAddress(int txStateUpdIndex, int index) {
+        return getLeasingForAddress(txStateUpdIndex, index).getOutBefore();
+    }
+
+    public static long getInBeforeFromLeasingForAddress(int txStateUpdIndex, int index) {
+        return getLeasingForAddress(txStateUpdIndex, index).getInBefore();
     }
 
     public static long getOutAfterFromLeasingForAddress(int txStateUpdIndex, int index) {

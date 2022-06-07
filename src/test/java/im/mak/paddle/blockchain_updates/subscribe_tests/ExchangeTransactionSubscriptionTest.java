@@ -21,6 +21,7 @@ import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.Subscri
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.SubscribeHandler.subscribeResponseHandler;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transaction_state_updates.Balances.*;
 import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.ExchangeTransaction.*;
+import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.Transactions.*;
 import static im.mak.paddle.util.Async.async;
 import static im.mak.paddle.util.Constants.*;
 import static im.mak.paddle.util.Constants.ORDER_V_4;

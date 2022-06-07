@@ -31,4 +31,6 @@ public class Constants {
     public static final String SCRIPT_PERMITTING_OPERATIONS = "{-# STDLIB_VERSION 5 #-} {-# SCRIPT_TYPE ASSET #-} true";
 
     public static final long DEVNET_CHAIN_ID = 68;
+    public static final String ACTIVE_STATUS_LEASE = "ACTIVE";
+    public static final String INACTIVE_STATUS_LEASE = "INACTIVE";
 }

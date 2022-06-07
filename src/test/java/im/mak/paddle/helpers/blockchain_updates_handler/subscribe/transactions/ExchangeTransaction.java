@@ -4,7 +4,9 @@ import com.wavesplatform.crypto.base.Base58;
 import com.wavesplatform.protobuf.order.OrderOuterClass;
 import com.wavesplatform.protobuf.transaction.TransactionOuterClass;
 
-public class ExchangeTransaction extends Transactions {
+import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.Transactions.getTransactionAtIndex;
+
+public class ExchangeTransaction {
     public static TransactionOuterClass.ExchangeTransactionData getExchangeTransaction(int index) {
         return getTransactionAtIndex(index).getExchange();
     }

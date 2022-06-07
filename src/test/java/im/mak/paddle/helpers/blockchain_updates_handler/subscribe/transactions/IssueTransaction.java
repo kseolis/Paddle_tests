@@ -1,6 +1,8 @@
 package im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions;
 
-public class IssueTransaction extends Transactions {
+import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.Transactions.getTransactionAtIndex;
+
+public class IssueTransaction {
     public static String getAssetName(int txIndex) {
         return getTransactionAtIndex(txIndex).getIssue().getName();
     }
