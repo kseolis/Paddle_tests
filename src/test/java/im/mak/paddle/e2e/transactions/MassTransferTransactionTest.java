@@ -17,6 +17,8 @@ import static com.wavesplatform.transactions.MassTransferTransaction.LATEST_VERS
 import static com.wavesplatform.transactions.common.AssetId.WAVES;
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
+import static im.mak.paddle.helpers.Calculations.calculateSenderBalanceAfterMassTransfer;
+import static im.mak.paddle.helpers.Calculations.getTransactionCommission;
 import static im.mak.paddle.helpers.Randomizer.accountListGenerator;
 import static im.mak.paddle.helpers.Randomizer.getRandomInt;
 import static im.mak.paddle.util.Async.async;
@@ -32,16 +34,14 @@ public class MassTransferTransactionTest {
     private static List<Account> minimumAccountsForMassTransfer;
     private static List<Account> maximumAccountsForMassTransfer;
 
-    long transactionCommission;
-
     @BeforeAll
     static void before() {
         async(
                 () -> {
-                    base58StringAttachment = new Base58String("attachment");
                     account = new Account(DEFAULT_FAUCET);
                     issuedAsset = account.issue(i -> i.name("Test_Asset").quantity(900_000_000_000L)).tx().assetId();
                 },
+                () -> base58StringAttachment = new Base58String("attachment"),
                 () -> minimumAccountsForMassTransfer = accountListGenerator(MIN_NUM_ACCOUNT_FOR_MASS_TRANSFER),
                 () -> maximumAccountsForMassTransfer = accountListGenerator(MAX_NUM_ACCOUNT_FOR_MASS_TRANSFER)
         );
@@ -92,7 +92,7 @@ public class MassTransferTransactionTest {
 
         int numberOfAccounts = accountsList.size();
 
-        long senderBalanceAfterMassTransfer = calculateSenderBalanceAfterTransfer(assetId, amount, numberOfAccounts);
+        long senderBalanceAfterMassTransfer = calculateSenderBalanceAfterMassTransfer(account, assetId, amount, numberOfAccounts);
 
         MassTransferTransaction tx = MassTransferTransaction
                 .builder(transfers)
@@ -111,7 +111,7 @@ public class MassTransferTransactionTest {
                 () -> assertThat(tx.attachment()).isEqualTo(base58StringAttachment),
                 () -> assertThat(tx.assetId()).isEqualTo(assetId),
                 () -> assertThat(tx.fee().assetId()).isEqualTo(WAVES),
-                () -> assertThat(tx.fee().value()).isEqualTo(transactionCommission),
+                () -> assertThat(tx.fee().value()).isEqualTo(getTransactionCommission()),
                 () -> assertThat(tx.sender()).isEqualTo(account.publicKey()),
                 () -> assertThat(tx.transfers().size()).isEqualTo(numberOfAccounts),
                 () -> assertThat(tx.type()).isEqualTo(11),
@@ -122,25 +122,6 @@ public class MassTransferTransactionTest {
                         )
                 )
         );
-    }
-
-    private long calculateSenderBalanceAfterTransfer(AssetId assetId, long amount, int numberOfAccounts) {
-        long senderBalance = account.getBalance(assetId);
-        long numForRoundCheck = 100000;
-        long additionalFeeForMassTransfer = FEE_FOR_MASS_TRANSFER * numberOfAccounts;
-        if (additionalFeeForMassTransfer % numForRoundCheck != 0) { // The fee value is rounded up to three decimals.
-            additionalFeeForMassTransfer = (long) Math.ceil(
-                    (float) additionalFeeForMassTransfer / numForRoundCheck
-            ) * numForRoundCheck;
-        }
-
-        transactionCommission = MIN_FEE + additionalFeeForMassTransfer;
-        long transactionSum = amount * numberOfAccounts;
-
-        if (assetId.equals(WAVES)) {
-            return senderBalance - transactionCommission - transactionSum;
-        }
-        return senderBalance - transactionSum;
     }
 }
 

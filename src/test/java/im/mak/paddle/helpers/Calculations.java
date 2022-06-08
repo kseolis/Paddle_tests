@@ -4,7 +4,8 @@ import com.wavesplatform.transactions.common.AssetId;
 import com.wavesplatform.transactions.exchange.Order;
 import im.mak.paddle.Account;
 
-import static im.mak.paddle.util.Constants.MIN_FEE_FOR_EXCHANGE;
+import static com.wavesplatform.transactions.common.AssetId.WAVES;
+import static im.mak.paddle.util.Constants.*;
 
 public class Calculations {
     private static AssetId amountAssetId;
@@ -14,8 +15,9 @@ public class Calculations {
     private static long buyerBalanceAfterTransactionPriceAsset;
     private static long sellerBalanceAfterTransactionPriceAsset;
 
-    public static void calculateBalancesAfterTransaction(Account from, Account to, Order buy, long amount, int decimals) {
+    private static long transactionCommission;
 
+    public static void calculateBalancesAfterTransaction(Account from, Account to, Order buy, long amount, int decimals) {
         amountAssetId = buy.assetPair().left();
         priceAssetId = buy.assetPair().right();
 
@@ -33,6 +35,26 @@ public class Calculations {
             buyerBalanceAfterTransactionPriceAsset = from.getBalance(priceAssetId) - (long) spendAmount;
             sellerBalanceAfterTransactionPriceAsset = to.getBalance(priceAssetId) + (long) spendAmount;
         }
+    }
+
+    public static long calculateSenderBalanceAfterMassTransfer
+            (Account account, AssetId assetId, long amount, int numberOfAccounts) {
+        long senderBalance = account.getBalance(assetId);
+        long numForRoundCheck = 100000;
+        long additionalFeeForMassTransfer = FEE_FOR_MASS_TRANSFER * numberOfAccounts;
+        if (additionalFeeForMassTransfer % numForRoundCheck != 0) { // The fee value is rounded up to three decimals.
+            additionalFeeForMassTransfer = (long) Math.ceil(
+                    (float) additionalFeeForMassTransfer / numForRoundCheck
+            ) * numForRoundCheck;
+        }
+
+        long transactionSum = amount * numberOfAccounts;
+        transactionCommission = MIN_FEE + additionalFeeForMassTransfer;
+
+        if (assetId.equals(WAVES)) {
+            return senderBalance - transactionSum - transactionCommission;
+        }
+        return senderBalance - transactionSum;
     }
 
 
@@ -58,5 +80,9 @@ public class Calculations {
 
     public static long getSellerBalanceAfterTransactionPriceAsset() {
         return sellerBalanceAfterTransactionPriceAsset;
+    }
+
+    public static long getTransactionCommission() {
+        return transactionCommission;
     }
 }

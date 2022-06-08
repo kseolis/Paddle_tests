@@ -23,4 +23,11 @@ public class TransactionMetadata {
                 .getRecipientAddress()
                 .toByteArray());
     }
+
+    public static String getMassTransferFromTransactionMetadata(int index, int addressIndex) {
+        return Base58.encode(getElementTransactionMetadata(index)
+                .getMassTransfer()
+                .getRecipientsAddresses(addressIndex)
+                .toByteArray());
+    }
 }
