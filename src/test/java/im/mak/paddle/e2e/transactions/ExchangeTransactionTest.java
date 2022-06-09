@@ -99,7 +99,6 @@ public class ExchangeTransactionTest {
         checkAssertsForExchangeTransaction(cat, alice, buyerOrder, sellOrder, amountValue);
     }
 
-
     @Test
     @DisplayName("Exchange transaction two smart assets")
     void exchangeTwoSmartAssets() {
