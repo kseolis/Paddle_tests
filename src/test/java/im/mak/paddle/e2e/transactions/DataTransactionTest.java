@@ -1,24 +1,17 @@
 package im.mak.paddle.e2e.transactions;
 
-import com.wavesplatform.transactions.DataTransaction;
 import com.wavesplatform.transactions.common.AssetId;
 import com.wavesplatform.transactions.common.Base64String;
 import com.wavesplatform.transactions.data.*;
-import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import static com.wavesplatform.transactions.DataTransaction.LATEST_VERSION;
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
-import static im.mak.paddle.Node.node;
 import static im.mak.paddle.helpers.Randomizer.randomNumAndLetterString;
+import static im.mak.paddle.helpers.transaction_senders.DataTransactionsSender.*;
 import static im.mak.paddle.util.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
@@ -42,7 +35,8 @@ public class DataTransactionTest {
     @DisplayName("transaction of all data types on dataTransaction")
     void allTypesDataTransactionTest() {
         for (int v = 1; v <= LATEST_VERSION; v++) {
-            dataEntryTransaction(v, binaryEntry, booleanEntry, integerEntry, stringEntry);
+            dataEntryTransactionSender(account, v, binaryEntry, booleanEntry, integerEntry, stringEntry);
+            checkAssertsForDataTransaction();
         }
     }
 
@@ -50,7 +44,8 @@ public class DataTransactionTest {
     @DisplayName("transaction integer dataTransaction")
     void intTypeDataTransactionTest() {
         for (int v = 1; v <= LATEST_VERSION; v++) {
-            dataEntryTransaction(v, integerEntry);
+            dataEntryTransactionSender(account, v, integerEntry);
+            checkAssertsForDataTransaction();
         }
     }
 
@@ -58,7 +53,8 @@ public class DataTransactionTest {
     @DisplayName("transaction string dataTransaction")
     void stringTypeDataTransactionTest() {
         for (int v = 1; v <= LATEST_VERSION; v++) {
-            dataEntryTransaction(v, stringEntry);
+            dataEntryTransactionSender(account, v, stringEntry);
+            checkAssertsForDataTransaction();
         }
     }
 
@@ -66,7 +62,8 @@ public class DataTransactionTest {
     @DisplayName("transaction binary dataTransaction")
     void binaryTypeDataTransactionTest() {
         for (int v = 1; v <= LATEST_VERSION; v++) {
-            dataEntryTransaction(v, binaryEntry);
+            dataEntryTransactionSender(account, v, binaryEntry);
+            checkAssertsForDataTransaction();
         }
     }
 
@@ -74,34 +71,21 @@ public class DataTransactionTest {
     @DisplayName("transaction boolean dataTransaction")
     void booleanTypeDataTransactionTest() {
         for (int v = 1; v <= LATEST_VERSION; v++) {
-            dataEntryTransaction(v, booleanEntry);
+            dataEntryTransactionSender(account, v, booleanEntry);
+            checkAssertsForDataTransaction();
         }
     }
 
-    private void dataEntryTransaction(int version, DataEntry... dataEntries) {
-        long balanceAfterTransaction = account.getWavesBalance() - MIN_FEE;
-        List<DataEntry> dataEntriesAsList = Arrays.asList(dataEntries);
-        Map<String, EntryType> entryMap = new HashMap<>();
-
-        dataEntriesAsList.forEach(a -> entryMap.put(a.key(), a.type()));
-
-        DataTransaction tx = DataTransaction
-                .builder(dataEntries)
-                .version(version)
-                .getSignedWith(account.privateKey());
-        node().waitForTransaction(node().broadcast(tx).id());
-
-        TransactionInfo txInfo = node().getTransactionInfo(tx.id());
-
+    private void checkAssertsForDataTransaction() {
         assertAll(
-                () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat(account.getWavesBalance()).isEqualTo(balanceAfterTransaction),
-                () -> assertThat(tx.fee().value()).isEqualTo(MIN_FEE),
-                () -> assertThat(tx.fee().assetId()).isEqualTo(AssetId.WAVES),
-                () -> assertThat(tx.sender()).isEqualTo(account.publicKey()),
-                () -> assertThat(tx.type()).isEqualTo(12),
-                () -> tx.data().forEach(
-                        data -> assertThat(entryMap.get(data.key())).isEqualTo(data.type())
+                () -> assertThat(getDataTxInfo().applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat(account.getWavesBalance()).isEqualTo(getBalanceAfterTransaction()),
+                () -> assertThat(getDataTx().fee().value()).isEqualTo(MIN_FEE),
+                () -> assertThat(getDataTx().fee().assetId()).isEqualTo(AssetId.WAVES),
+                () -> assertThat(getDataTx().sender()).isEqualTo(account.publicKey()),
+                () -> assertThat(getDataTx().type()).isEqualTo(12),
+                () -> getDataTx().data().forEach(
+                        data -> assertThat(getDataTxEntryMap().get(data.key())).isEqualTo(data.type())
                 )
         );
     }

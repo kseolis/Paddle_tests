@@ -1,9 +1,7 @@
 package im.mak.paddle.e2e.transactions;
 
-import com.wavesplatform.transactions.BurnTransaction;
 import com.wavesplatform.transactions.common.Amount;
 import com.wavesplatform.transactions.common.AssetId;
-import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -11,8 +9,8 @@ import org.junit.jupiter.api.Test;
 
 import static com.wavesplatform.transactions.BurnTransaction.LATEST_VERSION;
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
-import static im.mak.paddle.Node.node;
 import static im.mak.paddle.helpers.Randomizer.randomNumAndLetterString;
+import static im.mak.paddle.helpers.transaction_senders.BurnTransactionSender.*;
 import static im.mak.paddle.util.Async.async;
 import static im.mak.paddle.util.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -20,7 +18,6 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 
 public class BurnTransactionTest {
     private static Account account;
-    private static long accountWavesBalance;
     private static AssetId issuedAsset;
     private static AssetId issuedSmartAssetId;
 
@@ -43,7 +40,8 @@ public class BurnTransactionTest {
         Amount amount = Amount.of(ASSET_QUANTITY_MIN, issuedAsset);
 
         for (int v = 1; v < LATEST_VERSION; v++) {
-            burnTransaction(amount, issuedAsset, MIN_FEE, v);
+            burnTransactionSender(account, amount, issuedAsset, MIN_FEE, v);
+            checkAssertsForBurnTransaction(issuedAsset, MIN_FEE, amount.value());
         }
     }
 
@@ -54,7 +52,8 @@ public class BurnTransactionTest {
         Amount amount = Amount.of(burnSum, issuedAsset);
 
         for (int v = 1; v < LATEST_VERSION; v++) {
-            burnTransaction(amount, issuedAsset, MIN_FEE, v);
+            burnTransactionSender(account, amount, issuedAsset, MIN_FEE, v);
+            checkAssertsForBurnTransaction(issuedAsset, MIN_FEE, amount.value());
             account.reissue(1000, issuedAsset);
         }
     }
@@ -66,7 +65,8 @@ public class BurnTransactionTest {
         Amount amount = Amount.of(ASSET_QUANTITY_MIN, issuedSmartAssetId);
 
         for (int v = 1; v < LATEST_VERSION; v++) {
-            burnTransaction(amount, issuedSmartAssetId, fee, v);
+            burnTransactionSender(account, amount, issuedSmartAssetId, fee, v);
+            checkAssertsForBurnTransaction(issuedSmartAssetId, fee, amount.value());
         }
     }
 
@@ -78,34 +78,23 @@ public class BurnTransactionTest {
         Amount amount = Amount.of(burnSum, issuedSmartAssetId);
 
         for (int v = 1; v < LATEST_VERSION; v++) {
-            burnTransaction(amount, issuedSmartAssetId, fee, v);
+            burnTransactionSender(account, amount, issuedSmartAssetId, fee, v);
+            checkAssertsForBurnTransaction(issuedSmartAssetId, fee, amount.value());
             account.reissue(1000, issuedSmartAssetId);
         }
     }
 
-    private void burnTransaction(Amount amount, AssetId assetId, long fee, int version) {
-        accountWavesBalance = account.getBalance(AssetId.WAVES);
-        long balanceAfterBurn = account.getBalance(assetId) - amount.value();
-
-        BurnTransaction tx = BurnTransaction.builder(amount)
-                .version(version)
-                .sender(account.publicKey())
-                .fee(fee)
-                .getSignedWith(account.privateKey());
-        node().waitForTransaction(node().broadcast(tx).id());
-
-        TransactionInfo txInfo = node().getTransactionInfo(tx.id());
-
+    private void checkAssertsForBurnTransaction(AssetId assetId, long fee, long amount) {
         assertAll(
-                () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat(account.getAssetBalance(assetId)).isEqualTo(balanceAfterBurn),
-                () -> assertThat(account.getWavesBalance()).isEqualTo(accountWavesBalance - fee),
-                () -> assertThat(tx.fee().assetId()).isEqualTo(AssetId.WAVES),
-                () -> assertThat(tx.fee().value()).isEqualTo(fee),
-                () -> assertThat(tx.amount().value()).isEqualTo(amount.value()),
-                () -> assertThat(tx.amount().assetId()).isEqualTo(assetId),
-                () -> assertThat(tx.sender()).isEqualTo(account.publicKey()),
-                () -> assertThat(tx.type()).isEqualTo(6)
+                () -> assertThat(getTxInfo().applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat(account.getAssetBalance(assetId)).isEqualTo(getBalanceAfterTransaction()),
+                () -> assertThat(account.getWavesBalance()).isEqualTo(getAccountWavesBalance() - fee),
+                () -> assertThat(getBurnTx().fee().assetId()).isEqualTo(AssetId.WAVES),
+                () -> assertThat(getBurnTx().fee().value()).isEqualTo(fee),
+                () -> assertThat(getBurnTx().amount().value()).isEqualTo(amount),
+                () -> assertThat(getBurnTx().amount().assetId()).isEqualTo(assetId),
+                () -> assertThat(getBurnTx().sender()).isEqualTo(account.publicKey()),
+                () -> assertThat(getBurnTx().type()).isEqualTo(6)
         );
     }
 }

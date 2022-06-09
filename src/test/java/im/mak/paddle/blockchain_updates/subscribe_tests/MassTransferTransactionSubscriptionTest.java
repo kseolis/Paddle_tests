@@ -70,9 +70,7 @@ public class MassTransferTransactionSubscriptionTest extends BaseTest {
         accountList.forEach(a -> transfers.add(Transfer.to(a.address(), amountValue)));
 
         senderAccount.massTransfer(i -> i.transfers(transfers).attachment(base58StringAttachment));
-
         height = node().getHeight();
-
         subscribeResponseHandler(channel, senderAccount, height, height);
 
         checkMassTransferOnSubscribe();
@@ -89,8 +87,12 @@ public class MassTransferTransactionSubscriptionTest extends BaseTest {
         );
 
         for (int i = 0; i < MAX_NUM_ACCOUNT_FOR_MASS_TRANSFER; i++) {
+            assertThat(getRecipientAmountFromMassTransfer(0, i)).isEqualTo(amountValue);
+            assertThat(getRecipientPublicKeyHashFromMassTransfer(0, i)).isEqualTo(publicKeyHashFromList(i));
+            assertThat(getMassTransferFromTransactionMetadata(0, i)).isEqualTo(accountAddressFromList(i));
+
             for (int j = 0; j < MAX_NUM_ACCOUNT_FOR_MASS_TRANSFER; j++) {
-                if (getAccountAddressFromList(j).equals(getAddress(0, i))) {
+                if (accountAddressFromList(j).equals(getAddress(0, i))) {
                     assertThat(getAmountBefore(0, i)).isEqualTo(0);
                     assertThat(getAmountAfter(0, i)).isEqualTo(amountValue);
                 } else if (senderAddress.equals(getAddress(0, i))) {
@@ -99,19 +101,13 @@ public class MassTransferTransactionSubscriptionTest extends BaseTest {
                 }
             }
         }
-
-        for (int i = 0; i < MAX_NUM_ACCOUNT_FOR_MASS_TRANSFER; i++) {
-            assertThat(getRecipientAmountFromMassTransfer(0, i)).isEqualTo(amountValue);
-            assertThat(getRecipientPublicKeyHashFromMassTransfer(0, i)).isEqualTo(getPublicKeyHashFromList(i));
-            assertThat(getMassTransferFromTransactionMetadata(0, i)).isEqualTo(getAccountAddressFromList(i));
-        }
     }
 
-    private String getPublicKeyHashFromList(int index) {
+    private String publicKeyHashFromList(int index) {
         return Base58.encode(accountList.get(index).address().publicKeyHash());
     }
 
-    private String getAccountAddressFromList(int index) {
+    private String accountAddressFromList(int index) {
         return accountList.get(index).address().toString();
     }
 }
