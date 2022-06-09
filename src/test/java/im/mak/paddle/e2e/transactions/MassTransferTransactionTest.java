@@ -1,11 +1,7 @@
 package im.mak.paddle.e2e.transactions;
 
-import com.wavesplatform.transactions.MassTransferTransaction;
-import com.wavesplatform.transactions.account.Address;
 import com.wavesplatform.transactions.common.AssetId;
 import com.wavesplatform.transactions.common.Base58String;
-import com.wavesplatform.transactions.mass.Transfer;
-import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -16,11 +12,11 @@ import java.util.*;
 import static com.wavesplatform.transactions.MassTransferTransaction.LATEST_VERSION;
 import static com.wavesplatform.transactions.common.AssetId.WAVES;
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
-import static im.mak.paddle.Node.node;
-import static im.mak.paddle.helpers.Calculations.calculateSenderBalanceAfterMassTransfer;
 import static im.mak.paddle.helpers.Calculations.getTransactionCommission;
 import static im.mak.paddle.helpers.Randomizer.accountListGenerator;
 import static im.mak.paddle.helpers.Randomizer.getRandomInt;
+import static im.mak.paddle.helpers.transaction_senders.BaseTransactionSender.getTxInfo;
+import static im.mak.paddle.helpers.transaction_senders.MassTransferTransactionSender.*;
 import static im.mak.paddle.util.Async.async;
 import static im.mak.paddle.util.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -30,7 +26,7 @@ public class MassTransferTransactionTest {
     private static Account account;
 
     private static AssetId issuedAsset;
-    private static Base58String base58StringAttachment;
+    private static Base58String attachment;
     private static List<Account> minimumAccountsForMassTransfer;
     private static List<Account> maximumAccountsForMassTransfer;
 
@@ -41,7 +37,7 @@ public class MassTransferTransactionTest {
                     account = new Account(DEFAULT_FAUCET);
                     issuedAsset = account.issue(i -> i.name("Test_Asset").quantity(900_000_000_000L)).tx().assetId();
                 },
-                () -> base58StringAttachment = new Base58String("attachment"),
+                () -> attachment = new Base58String("attachment"),
                 () -> minimumAccountsForMassTransfer = accountListGenerator(MIN_NUM_ACCOUNT_FOR_MASS_TRANSFER),
                 () -> maximumAccountsForMassTransfer = accountListGenerator(MAX_NUM_ACCOUNT_FOR_MASS_TRANSFER)
         );
@@ -52,7 +48,8 @@ public class MassTransferTransactionTest {
     void massTransferForMaximumCountAccounts() {
         for (int v = 1; v <= LATEST_VERSION; v++) {
             int amount = getRandomInt(MIN_TRANSFER_SUM, 100);
-            massTransferTransaction(WAVES, amount, maximumAccountsForMassTransfer, v);
+            massTransferTransactionSender(account, WAVES, amount, maximumAccountsForMassTransfer, v, attachment);
+            checkMassTransferTransaction(WAVES, amount, maximumAccountsForMassTransfer);
         }
     }
 
@@ -61,7 +58,8 @@ public class MassTransferTransactionTest {
     void massTransferForMinimumCountAccounts() {
         for (int v = 1; v <= LATEST_VERSION; v++) {
             int amount = getRandomInt(MIN_TRANSFER_SUM, 100);
-            massTransferTransaction(WAVES, amount, minimumAccountsForMassTransfer, v);
+            massTransferTransactionSender(account, WAVES, amount, minimumAccountsForMassTransfer, v, attachment);
+            checkMassTransferTransaction(WAVES, amount, minimumAccountsForMassTransfer);
         }
     }
 
@@ -70,7 +68,8 @@ public class MassTransferTransactionTest {
     void massTransferForMaximumAccountsForIssueAsset() {
         for (int v = 1; v <= LATEST_VERSION; v++) {
             int amount = getRandomInt(MIN_TRANSFER_SUM, 100);
-            massTransferTransaction(issuedAsset, amount, maximumAccountsForMassTransfer, v);
+            massTransferTransactionSender(account, issuedAsset, amount, maximumAccountsForMassTransfer, v, attachment);
+            checkMassTransferTransaction(issuedAsset, amount, maximumAccountsForMassTransfer);
         }
     }
 
@@ -79,47 +78,27 @@ public class MassTransferTransactionTest {
     void massTransferForMinimumAccountsForIssueAsset() {
         for (int v = 1; v <= LATEST_VERSION; v++) {
             int amount = getRandomInt(MIN_TRANSFER_SUM, 100);
-            massTransferTransaction(issuedAsset, amount, minimumAccountsForMassTransfer, v);
+            massTransferTransactionSender(account, issuedAsset, amount, minimumAccountsForMassTransfer, v, attachment);
+            checkMassTransferTransaction(issuedAsset, amount, minimumAccountsForMassTransfer);
         }
     }
 
-    private void massTransferTransaction(AssetId assetId, long amount, List<Account> accountsList, int version) {
-        List<Transfer> transfers = new ArrayList<>();
-        Map<Address, Long> balancesAfterTransaction = new HashMap<>();
-
-        accountsList.forEach(a -> transfers.add(Transfer.to(a.address(), amount)));
-        accountsList.forEach(a -> balancesAfterTransaction.put(a.address(), a.getBalance(assetId) + amount));
-
-        int numberOfAccounts = accountsList.size();
-
-        long senderBalanceAfterMassTransfer = calculateSenderBalanceAfterMassTransfer(account, assetId, amount, numberOfAccounts);
-
-        MassTransferTransaction tx = MassTransferTransaction
-                .builder(transfers)
-                .assetId(assetId)
-                .attachment(base58StringAttachment)
-                .version(version)
-                .getSignedWith(account.privateKey());
-
-        node().waitForTransaction(node().broadcast(tx).id());
-
-        TransactionInfo txInfo = node().getTransactionInfo(tx.id());
-
+    private void checkMassTransferTransaction(AssetId assetId, long amount, List<Account> accountsList) {
         assertAll(
-                () -> assertThat(txInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat(account.getBalance(assetId)).isEqualTo(senderBalanceAfterMassTransfer),
-                () -> assertThat(tx.attachment()).isEqualTo(base58StringAttachment),
-                () -> assertThat(tx.assetId()).isEqualTo(assetId),
-                () -> assertThat(tx.fee().assetId()).isEqualTo(WAVES),
-                () -> assertThat(tx.fee().value()).isEqualTo(getTransactionCommission()),
-                () -> assertThat(tx.sender()).isEqualTo(account.publicKey()),
-                () -> assertThat(tx.transfers().size()).isEqualTo(numberOfAccounts),
-                () -> assertThat(tx.type()).isEqualTo(11),
-                () -> tx.transfers().forEach(transfer -> assertThat(transfer.amount()).isEqualTo(amount)),
+                () -> assertThat(getTxInfo().applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat(account.getBalance(assetId)).isEqualTo(getSenderBalanceAfterMassTransfer()),
+                () -> assertThat(getMassTransferTx().attachment()).isEqualTo(attachment),
+                () -> assertThat(getMassTransferTx().assetId()).isEqualTo(assetId),
+                () -> assertThat(getMassTransferTx().fee().assetId()).isEqualTo(WAVES),
+                () -> assertThat(getMassTransferTx().fee().value()).isEqualTo(getTransactionCommission()),
+                () -> assertThat(getMassTransferTx().sender()).isEqualTo(account.publicKey()),
+                () -> assertThat(getMassTransferTx().transfers().size()).isEqualTo(getAccountsSize()),
+                () -> assertThat(getMassTransferTx().type()).isEqualTo(11),
+                () -> getMassTransferTx().transfers().forEach(
+                        transfer -> assertThat(transfer.amount()).isEqualTo(amount)),
                 () -> accountsList.forEach(
-                        account -> assertThat(
-                                balancesAfterTransaction.get(account.address())).isEqualTo(account.getBalance(assetId)
-                        )
+                        account -> assertThat(getBalancesAfterTransaction()
+                                        .get(account.address())).isEqualTo(account.getBalance(assetId))
                 )
         );
     }
