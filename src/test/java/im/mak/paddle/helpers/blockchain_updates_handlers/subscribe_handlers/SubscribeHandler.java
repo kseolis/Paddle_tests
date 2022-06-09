@@ -1,4 +1,4 @@
-package im.mak.paddle.helpers.blockchain_updates_handler.subscribe;
+package im.mak.paddle.helpers.blockchain_updates_handlers.subscribe_handlers;
 
 import com.wavesplatform.crypto.base.Base58;
 import com.wavesplatform.events.api.grpc.protobuf.BlockchainUpdates;

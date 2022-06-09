@@ -1,12 +1,12 @@
-package im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions;
+package im.mak.paddle.helpers.blockchain_updates_handlers.subscribe_handlers.transactions_handlers;
 
 import com.wavesplatform.crypto.base.Base58;
 import com.wavesplatform.protobuf.order.OrderOuterClass;
 import com.wavesplatform.protobuf.transaction.TransactionOuterClass;
 
-import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.Transactions.getTransactionAtIndex;
+import static im.mak.paddle.helpers.blockchain_updates_handlers.subscribe_handlers.transactions_handlers.TransactionsHandler.getTransactionAtIndex;
 
-public class ExchangeTransaction {
+public class ExchangeTransactionHandler {
     public static TransactionOuterClass.ExchangeTransactionData getExchangeTransaction(int index) {
         return getTransactionAtIndex(index).getExchange();
     }

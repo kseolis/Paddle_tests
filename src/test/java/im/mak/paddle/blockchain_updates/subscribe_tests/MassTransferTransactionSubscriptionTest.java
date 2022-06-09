@@ -2,8 +2,6 @@ package im.mak.paddle.blockchain_updates.subscribe_tests;
 
 import com.wavesplatform.crypto.base.Base58;
 import com.wavesplatform.transactions.MassTransferTransaction;
-import com.wavesplatform.transactions.account.Address;
-import com.wavesplatform.transactions.account.PrivateKey;
 import com.wavesplatform.transactions.account.PublicKey;
 import com.wavesplatform.transactions.common.Amount;
 import com.wavesplatform.transactions.common.AssetId;
@@ -23,12 +21,12 @@ import static im.mak.paddle.helpers.Calculations.calculateSenderBalanceAfterMass
 import static im.mak.paddle.helpers.Calculations.getTransactionCommission;
 import static im.mak.paddle.helpers.Randomizer.accountListGenerator;
 import static im.mak.paddle.helpers.Randomizer.getRandomInt;
-import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.SubscribeHandler.*;
-import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.TransactionMetadata.getMassTransferFromTransactionMetadata;
-import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transaction_state_updates.Balances.*;
-import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.MassTransferTransaction.*;
-import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.Transactions.*;
-import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.Transactions.getTransactionFeeAmount;
+import static im.mak.paddle.helpers.blockchain_updates_handlers.subscribe_handlers.SubscribeHandler.*;
+import static im.mak.paddle.helpers.blockchain_updates_handlers.subscribe_handlers.TransactionMetadataHandler.getMassTransferFromTransactionMetadata;
+import static im.mak.paddle.helpers.blockchain_updates_handlers.subscribe_handlers.transaction_state_updates.Balances.*;
+import static im.mak.paddle.helpers.blockchain_updates_handlers.subscribe_handlers.transactions_handlers.MassTransferTransactionHandler.*;
+import static im.mak.paddle.helpers.blockchain_updates_handlers.subscribe_handlers.transactions_handlers.TransactionsHandler.*;
+import static im.mak.paddle.helpers.blockchain_updates_handlers.subscribe_handlers.transactions_handlers.TransactionsHandler.getTransactionFeeAmount;
 import static im.mak.paddle.util.Async.async;
 import static im.mak.paddle.util.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -64,7 +62,7 @@ public class MassTransferTransactionSubscriptionTest extends BaseTest {
 
     @Test
     @DisplayName("Check subscription on transfer transaction")
-    void subscribeTestForTransferTransaction() {
+    void subscribeTestForMassTransferTransaction() {
         accountList = accountListGenerator(MAX_NUM_ACCOUNT_FOR_MASS_TRANSFER);
         List<Transfer> transfers = new ArrayList<>();
         senderAmountAfter = calculateSenderBalanceAfterMassTransfer

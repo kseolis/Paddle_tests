@@ -1,10 +1,10 @@
-package im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions;
+package im.mak.paddle.helpers.blockchain_updates_handlers.subscribe_handlers.transactions_handlers;
 
 import com.wavesplatform.crypto.base.Base58;
 
-import static im.mak.paddle.helpers.blockchain_updates_handler.subscribe.transactions.Transactions.getTransactionAtIndex;
+import static im.mak.paddle.helpers.blockchain_updates_handlers.subscribe_handlers.transactions_handlers.TransactionsHandler.getTransactionAtIndex;
 
-public class LeaseTransaction {
+public class LeaseTransactionHandler {
     public static String getLeaseTransactionPublicKeyHash(int txIndex) {
         return Base58.encode(getTransactionAtIndex(txIndex)
                 .getLease()
