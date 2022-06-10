@@ -1,7 +1,5 @@
 package im.mak.paddle.helpers.transaction_senders;
 
-import com.wavesplatform.transactions.CreateAliasTransaction;
-import com.wavesplatform.transactions.Transaction;
 import com.wavesplatform.wavesj.info.TransactionInfo;
 
 public class BaseTransactionSender {
