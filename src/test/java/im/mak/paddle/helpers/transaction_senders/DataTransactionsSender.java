@@ -14,10 +14,8 @@ import java.util.Map;
 import static im.mak.paddle.Node.node;
 import static im.mak.paddle.util.Constants.MIN_FEE;
 
-public class DataTransactionsSender {
+public class DataTransactionsSender extends BaseTransactionSender {
     private static DataTransaction dataTx;
-    private static TransactionInfo dataTxInfo;
-    private static long balanceAfterTransaction;
     private static final Map<String, EntryType> dataTxEntryMap = new HashMap<>();
 
     public static void dataEntryTransactionSender(Account account, int version, DataEntry... dataEntries) {
@@ -30,23 +28,14 @@ public class DataTransactionsSender {
                 .version(version)
                 .getSignedWith(account.privateKey());
         node().waitForTransaction(node().broadcast(dataTx).id());
-        dataTxInfo = node().getTransactionInfo(dataTx.id());
+        txInfo = node().getTransactionInfo(dataTx.id());
     }
 
     public static DataTransaction getDataTx() {
         return dataTx;
     }
 
-    public static TransactionInfo getDataTxInfo() {
-        return dataTxInfo;
-    }
-
     public static Map<String, EntryType> getDataTxEntryMap() {
         return dataTxEntryMap;
     }
-
-    public static long getBalanceAfterTransaction() {
-        return balanceAfterTransaction;
-    }
-
 }

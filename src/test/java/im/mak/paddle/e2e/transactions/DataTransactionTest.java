@@ -78,7 +78,7 @@ public class DataTransactionTest {
 
     private void checkAssertsForDataTransaction() {
         assertAll(
-                () -> assertThat(getDataTxInfo().applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat(getTxInfo().applicationStatus()).isEqualTo(SUCCEEDED),
                 () -> assertThat(account.getWavesBalance()).isEqualTo(getBalanceAfterTransaction()),
                 () -> assertThat(getDataTx().fee().value()).isEqualTo(MIN_FEE),
                 () -> assertThat(getDataTx().fee().assetId()).isEqualTo(AssetId.WAVES),
