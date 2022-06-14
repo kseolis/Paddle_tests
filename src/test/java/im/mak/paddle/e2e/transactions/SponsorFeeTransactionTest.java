@@ -1,22 +1,17 @@
 package im.mak.paddle.e2e.transactions;
 
-import com.wavesplatform.transactions.SponsorFeeTransaction;
-import com.wavesplatform.transactions.TransferTransaction;
 import com.wavesplatform.transactions.common.AssetId;
-import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
-import im.mak.paddle.exceptions.ApiError;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static com.wavesplatform.transactions.SponsorFeeTransaction.LATEST_VERSION;
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
-import static im.mak.paddle.Node.node;
 import static im.mak.paddle.helpers.Randomizer.getRandomInt;
+import static im.mak.paddle.helpers.transaction_senders.SponsorFeeTransactionSender.*;
 import static im.mak.paddle.util.Async.async;
 import static im.mak.paddle.util.Constants.DEFAULT_FAUCET;
-import static im.mak.paddle.util.Constants.MIN_FEE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertAll;
 
@@ -49,7 +44,8 @@ public class SponsorFeeTransactionTest {
     @DisplayName("Sponsor transaction with minimal sponsored fee")
     void sponsorMinAssets() {
         for (int v = 1; v <= LATEST_VERSION; v++) {
-            sponsorTransaction(alice, bob, acc, 1, 1, aliceAssetId, v);
+            sponsorFeeTransactionSender(alice, bob, acc, 1, 1, aliceAssetId, v);
+            checkSponsorTransaction(alice, bob, acc, 1, aliceAssetId);
         }
     }
 
@@ -59,7 +55,8 @@ public class SponsorFeeTransactionTest {
         for (int v = 1; v <= LATEST_VERSION; v++) {
             long fee = getRandomInt(10, 50);
             long transferSum = acc.getBalance(bobAssetId) - fee;
-            sponsorTransaction(bob, acc, alice, fee, transferSum, bobAssetId, v);
+            sponsorFeeTransactionSender(bob, acc, alice, fee, transferSum, bobAssetId, v);
+            checkSponsorTransaction(bob, acc, alice, fee, bobAssetId);
             bob.reissue(500, bobAssetId);
             bob.transfer(acc, bob.getBalance(bobAssetId) / 2, bobAssetId);
         }
@@ -69,74 +66,41 @@ public class SponsorFeeTransactionTest {
     @DisplayName("Cancel sponsored fee")
     void cancelAliceSponsorFee() {
         for (int v = 1; v <= LATEST_VERSION; v++) {
-            transactionCancelSponsorFee(alice, bob, acc, aliceAssetId, v);
+            cancelSponsorFeeSender(alice, bob, acc, aliceAssetId, v);
+            checkCancelSponsorFee(alice, aliceAssetId);
         }
     }
 
-    private void sponsorTransaction
-            (Account assetOwner, Account sender, Account recipient,
-             long fee, long transferSum, AssetId assetId, int version) {
-        long assetOwnerAssetBalanceAfterTransaction = assetOwner.getBalance(assetId) + fee;
-        long fromAssetBalanceAfterTransaction = sender.getBalance(assetId) - fee - transferSum;
-        long toAssetBalanceAfterTransaction = recipient.getAssetBalance(assetId) + transferSum;
-
-        long assetOwnerWavesBalance = assetOwner.getWavesBalance() - MIN_FEE - MIN_FEE;
-        long fromWavesBalance = sender.getWavesBalance();
-        long toWavesBalance = recipient.getWavesBalance();
-
-        SponsorFeeTransaction sponsorTx = SponsorFeeTransaction.builder(assetId, fee).version(version)
-                .getSignedWith(assetOwner.privateKey());
-        node().waitForTransaction(node().broadcast(sponsorTx).id());
-        TransactionInfo sponsorTxInfo = node().getTransactionInfo(sponsorTx.id());
-
-        TransferTransaction transferTx = sender.transfer(
-                recipient.address(), transferSum, assetId, i -> i.feeAssetId(assetId)
-        ).tx();
-        TransactionInfo transferTxInfo = node().getTransactionInfo(transferTx.id());
-
+    private void checkSponsorTransaction(Account assetOwner, Account sender, Account recipient, long fee, AssetId assetId) {
         assertAll(
-                () -> assertThat(sponsorTxInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat(sponsorTx.sender()).isEqualTo(assetOwner.publicKey()),
-                () -> assertThat(sponsorTx.assetId()).isEqualTo(assetId),
-                () -> assertThat(sponsorTx.minSponsoredFee()).isEqualTo(fee),
-                () -> assertThat(sponsorTx.type()).isEqualTo(14),
+                () -> assertThat(getSponsorTxInfo().applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat(getSponsorTx().sender()).isEqualTo(assetOwner.publicKey()),
+                () -> assertThat(getSponsorTx().assetId()).isEqualTo(assetId),
+                () -> assertThat(getSponsorTx().minSponsoredFee()).isEqualTo(fee),
+                () -> assertThat(getSponsorTx().type()).isEqualTo(14),
 
-                () -> assertThat(transferTxInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat(transferTx.sender()).isEqualTo(sender.publicKey()),
-                () -> assertThat(transferTx.fee().assetId()).isEqualTo(assetId),
-                () -> assertThat(transferTx.fee().value()).isEqualTo(fee),
+                () -> assertThat(getTransferTxInfo().applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat(getTransferTx().sender()).isEqualTo(sender.publicKey()),
+                () -> assertThat(getTransferTx().fee().assetId()).isEqualTo(assetId),
+                () -> assertThat(getTransferTx().fee().value()).isEqualTo(fee),
 
-                () -> assertThat(assetOwner.getBalance(assetId)).isEqualTo(assetOwnerAssetBalanceAfterTransaction),
-                () -> assertThat(sender.getBalance(assetId)).isEqualTo(fromAssetBalanceAfterTransaction),
-                () -> assertThat(recipient.getBalance(assetId)).isEqualTo(toAssetBalanceAfterTransaction),
+                () -> assertThat(assetOwner.getBalance(assetId)).isEqualTo(getAssetOwnerAssetBalanceAfterTransaction()),
+                () -> assertThat(sender.getBalance(assetId)).isEqualTo(getFromAssetBalanceAfterTransaction()),
+                () -> assertThat(recipient.getBalance(assetId)).isEqualTo(getToAssetBalanceAfterTransaction()),
 
-                () -> assertThat(assetOwner.getWavesBalance()).isEqualTo(assetOwnerWavesBalance),
-                () -> assertThat(sender.getWavesBalance()).isEqualTo(fromWavesBalance),
-                () -> assertThat(recipient.getWavesBalance()).isEqualTo(toWavesBalance)
+                () -> assertThat(assetOwner.getWavesBalance()).isEqualTo(getAssetOwnerWavesBalance()),
+                () -> assertThat(sender.getWavesBalance()).isEqualTo(getFromWavesBalance()),
+                () -> assertThat(recipient.getWavesBalance()).isEqualTo(getToWavesBalance())
         );
     }
 
-    private void transactionCancelSponsorFee
-            (Account assetOwner, Account sender, Account recipient, AssetId assetId, int version) {
-
-        SponsorFeeTransaction sponsorTx = SponsorFeeTransaction.builder(assetId, 0).version(version)
-                .getSignedWith(assetOwner.privateKey());
-        node().waitForTransaction(node().broadcast(sponsorTx).id());
-
-        TransactionInfo sponsorTxInfo = node().getTransactionInfo(sponsorTx.id());
-
-        try {
-            sender.transfer(recipient.address(), 1, assetId, i -> i.feeAssetId(assetId));
-        } catch (ApiError e) {
-            assertThat(e.getMessage()).isEqualTo("insufficient fee");
-        }
-
+    private void checkCancelSponsorFee(Account assetOwner, AssetId assetId) {
         assertAll(
-                () -> assertThat(sponsorTxInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat(sponsorTx.sender()).isEqualTo(assetOwner.publicKey()),
-                () -> assertThat(sponsorTx.assetId()).isEqualTo(assetId),
-                () -> assertThat(sponsorTx.minSponsoredFee()).isEqualTo(0),
-                () -> assertThat(sponsorTx.type()).isEqualTo(14)
+                () -> assertThat(getSponsorTxInfo().applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat(getSponsorTx().sender()).isEqualTo(assetOwner.publicKey()),
+                () -> assertThat(getSponsorTx().assetId()).isEqualTo(assetId),
+                () -> assertThat(getSponsorTx().minSponsoredFee()).isEqualTo(0),
+                () -> assertThat(getSponsorTx().type()).isEqualTo(14)
         );
     }
 }
