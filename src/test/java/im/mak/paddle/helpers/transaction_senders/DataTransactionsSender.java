@@ -3,7 +3,6 @@ package im.mak.paddle.helpers.transaction_senders;
 import com.wavesplatform.transactions.DataTransaction;
 import com.wavesplatform.transactions.data.DataEntry;
 import com.wavesplatform.transactions.data.EntryType;
-import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
 
 import java.util.Arrays;
