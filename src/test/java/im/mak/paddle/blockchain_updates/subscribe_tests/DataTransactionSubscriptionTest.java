@@ -82,9 +82,10 @@ public class DataTransactionSubscriptionTest extends BaseTest {
                 () -> assertThat(getAmountBefore(0, 0)).isEqualTo(DEFAULT_FAUCET),
                 () -> assertThat(getAmountAfter(0, 0)).isEqualTo(DEFAULT_FAUCET - MIN_FEE),
 
+                // before data transaction
                 () -> assertThat(getBeforeDataEntries(0, 0).getKey()).isEqualTo(integerEntry.key()),
                 () -> assertThat(getBeforeDataEntries(0, 0).getIntValue()).isEqualTo(0),
-
+                // after data transaction
                 () -> assertThat(getSenderAddress(0, 0)).isEqualTo(senderAddress),
                 () -> assertThat(getTxKeyForStateUpdates(0, 0)).isEqualTo(integerEntry.key()),
                 () -> assertThat(getTxIntValueForStateUpdates(0,0)).isEqualTo(integerEntry.value())
