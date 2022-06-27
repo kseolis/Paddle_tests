@@ -1,6 +1,5 @@
 package im.mak.paddle.blockchain_updates.subscribe_tests;
 
-import com.wavesplatform.crypto.base.Base58;
 import com.wavesplatform.transactions.DataTransaction;
 import com.wavesplatform.transactions.common.Base64String;
 import com.wavesplatform.transactions.data.BinaryEntry;
@@ -13,13 +12,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.util.Arrays;
-
 import static im.mak.paddle.Node.node;
 import static im.mak.paddle.helpers.Randomizer.getRandomInt;
 import static im.mak.paddle.helpers.Randomizer.randomNumAndLetterString;
 import static im.mak.paddle.helpers.blockchain_updates_handlers.subscribe_handlers.SubscribeHandler.*;
-import static im.mak.paddle.helpers.blockchain_updates_handlers.subscribe_handlers.TransactionMetadataHandler.getElementTransactionMetadata;
 import static im.mak.paddle.helpers.blockchain_updates_handlers.subscribe_handlers.transaction_state_updates.Balances.*;
 import static im.mak.paddle.helpers.blockchain_updates_handlers.subscribe_handlers.transaction_state_updates.DataEntries.*;
 import static im.mak.paddle.helpers.blockchain_updates_handlers.subscribe_handlers.transactions_handlers.DataTransactionHandler.getKeyFromDataTx;
@@ -65,8 +61,6 @@ public class DataTransactionSubscriptionTest extends BaseTest {
         dataEntryTransactionSender(senderAccount, DataTransaction.LATEST_VERSION, integerEntry);
         height = node().getHeight();
         subscribeResponseHandler(channel, senderAccount, height, height);
-
-        System.out.println(getAppend());
 
         assertAll(
                 () -> assertThat(getChainId(0)).isEqualTo(DEVNET_CHAIN_ID),
