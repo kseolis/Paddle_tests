@@ -49,10 +49,11 @@ public class TransferTransactionSubscriptionTest extends BaseTest {
                     recipientAddress = recipient.address().toString();
                     recipientPublicKeyHash = Base58.encode(recipient.address().publicKeyHash());
                 },
-                () -> amount = Amount.of(getRandomInt(1, 10000)),
-                () -> amountValue = amount.value(),
-                () -> amountAfter = DEFAULT_FAUCET - MIN_FEE - amountValue
-
+                () -> {
+                    amount = Amount.of(getRandomInt(1, 10000));
+                    amountValue = amount.value();
+                    amountAfter = DEFAULT_FAUCET - MIN_FEE - amountValue;
+                }
         );
     }
 

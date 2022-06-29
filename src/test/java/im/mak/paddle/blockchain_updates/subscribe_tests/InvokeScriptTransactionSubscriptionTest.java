@@ -77,7 +77,7 @@ public class InvokeScriptTransactionSubscriptionTest extends BaseTest {
         }
     }
 
-    void checkInvokeSubscribe(int version, long amount, String dAppKey, int dAppValue, int dAppBeforeValue) {
+    private void checkInvokeSubscribe(int version, long amount, String dAppKey, int dAppValue, int dAppBeforeValue) {
         assertAll(
                 () -> assertThat(getChainId(0)).isEqualTo(DEVNET_CHAIN_ID),
                 () -> assertThat(getSenderPublicKeyFromTransaction(0)).isEqualTo(publicKey),
@@ -87,7 +87,6 @@ public class InvokeScriptTransactionSubscriptionTest extends BaseTest {
 
                 () -> assertThat(getInvokeTransactionAmount(0, 0)).isEqualTo(amount),
                 () -> assertThat(getInvokeTransactionPublicKeyHash(0)).isEqualTo(accWithDAppPublicKeyHash),
-                //  () -> assertThat(getInvokeTransactionFunctionCall(0)).isEqualTo(getInvokeScriptTx())
                 () -> assertThat(getInvokeMetadataDAppAddress(0)).isEqualTo(accWithDAppAddress),
                 () -> assertThat(getInvokeMetadataFunctionName(0)).isEqualTo(accWithDAppFunctionName),
                 () -> assertThat(getInvokeMetadataResultDataKey(0, 0)).isEqualTo(dAppKey),
