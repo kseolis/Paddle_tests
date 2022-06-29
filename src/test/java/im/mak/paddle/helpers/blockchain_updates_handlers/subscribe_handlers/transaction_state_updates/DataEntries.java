@@ -19,6 +19,14 @@ public class DataEntries {
         return getDataEntries(txStateUpdIndex, index).getDataEntry().getIntValue();
     }
 
+    public static long getBeforeDataEntriesIntegerValue(int txStateUpdIndex, int index) {
+        return getBeforeDataEntries(0, 0).getIntValue();
+    }
+
+    public static String getBeforeDataEntriesKey(int txStateUpdIndex, int index) {
+        return getBeforeDataEntries(0, 0).getKey();
+    }
+
     public static TransactionOuterClass.DataTransactionData.DataEntry getBeforeDataEntries(int txStateUpdIndex, int index) {
         return getDataEntries(txStateUpdIndex, index).getDataEntryBefore();
     }

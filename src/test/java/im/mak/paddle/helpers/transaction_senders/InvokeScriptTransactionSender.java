@@ -12,16 +12,22 @@ import static im.mak.paddle.helpers.Randomizer.getRandomInt;
 public class InvokeScriptTransactionSender extends BaseTransactionSender {
     private static InvokeScriptTransaction invokeScriptTx;
     private static DAppCall dAppCall;
+    private static long dAppAccountBalance;
+    private static long dAppAccountBalanceAfterTransaction;
 
-    public static void invokeIntDAppSender(Account sender, IntDApp dAppAccount, Amount amount, int version, long fee) {
-        balanceAfterTransaction = sender.getWavesBalance() - fee - amount.value();
-        dAppCall = dAppAccount.setInt(getRandomInt(1, 50));
+    public static void invokeIntDAppSender(Account account, IntDApp dAppAccount, Amount amount, int version, long fee) {
+        accountWavesBalance = account.getWavesBalance();
+        balanceAfterTransaction = account.getWavesBalance() - fee - amount.value();
+        dAppAccountBalance = dAppAccount.getWavesBalance();
+        dAppAccountBalanceAfterTransaction = dAppAccountBalance + amount.value();
+
+        dAppCall = dAppAccount.setInt(getRandomInt(1, 500));
 
         invokeScriptTx = InvokeScriptTransaction
                 .builder(dAppAccount.address(), dAppCall.getFunction())
                 .payments(amount)
                 .version(version)
-                .getSignedWith(sender.privateKey());
+                .getSignedWith(account.privateKey());
 
         node().waitForTransaction(node().broadcast(invokeScriptTx).id());
 
@@ -36,5 +42,16 @@ public class InvokeScriptTransactionSender extends BaseTransactionSender {
         return dAppCall;
     }
 
+    public static String getInvokeScriptId() {
+        return invokeScriptTx.id().toString();
+    }
+
+    public static long getDAppAccountBalance() {
+        return dAppAccountBalance;
+    }
+
+    public static long getDAppAccountBalanceAfterTransaction() {
+        return dAppAccountBalanceAfterTransaction;
+    }
 
 }
