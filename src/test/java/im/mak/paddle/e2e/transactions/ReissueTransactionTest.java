@@ -25,7 +25,6 @@ public class ReissueTransactionTest {
     private static long accountWavesBalance;
     private static AssetId issuedAssetId;
     private static AssetId issuedSmartAssetId;
-    long feeForSmartAssetReissue = MIN_FEE + EXTRA_FEE;
 
     @BeforeAll
     static void before() {
@@ -68,8 +67,8 @@ public class ReissueTransactionTest {
         Amount amount = Amount.of(ASSET_QUANTITY_MIN, issuedSmartAssetId);
         for (int v = 1; v <= LATEST_VERSION; v++) {
             accountWavesBalance = account.getBalance(AssetId.WAVES);
-            reissueTransactionSender(account, amount, issuedSmartAssetId, feeForSmartAssetReissue, v);
-            checkReissueTransaction(amount, issuedSmartAssetId, feeForSmartAssetReissue, v);
+            reissueTransactionSender(account, amount, issuedSmartAssetId, SUM_FEE, v);
+            checkReissueTransaction(amount, issuedSmartAssetId, SUM_FEE, v);
         }
     }
 
@@ -80,8 +79,8 @@ public class ReissueTransactionTest {
         Amount amount = Amount.of(reissueSum, issuedSmartAssetId);
         for (int v = 1; v <= LATEST_VERSION; v++) {
             accountWavesBalance = account.getBalance(AssetId.WAVES);
-            reissueTransactionSender(account, amount, issuedSmartAssetId, feeForSmartAssetReissue, v);
-            checkReissueTransaction(amount, issuedSmartAssetId, feeForSmartAssetReissue, v);
+            reissueTransactionSender(account, amount, issuedSmartAssetId, SUM_FEE, v);
+            checkReissueTransaction(amount, issuedSmartAssetId, SUM_FEE, v);
             account.burn(reissueSum, issuedSmartAssetId);
         }
     }

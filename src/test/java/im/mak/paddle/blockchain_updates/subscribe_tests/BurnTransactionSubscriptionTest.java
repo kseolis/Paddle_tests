@@ -62,8 +62,7 @@ public class BurnTransactionSubscriptionTest extends BaseTest {
     @Test
     @DisplayName("Check subscription on burn smart asset transaction")
     void subscribeTestForBurnSmartAssetTransaction() {
-        final long fee = MIN_FEE + EXTRA_FEE;
-        wavesAmountAfterBurn = wavesAmountBeforeBurn - fee;
+        wavesAmountAfterBurn = wavesAmountBeforeBurn - SUM_FEE;
         final IssueTransaction issueTx = account.issue(i -> i
                 .name(assetName)
                 .quantity(assetQuantity)
@@ -74,13 +73,13 @@ public class BurnTransactionSubscriptionTest extends BaseTest {
         final AssetId assetId = issueTx.assetId();
         final Amount amount = Amount.of(getRandomInt(100, 10000), assetId);
 
-        burnTransactionSender(account, amount, issueTx.assetId(), fee, LATEST_VERSION);
+        burnTransactionSender(account, amount, issueTx.assetId(), SUM_FEE, LATEST_VERSION);
 
         quantityAfterBurn = assetQuantity - amount.value();
         height = node().getHeight();
 
         subscribeResponseHandler(channel, account, height, height);
-        checkBurnTransactionSubscription(assetId.toString(), amount.value(), fee, compileScript);
+        checkBurnTransactionSubscription(assetId.toString(), amount.value(), SUM_FEE, compileScript);
     }
 
     @Test

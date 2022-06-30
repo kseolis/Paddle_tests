@@ -21,7 +21,6 @@ import static org.junit.jupiter.api.Assertions.assertAll;
 public class InvokeScriptTransactionTest {
     private static IntDApp accWithDApp;
     private static Account account;
-    private static final long fee = MIN_FEE + EXTRA_FEE;
 
     @BeforeAll
     static void before() {
@@ -34,7 +33,7 @@ public class InvokeScriptTransactionTest {
     void invokeScriptWithSmallComplexityTest() {
         for (int v = 1; v <= LATEST_VERSION; v++) {
             Amount amount = WAVES.of(0.1);
-            invokeIntDAppSender(account, accWithDApp, amount, v, fee);
+            invokeIntDAppSender(account, accWithDApp, amount, v, SUM_FEE);
             checkAssertsForSetScriptTransaction();
         }
     }
@@ -47,7 +46,7 @@ public class InvokeScriptTransactionTest {
                 () -> assertThat(getInvokeScriptTx().function()).isEqualTo(getDAppCall().getFunction()),
                 () -> assertThat(getInvokeScriptTx().sender()).isEqualTo(account.publicKey()),
                 () -> assertThat(getInvokeScriptTx().fee().assetId()).isEqualTo(AssetId.WAVES),
-                () -> assertThat(getInvokeScriptTx().fee().value()).isEqualTo(fee),
+                () -> assertThat(getInvokeScriptTx().fee().value()).isEqualTo(SUM_FEE),
                 () -> assertThat(getInvokeScriptTx().type()).isEqualTo(16)
         );
     }

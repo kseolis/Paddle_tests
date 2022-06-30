@@ -61,25 +61,23 @@ public class BurnTransactionTest {
     @Test
     @DisplayName("burn minimum quantity smart asset")
     void burnMinimumSmartAssets() {
-        long fee = MIN_FEE + EXTRA_FEE;
         Amount amount = Amount.of(ASSET_QUANTITY_MIN, issuedSmartAssetId);
 
         for (int v = 1; v < LATEST_VERSION; v++) {
-            burnTransactionSender(account, amount, issuedSmartAssetId, fee, v);
-            checkAssertsForBurnTransaction(issuedSmartAssetId, fee, amount.value());
+            burnTransactionSender(account, amount, issuedSmartAssetId, SUM_FEE, v);
+            checkAssertsForBurnTransaction(issuedSmartAssetId, SUM_FEE, amount.value());
         }
     }
 
     @Test
     @DisplayName("burn almost maximum quantity smart asset")
     void burnMaximumSmartAssets() {
-        long fee = MIN_FEE + EXTRA_FEE;
         long burnSum = account.getAssetBalance(issuedSmartAssetId);
         Amount amount = Amount.of(burnSum, issuedSmartAssetId);
 
         for (int v = 1; v < LATEST_VERSION; v++) {
-            burnTransactionSender(account, amount, issuedSmartAssetId, fee, v);
-            checkAssertsForBurnTransaction(issuedSmartAssetId, fee, amount.value());
+            burnTransactionSender(account, amount, issuedSmartAssetId, SUM_FEE, v);
+            checkAssertsForBurnTransaction(issuedSmartAssetId, SUM_FEE, amount.value());
             account.reissue(1000, issuedSmartAssetId);
         }
     }

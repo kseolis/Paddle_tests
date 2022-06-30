@@ -37,8 +37,6 @@ public class InvokeScriptTransactionSubscriptionTest extends BaseTest {
     private static String accWithDAppAddress;
     private static String accWithDAppFunctionName;
 
-    private static final long fee = MIN_FEE + EXTRA_FEE;
-
     private final Base64String script = node()
             .compileScript(fromFile("ride_scripts/permissionOnUpdatingKeyValues.ride")).script();
 
@@ -64,7 +62,7 @@ public class InvokeScriptTransactionSubscriptionTest extends BaseTest {
         Amount amount = WAVES.of(0.1);
         int dAppBeforeValue = 0;
         for (int v = 1; v <= LATEST_VERSION; v++) {
-            invokeIntDAppSender(account, accWithDApp, amount, v, fee);
+            invokeIntDAppSender(account, accWithDApp, amount, v, SUM_FEE);
             accWithDAppFunctionName = getDAppCall().getFunction().name();
             Long dAppValue = (Long) getInvokeScriptTx().function().args().get(0).valueAsObject();
             String dAppKey = "int";
@@ -81,7 +79,7 @@ public class InvokeScriptTransactionSubscriptionTest extends BaseTest {
         assertAll(
                 () -> assertThat(getChainId(0)).isEqualTo(DEVNET_CHAIN_ID),
                 () -> assertThat(getSenderPublicKeyFromTransaction(0)).isEqualTo(publicKey),
-                () -> assertThat(getTransactionFeeAmount(0)).isEqualTo(fee),
+                () -> assertThat(getTransactionFeeAmount(0)).isEqualTo(SUM_FEE),
                 () -> assertThat(getTransactionVersion(0)).isEqualTo(version),
                 () -> assertThat(getTransactionId()).isEqualTo(getInvokeScriptId()),
 

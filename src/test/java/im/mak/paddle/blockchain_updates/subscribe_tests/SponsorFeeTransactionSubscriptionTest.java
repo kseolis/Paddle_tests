@@ -33,9 +33,8 @@ public class SponsorFeeTransactionSubscriptionTest extends BaseTest {
     private String assetName;
     private String assetDescription;
     private long sponsorFeeAmount;
-    private final long transactionFee = MIN_FEE + EXTRA_FEE;
     private final long wavesAmountBefore = DEFAULT_FAUCET - ONE_WAVES;
-    private final long wavesAmountAfter = wavesAmountBefore - transactionFee;
+    private final long wavesAmountAfter = wavesAmountBefore - SUM_FEE;
 
     @BeforeEach
     void setUp() {
@@ -77,7 +76,7 @@ public class SponsorFeeTransactionSubscriptionTest extends BaseTest {
         assertAll(
                 () -> assertThat(getChainId(0)).isEqualTo(DEVNET_CHAIN_ID),
                 () -> assertThat(getSenderPublicKeyFromTransaction(0)).isEqualTo(publicKey),
-                () -> assertThat(getTransactionFeeAmount(0)).isEqualTo(transactionFee),
+                () -> assertThat(getTransactionFeeAmount(0)).isEqualTo(SUM_FEE),
                 () -> assertThat(getTransactionVersion(0)).isEqualTo(SponsorFeeTransaction.LATEST_VERSION),
                 () -> assertThat(getAssetIdFromSponsorFee(0)).isEqualTo(assetIdToString),
                 () -> assertThat(getAmountFromSponsorFee(0)).isEqualTo(sponsorFeeAmount),

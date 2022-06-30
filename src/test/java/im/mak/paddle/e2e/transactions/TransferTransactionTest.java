@@ -105,20 +105,18 @@ public class TransferTransactionTest {
     @Test
     @DisplayName("transfer minimum smart asset on address")
     void transferMinSmartAsset() {
-        long fee = MIN_FEE + EXTRA_FEE;
         Amount amount = Amount.of(MIN_TRANSFER_SUM, issuedSmartAssetId);
-        transferTransactionSender(amount, acc, alice, ADDRESS, fee, 2);
-        checkTransferTransaction(amount, acc, alice, fee);
+        transferTransactionSender(amount, acc, alice, ADDRESS, SUM_FEE, 2);
+        checkTransferTransaction(amount, acc, alice, SUM_FEE);
     }
 
     @Test
     @DisplayName("transfer almost all smart asset on alias")
     void transferMaxSmartAsset() {
         long transferSum = acc.getBalance(issuedSmartAssetId) - MIN_TRANSFER_SUM;
-        long fee = MIN_FEE + EXTRA_FEE;
         Amount amount = Amount.of(transferSum, issuedSmartAssetId);
-        transferTransactionSender(amount, acc, alice, ALIAS, fee, 1);
-        checkTransferTransaction(amount, acc, alice, fee);
+        transferTransactionSender(amount, acc, alice, ALIAS, SUM_FEE, 1);
+        checkTransferTransaction(amount, acc, alice, SUM_FEE);
     }
 
     private void checkTransferTransaction(Amount amount, Account from, Account to, long fee) {
