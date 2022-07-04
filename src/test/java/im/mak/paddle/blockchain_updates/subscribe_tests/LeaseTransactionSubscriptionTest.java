@@ -3,7 +3,6 @@ package im.mak.paddle.blockchain_updates.subscribe_tests;
 import com.wavesplatform.crypto.base.Base58;
 import im.mak.paddle.Account;
 import im.mak.paddle.blockchain_updates.BaseTest;
-import im.mak.paddle.dapps.IntDApp;
 import im.mak.paddle.dapps.DefaultDApp420Complexity;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -79,7 +78,7 @@ public class LeaseTransactionSubscriptionTest extends BaseTest {
         leaseTransactionSender(amountLease, accWithDApp, recipient, SUM_FEE, LATEST_VERSION);
         String leaseId = getLeaseTx().id().toString();
         height = node().getHeight();
-        subscribeResponseHandler(channel, sender, height, height);
+        subscribeResponseHandler(channel, accWithDApp, height, height);
         checkLeaseSubscribe(leaseId, amountLease, balance, SUM_FEE);
     }
 
@@ -115,6 +114,5 @@ public class LeaseTransactionSubscriptionTest extends BaseTest {
                 () -> assertThat(getRecipientFromIndividualLeases(0, 0)).isEqualTo(recipientAddress),
                 () -> assertThat(getOriginalTransactionIdFromIndividualLeases(0, 0)).isEqualTo(leaseId)
         );
-
     }
 }

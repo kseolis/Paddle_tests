@@ -39,7 +39,7 @@ public class LeaseCancelTransactionTest {
     void leaseMinAssets() {
         for (int v = 1; v <= LATEST_VERSION; v++) {
             Id minLeaseTx = stan.lease(eric, MIN_TRANSACTION_SUM).tx().id();
-            leaseCancelTransactionSender(stan, eric, minLeaseTx, MIN_TRANSACTION_SUM, v);
+            leaseCancelTransactionSender(stan, eric, minLeaseTx, MIN_TRANSACTION_SUM, MIN_FEE, v);
             checkCancelLeaseTransaction(stan, eric);
         }
     }
@@ -50,7 +50,7 @@ public class LeaseCancelTransactionTest {
         for (int v = 1; v <= LATEST_VERSION; v++) {
             long leaseSum = kenny.getWavesBalance() - MIN_FEE;
             Id maxLeaseTx = kenny.lease(kyle, leaseSum).tx().id();
-            leaseCancelTransactionSender(kenny, kyle, maxLeaseTx, leaseSum, v);
+            leaseCancelTransactionSender(kenny, kyle, maxLeaseTx, leaseSum, MIN_FEE, v);
             checkCancelLeaseTransaction(kenny, kyle);
         }
     }

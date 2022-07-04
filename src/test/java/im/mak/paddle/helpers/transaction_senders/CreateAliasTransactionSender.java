@@ -9,12 +9,13 @@ import static im.mak.paddle.util.Constants.MIN_FEE;
 public class CreateAliasTransactionSender extends BaseTransactionSender {
     private static CreateAliasTransaction createAliasTx;
 
-    public static void createAliasTransactionSender(Account account, String alias, int version) {
+    public static void createAliasTransactionSender(Account account, String alias, long fee, int version) {
         accountWavesBalance = account.getWavesBalance();
-        balanceAfterTransaction = accountWavesBalance - MIN_FEE;
-
-         createAliasTx = CreateAliasTransaction
+        balanceAfterTransaction = accountWavesBalance - fee;
+        System.out.println(accountWavesBalance);
+        createAliasTx = CreateAliasTransaction
                 .builder(alias)
+                .fee(fee)
                 .version(version)
                 .getSignedWith(account.privateKey());
 
@@ -25,5 +26,4 @@ public class CreateAliasTransactionSender extends BaseTransactionSender {
     public static CreateAliasTransaction getCreateAliasTx() {
         return createAliasTx;
     }
-
 }

@@ -30,12 +30,13 @@ public class LeaseTransactionSender extends BaseTransactionSender {
         txInfo = node().getTransactionInfo(leaseTx.id());
     }
 
-    public static void leaseCancelTransactionSender(Account from, Account to, Id index, long leaseSum, int version) {
+    public static void leaseCancelTransactionSender(Account from, Account to, Id index, long leaseSum, long fee, int version) {
         effectiveBalanceAfterSendTransaction = from.getWavesBalanceDetails().effective() - MIN_FEE + leaseSum;
         balanceAfterReceiving = to.getWavesBalanceDetails().effective() - leaseSum;
 
         leaseCancelTx = LeaseCancelTransaction
                 .builder(index)
+                .fee(fee)
                 .version(version)
                 .getSignedWith(from.privateKey());
 
