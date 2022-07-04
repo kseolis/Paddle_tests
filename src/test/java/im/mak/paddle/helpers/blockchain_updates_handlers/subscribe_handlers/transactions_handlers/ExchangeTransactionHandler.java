@@ -43,7 +43,7 @@ public class ExchangeTransactionHandler {
                 .toByteArray());
     }
 
-    public static String getPriceAssetIdFromExchange(int index, int orderIndex) {
+    public static String getAmountAssetIdFromExchange(int index, int orderIndex) {
         return Base58.encode(getOrdersFromExchange(index, orderIndex)
                 .getAssetPair()
                 .getAmountAssetId()

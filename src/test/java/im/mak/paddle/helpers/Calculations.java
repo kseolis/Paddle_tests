@@ -10,8 +10,8 @@ import static im.mak.paddle.util.Constants.*;
 public class Calculations {
     private static AssetId amountAssetId;
     private static AssetId priceAssetId;
-    private static long buyerBalanceAfterTransactionAmountAssetId;
-    private static long sellerBalanceAfterTransactionAmountAssetId;
+    private static long buyerBalanceAfterTransactionAmountAsset;
+    private static long sellerBalanceAfterTransactionAmountAsset;
     private static long buyerBalanceAfterTransactionPriceAsset;
     private static long sellerBalanceAfterTransactionPriceAsset;
 
@@ -21,11 +21,11 @@ public class Calculations {
         amountAssetId = buy.assetPair().left();
         priceAssetId = buy.assetPair().right();
 
-        buyerBalanceAfterTransactionAmountAssetId = from.getBalance(amountAssetId) + amount;
-        sellerBalanceAfterTransactionAmountAssetId = to.getBalance(amountAssetId) - amount;
+        buyerBalanceAfterTransactionAmountAsset = from.getBalance(amountAssetId) + amount;
+        sellerBalanceAfterTransactionAmountAsset = to.getBalance(amountAssetId) - amount;
 
         if (amountAssetId.isWaves()) {
-            sellerBalanceAfterTransactionAmountAssetId = to.getBalance(amountAssetId) - amount - MIN_FEE_FOR_EXCHANGE;
+            sellerBalanceAfterTransactionAmountAsset = to.getBalance(amountAssetId) - amount - MIN_FEE_FOR_EXCHANGE;
         }
 
         if (!amountAssetId.isWaves() || !priceAssetId.isWaves()) {
@@ -66,12 +66,12 @@ public class Calculations {
         return priceAssetId;
     }
 
-    public static long getBuyerBalanceAfterTransactionAmountAssetId() {
-        return buyerBalanceAfterTransactionAmountAssetId;
+    public static long getBuyerBalanceAfterTransactionAmountAsset() {
+        return buyerBalanceAfterTransactionAmountAsset;
     }
 
-    public static long getSellerBalanceAfterTransactionAmountAssetId() {
-        return sellerBalanceAfterTransactionAmountAssetId;
+    public static long getSellerBalanceAfterTransactionAmountAsset() {
+        return sellerBalanceAfterTransactionAmountAsset;
     }
 
     public static long getBuyerBalanceAfterTransactionPriceAsset() {

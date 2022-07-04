@@ -89,6 +89,7 @@ public class TransferTransactionSubscriptionTest extends BaseTest {
 
         checkTransferSubscribe(assetId.toString(), issuedAsset.quantity(), assetAmount, MIN_FEE);
     }
+
     @Test
     @DisplayName("Check subscription on transfer transaction issue smart asset")
     void subscribeTestForTransferTransactionIssueSmartAsset() {

@@ -102,8 +102,7 @@ public class ExchangeTransactionTest {
     @Test
     @DisplayName("Exchange transaction two smart assets")
     void exchangeTwoSmartAssets() {
-        long extraFee = EXTRA_FEE * 2;
-        fee = MIN_FEE_FOR_EXCHANGE + extraFee;
+        fee = MIN_FEE_FOR_EXCHANGE + EXCHANGE_FEE_FOR_SMART_ASSETS;
 
         long sumBuyerTokens = getRandomInt(1, 50) * (long) Math.pow(10, 8);
 
@@ -117,7 +116,8 @@ public class ExchangeTransactionTest {
                 .getSignedWith(bob.privateKey());
         Order sellOrder = Order.sell(amountsTokensForExchange, pricePerToken, bob.publicKey()).version(ORDER_V_4)
                 .getSignedWith(cat.privateKey());
-        exchangeTransactionSender(bob, cat, buyerOrder, sellOrder, amountValue, priceValue, extraFee, LATEST_VERSION);
+        exchangeTransactionSender
+                (bob, cat, buyerOrder, sellOrder, amountValue, priceValue, EXCHANGE_FEE_FOR_SMART_ASSETS, LATEST_VERSION);
         checkAssertsForExchangeTransaction(bob, cat, buyerOrder, sellOrder, amountValue);
     }
 
@@ -132,8 +132,8 @@ public class ExchangeTransactionTest {
                 () -> assertThat(getExchangeTx().amount()).isEqualTo(amount),
                 () -> assertThat(getExchangeTx().price()).isEqualTo(buy.price().value()),
                 () -> assertThat(getExchangeTx().type()).isEqualTo(7),
-                () -> assertThat(from.getBalance(getAmountAssetId())).isEqualTo(getBuyerBalanceAfterTransactionAmountAssetId()),
-                () -> assertThat(to.getBalance(getAmountAssetId())).isEqualTo(getSellerBalanceAfterTransactionAmountAssetId()),
+                () -> assertThat(from.getBalance(getAmountAssetId())).isEqualTo(getBuyerBalanceAfterTransactionAmountAsset()),
+                () -> assertThat(to.getBalance(getAmountAssetId())).isEqualTo(getSellerBalanceAfterTransactionAmountAsset()),
                 () -> assertThat(from.getBalance(getPriceAssetId())).isEqualTo(getBuyerBalanceAfterTransactionPriceAsset()),
                 () -> assertThat(to.getBalance(getPriceAssetId())).isEqualTo(getSellerBalanceAfterTransactionPriceAsset())
         );
