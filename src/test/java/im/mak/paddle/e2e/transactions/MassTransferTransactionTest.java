@@ -47,7 +47,7 @@ public class MassTransferTransactionTest {
     @DisplayName("transfer in a 'mass transfer transaction' for maximum Accounts")
     void massTransferForMaximumCountAccounts() {
         for (int v = 1; v <= LATEST_VERSION; v++) {
-            int amount = getRandomInt(MIN_TRANSFER_SUM, 100);
+            int amount = getRandomInt(MIN_TRANSACTION_SUM, 100);
             massTransferTransactionSender(account, WAVES, amount, maximumAccountsForMassTransfer, v, attachment);
             checkMassTransferTransaction(WAVES, amount, maximumAccountsForMassTransfer);
         }
@@ -57,7 +57,7 @@ public class MassTransferTransactionTest {
     @DisplayName("transfer in a 'mass transfer transaction' for minimum Accounts")
     void massTransferForMinimumCountAccounts() {
         for (int v = 1; v <= LATEST_VERSION; v++) {
-            int amount = getRandomInt(MIN_TRANSFER_SUM, 100);
+            int amount = getRandomInt(MIN_TRANSACTION_SUM, 100);
             massTransferTransactionSender(account, WAVES, amount, minimumAccountsForMassTransfer, v, attachment);
             checkMassTransferTransaction(WAVES, amount, minimumAccountsForMassTransfer);
         }
@@ -67,7 +67,7 @@ public class MassTransferTransactionTest {
     @DisplayName("transfer in a 'mass transfer transaction' issued asset for maximum Accounts")
     void massTransferForMaximumAccountsForIssueAsset() {
         for (int v = 1; v <= LATEST_VERSION; v++) {
-            int amount = getRandomInt(MIN_TRANSFER_SUM, 100);
+            int amount = getRandomInt(MIN_TRANSACTION_SUM, 100);
             massTransferTransactionSender(account, issuedAsset, amount, maximumAccountsForMassTransfer, v, attachment);
             checkMassTransferTransaction(issuedAsset, amount, maximumAccountsForMassTransfer);
         }
@@ -77,7 +77,7 @@ public class MassTransferTransactionTest {
     @DisplayName("transfer in a 'mass transfer transaction' issued asset for minimum Accounts")
     void massTransferForMinimumAccountsForIssueAsset() {
         for (int v = 1; v <= LATEST_VERSION; v++) {
-            int amount = getRandomInt(MIN_TRANSFER_SUM, 100);
+            int amount = getRandomInt(MIN_TRANSACTION_SUM, 100);
             massTransferTransactionSender(account, issuedAsset, amount, minimumAccountsForMassTransfer, v, attachment);
             checkMassTransferTransaction(issuedAsset, amount, minimumAccountsForMassTransfer);
         }

@@ -38,8 +38,8 @@ public class LeaseCancelTransactionTest {
     @DisplayName("cancel lease of the minimum available amount")
     void leaseMinAssets() {
         for (int v = 1; v <= LATEST_VERSION; v++) {
-            Id minLeaseTx = stan.lease(eric, MIN_TRANSFER_SUM).tx().id();
-            leaseCancelTransactionSender(stan, eric, minLeaseTx, MIN_TRANSFER_SUM, v);
+            Id minLeaseTx = stan.lease(eric, MIN_TRANSACTION_SUM).tx().id();
+            leaseCancelTransactionSender(stan, eric, minLeaseTx, MIN_TRANSACTION_SUM, v);
             checkCancelLeaseTransaction(stan, eric);
         }
     }

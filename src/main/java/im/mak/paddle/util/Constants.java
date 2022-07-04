@@ -21,9 +21,7 @@ public class Constants {
     public static final byte ASSET_DECIMALS_MAX = 8;
     public static final int DEFAULT_FAUCET = 10_00000000;
 
-    public static final byte MIN_TRANSFER_SUM = 1;
-    public static final byte ORDER_V_3 = 3;
-    public static final byte ORDER_V_4 = 4;
+    public static final byte MIN_TRANSACTION_SUM = 1;
 
     public static int MIN_NUM_ACCOUNT_FOR_MASS_TRANSFER = 1;
     public static int MAX_NUM_ACCOUNT_FOR_MASS_TRANSFER = 100;
@@ -36,4 +34,6 @@ public class Constants {
     public static final long DEVNET_CHAIN_ID = 68;
     public static final String ACTIVE_STATUS_LEASE = "ACTIVE";
     public static final String INACTIVE_STATUS_LEASE = "INACTIVE";
+    public static final byte ORDER_V_3 = 3;
+    public static final byte ORDER_V_4 = 4;
 }

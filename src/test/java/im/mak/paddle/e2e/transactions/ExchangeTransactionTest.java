@@ -106,7 +106,7 @@ public class ExchangeTransactionTest {
 
         long sumBuyerTokens = getRandomInt(1, 50) * (long) Math.pow(10, 8);
 
-        Amount amountsTokensForExchange = Amount.of(MIN_TRANSFER_SUM, firstSmartAssetId);
+        Amount amountsTokensForExchange = Amount.of(MIN_TRANSACTION_SUM, firstSmartAssetId);
         long amountValue = amountsTokensForExchange.value();
 
         Amount pricePerToken = Amount.of(sumBuyerTokens, secondSmartAssetId);

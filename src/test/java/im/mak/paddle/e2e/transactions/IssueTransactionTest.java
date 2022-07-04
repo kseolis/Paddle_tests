@@ -5,7 +5,7 @@ import com.wavesplatform.transactions.common.AssetId;
 import com.wavesplatform.transactions.common.Base64String;
 import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
-import im.mak.paddle.dapps.defaultDApp420Complexity;
+import im.mak.paddle.dapps.DefaultDApp420Complexity;
 import im.mak.paddle.exceptions.ApiError;
 import org.junit.jupiter.api.*;
 
@@ -25,7 +25,7 @@ class IssueTransactionTest {
     @BeforeAll
     static void before() {
         normalAccount = new Account(DEFAULT_FAUCET);
-        dAppAccount = new defaultDApp420Complexity(DEFAULT_FAUCET);
+        dAppAccount = new DefaultDApp420Complexity(DEFAULT_FAUCET);
     }
 
     @Test

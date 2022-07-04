@@ -113,7 +113,7 @@ public class ExchangeTransactionSubscriptionTest extends BaseTest {
         AssetId secondSmartAssetId = buyer.issue(i -> i.name("S_Smart_Asset").script(SCRIPT_PERMITTING_OPERATIONS)
                 .quantity(assetQuantity).decimals(DEFAULT_DECIMALS)).tx().assetId();
 
-        amount = Amount.of(MIN_TRANSFER_SUM, firstSmartAssetId);
+        amount = Amount.of(MIN_TRANSACTION_SUM, firstSmartAssetId);
         price = Amount.of(sumBuyerTokens, secondSmartAssetId);
         buy = Order.buy(amount, price, buyer.publicKey()).version(ORDER_V_4).getSignedWith(buyerPrivateKey);
         sell = Order.sell(amount, price, buyer.publicKey()).version(ORDER_V_4).getSignedWith(sellerPrivateKey);
@@ -137,7 +137,7 @@ public class ExchangeTransactionSubscriptionTest extends BaseTest {
         AssetId smartAssetId = seller.issue(i -> i.name("v_Asset").script(SCRIPT_PERMITTING_OPERATIONS)
                 .quantity(assetQuantity).decimals(DEFAULT_DECIMALS)).tx().assetId();
 
-        amount = Amount.of(MIN_TRANSFER_SUM, smartAssetId);
+        amount = Amount.of(MIN_TRANSACTION_SUM, smartAssetId);
         price = Amount.of(sumBuyerTokens, assetId);
         buy = Order.buy(amount, price, buyer.publicKey()).version(ORDER_V_4).getSignedWith(buyerPrivateKey);
         sell = Order.sell(amount, price, buyer.publicKey()).version(ORDER_V_4).getSignedWith(sellerPrivateKey);

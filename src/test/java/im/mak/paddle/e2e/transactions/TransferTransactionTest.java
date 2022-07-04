@@ -60,7 +60,7 @@ public class TransferTransactionTest {
     @Test
     @DisplayName("min transfer issued asset on address")
     void transferTransactionIssuedAssetByAddressTest() {
-        Amount amount = Amount.of(MIN_TRANSFER_SUM, issuedAssetId);
+        Amount amount = Amount.of(MIN_TRANSACTION_SUM, issuedAssetId);
         for (int v = 1; v <= LATEST_VERSION; v++) {
             transferTransactionSender(amount, alice, bob, ADDRESS, MIN_FEE, v);
             checkTransferTransaction(amount, alice, bob, MIN_FEE);
@@ -70,7 +70,7 @@ public class TransferTransactionTest {
     @Test
     @DisplayName("min transfer WAVES on alias")
     void transferTransactionWavesByAliasTest() {
-        Amount amount = Amount.of(MIN_TRANSFER_SUM, WAVES);
+        Amount amount = Amount.of(MIN_TRANSACTION_SUM, WAVES);
         for (int v = 1; v <= LATEST_VERSION; v++) {
             transferTransactionSender(amount, alice, bob, ALIAS, MIN_FEE, v);
             checkTransferTransaction(amount, alice, bob, MIN_FEE);
@@ -105,7 +105,7 @@ public class TransferTransactionTest {
     @Test
     @DisplayName("transfer minimum smart asset on address")
     void transferMinSmartAsset() {
-        Amount amount = Amount.of(MIN_TRANSFER_SUM, issuedSmartAssetId);
+        Amount amount = Amount.of(MIN_TRANSACTION_SUM, issuedSmartAssetId);
         transferTransactionSender(amount, acc, alice, ADDRESS, SUM_FEE, 2);
         checkTransferTransaction(amount, acc, alice, SUM_FEE);
     }
@@ -113,7 +113,7 @@ public class TransferTransactionTest {
     @Test
     @DisplayName("transfer almost all smart asset on alias")
     void transferMaxSmartAsset() {
-        long transferSum = acc.getBalance(issuedSmartAssetId) - MIN_TRANSFER_SUM;
+        long transferSum = acc.getBalance(issuedSmartAssetId) - MIN_TRANSACTION_SUM;
         Amount amount = Amount.of(transferSum, issuedSmartAssetId);
         transferTransactionSender(amount, acc, alice, ALIAS, SUM_FEE, 1);
         checkTransferTransaction(amount, acc, alice, SUM_FEE);
