@@ -61,7 +61,7 @@ public class IssueTransactionSubscriptionTest extends BaseTest {
 
         final String assetId = tx.assetId().toString();
         subscribeResponseHandler(channel, account, height, height);
-        checkIssueTransactionSubscription(tx, assetId, assetQuantity, reissuable);
+        checkIssueTransactionSubscribe(tx, assetId, assetQuantity, reissuable);
     }
 
     @Test
@@ -80,7 +80,7 @@ public class IssueTransactionSubscriptionTest extends BaseTest {
 
         final String assetId = tx.assetId().toString();
         subscribeResponseHandler(channel, account, height, height);
-        checkIssueTransactionSubscription(tx, assetId, assetQuantity, reissuable);
+        checkIssueTransactionSubscribe(tx, assetId, assetQuantity, reissuable);
     }
 
     @Test
@@ -95,18 +95,17 @@ public class IssueTransactionSubscriptionTest extends BaseTest {
 
         final String assetId = tx.assetId().toString();
         subscribeResponseHandler(channel, account, height, height);
-        checkIssueTransactionSubscription(tx, assetId, 1, false);
+        checkIssueTransactionSubscribe(tx, assetId, 1, false);
     }
 
-    private void checkIssueTransactionSubscription
-            (IssueTransaction tx, String assetId, int assetQuantity, boolean reissuable) {
+    private void checkIssueTransactionSubscribe(IssueTransaction tx, String assetId, int quantity, boolean reissue) {
         assertAll(
                 () -> assertThat(getChainId(0)).isEqualTo(DEVNET_CHAIN_ID),
                 () -> assertThat(getSenderPublicKeyFromTransaction(0)).isEqualTo(publicKey),
                 () -> assertThat(getAssetName(0)).isEqualTo(assetName),
                 () -> assertThat(getAssetDescription(0)).isEqualTo(assetDescription),
-                () -> assertThat(getAssetAmount(0)).isEqualTo(assetQuantity),
-                () -> assertThat(getAssetReissuable(0)).isEqualTo(reissuable),
+                () -> assertThat(getAssetAmount(0)).isEqualTo(quantity),
+                () -> assertThat(getAssetReissuable(0)).isEqualTo(reissue),
                 () -> assertThat(getAssetDecimals(0)).isEqualTo(assetDecimals),
                 () -> assertThat(getAssetScript(0)).isEqualTo(compileScript),
                 () -> assertThat(getFirstTransaction().getVersion()).isEqualTo(IssueTransaction.LATEST_VERSION),
@@ -119,16 +118,16 @@ public class IssueTransactionSubscriptionTest extends BaseTest {
                 // check assetId and balance from balances
                 () -> assertThat(getIssuedAssetIdAmountAfter(0, 1)).isEqualTo(assetId),
                 () -> assertThat(getAmountBefore(0, 1)).isEqualTo(0),
-                () -> assertThat(getAmountAfter(0, 1)).isEqualTo(assetQuantity),
+                () -> assertThat(getAmountAfter(0, 1)).isEqualTo(quantity),
                 // check from assets
                 () -> assertThat(getAssetIdFromAssetAfter(0, 0)).isEqualTo(assetId),
                 () -> assertThat(getIssuerAfter(0, 0)).isEqualTo(publicKey),
                 // check asset info
                 () -> assertThat(getNameAfter(0, 0)).isEqualTo(assetName),
                 () -> assertThat(getDescriptionAfter(0, 0)).isEqualTo(assetDescription),
-                () -> assertThat(getQuantityAfter(0, 0)).isEqualTo(assetQuantity),
+                () -> assertThat(getQuantityAfter(0, 0)).isEqualTo(quantity),
                 () -> assertThat(getDecimalsAfter(0, 0)).isEqualTo(assetDecimals),
-                () -> assertThat(getReissuableAfter(0, 0)).isEqualTo(reissuable),
+                () -> assertThat(getReissuableAfter(0, 0)).isEqualTo(reissue),
                 () -> assertThat(getScriptAfter(0, 0)).isEqualTo(compileScript)
         );
     }
