@@ -7,6 +7,7 @@ public class Constants {
     public static final long MIN_FEE = 100_000L;
     public static final long EXTRA_FEE = 400_000L;
     public static final long SUM_FEE = MIN_FEE + EXTRA_FEE;
+    public static final long FEE_FOR_DAPP_ACC = SUM_FEE + EXTRA_FEE;
 
     public static final long MIN_FEE_FOR_SET_SCRIPT = 1_000_000L;
     public static final long EXTRA_FEE_FOR_SET_SCRIPT = 4_000_000L;

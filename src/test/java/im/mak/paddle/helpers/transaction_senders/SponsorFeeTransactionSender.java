@@ -1,7 +1,6 @@
 package im.mak.paddle.helpers.transaction_senders;
 
 import com.wavesplatform.transactions.SponsorFeeTransaction;
-import com.wavesplatform.transactions.TransferTransaction;
 import com.wavesplatform.transactions.common.AssetId;
 import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
@@ -12,36 +11,19 @@ import static im.mak.paddle.util.Constants.MIN_FEE;
 import static org.assertj.core.api.Assertions.assertThat;
 
 public class SponsorFeeTransactionSender extends BaseTransactionSender {
-    private static long assetOwnerAssetBalanceAfterTransaction;
-    private static long fromAssetBalanceAfterTransaction;
-    private static long toAssetBalanceAfterTransaction;
     private static long assetOwnerWavesBalance;
-    private static long fromWavesBalance;
-    private static long toWavesBalance;
     private static SponsorFeeTransaction sponsorTx;
     private static TransactionInfo sponsorTxInfo;
-    private static TransferTransaction transferTx;
-    private static TransactionInfo transferTxInfo;
 
-    public static void sponsorFeeTransactionSender(Account assetOwner, Account sender, Account recipient,
-                                                   long fee, long transferSum, AssetId assetId, int version) {
-        assetOwnerAssetBalanceAfterTransaction = assetOwner.getBalance(assetId) + fee;
-        fromAssetBalanceAfterTransaction = sender.getBalance(assetId) - fee - transferSum;
-        toAssetBalanceAfterTransaction = recipient.getAssetBalance(assetId) + transferSum;
+    public static void sponsorFeeTransactionSender(Account account, long sponsorFee, AssetId assetId, long fee, int version) {
+        assetOwnerWavesBalance = account.getWavesBalance() - MIN_FEE - fee;
 
-        assetOwnerWavesBalance = assetOwner.getWavesBalance() - MIN_FEE - MIN_FEE;
-        fromWavesBalance = sender.getWavesBalance();
-        toWavesBalance = recipient.getWavesBalance();
-
-        sponsorTx = SponsorFeeTransaction.builder(assetId, fee).version(version)
-                .getSignedWith(assetOwner.privateKey());
+        sponsorTx = SponsorFeeTransaction.builder(assetId, sponsorFee)
+                .version(version)
+                .fee(fee)
+                .getSignedWith(account.privateKey());
         node().waitForTransaction(node().broadcast(sponsorTx).id());
         sponsorTxInfo = node().getTransactionInfo(sponsorTx.id());
-
-        transferTx = sender.transfer(
-                recipient.address(), transferSum, assetId, i -> i.feeAssetId(assetId)
-        ).tx();
-        transferTxInfo = node().getTransactionInfo(transferTx.id());
     }
 
     public static void cancelSponsorFeeSender
@@ -61,28 +43,8 @@ public class SponsorFeeTransactionSender extends BaseTransactionSender {
         }
     }
 
-    public static long getAssetOwnerAssetBalanceAfterTransaction() {
-        return assetOwnerAssetBalanceAfterTransaction;
-    }
-
-    public static long getFromAssetBalanceAfterTransaction() {
-        return fromAssetBalanceAfterTransaction;
-    }
-
-    public static long getToAssetBalanceAfterTransaction() {
-        return toAssetBalanceAfterTransaction;
-    }
-
     public static long getAssetOwnerWavesBalance() {
         return assetOwnerWavesBalance;
-    }
-
-    public static long getFromWavesBalance() {
-        return fromWavesBalance;
-    }
-
-    public static long getToWavesBalance() {
-        return toWavesBalance;
     }
 
     public static SponsorFeeTransaction getSponsorTx() {
@@ -92,13 +54,4 @@ public class SponsorFeeTransactionSender extends BaseTransactionSender {
     public static TransactionInfo getSponsorTxInfo() {
         return sponsorTxInfo;
     }
-
-    public static TransferTransaction getTransferTx() {
-        return transferTx;
-    }
-
-    public static TransactionInfo getTransferTxInfo() {
-        return transferTxInfo;
-    }
-
 }

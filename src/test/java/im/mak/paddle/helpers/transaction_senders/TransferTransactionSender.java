@@ -13,25 +13,32 @@ import static im.mak.paddle.util.Constants.MIN_FEE;
 
 public class TransferTransactionSender extends BaseTransactionSender {
     private static long senderBalanceAfterTransaction;
+    private static long senderWavesBalanceAfterTransaction;
     private static long recipientBalanceAfterTransaction;
+    private static long recipientWavesBalanceAfterTransaction;
     private static TransferTransaction transferTx;
     private static Base58String base58StringAttachment;
     private static AssetId asset;
 
     public static void transferTransactionSender
-            (Amount amount, Account from, Account to, String addressOrAlias, long fee, int version) {
+            (Amount amount, Account sender, Account recipient, String addressOrAlias, long fee, int version) {
         asset = amount.assetId();
-        senderBalanceAfterTransaction = from.getBalance(asset) - amount.value() - (asset.isWaves() ? MIN_FEE : 0);
-        recipientBalanceAfterTransaction = to.getBalance(asset) + amount.value();
+        senderBalanceAfterTransaction = sender.getBalance(asset) - amount.value() - (asset.isWaves() ? MIN_FEE : 0);
+        recipientBalanceAfterTransaction = recipient.getBalance(asset) + amount.value();
         base58StringAttachment = new Base58String("attachment");
-        Recipient transferTo = addressOrAlias.equals(ADDRESS) ? to.address() : to.getAliases().get(0);
+        Recipient transferTo = addressOrAlias.equals(ADDRESS) ? recipient.address() : recipient.getAliases().get(0);
+
+        if (!asset.isWaves()) {
+            senderWavesBalanceAfterTransaction = sender.getWavesBalance() - fee;
+            recipientWavesBalanceAfterTransaction = recipient.getWavesBalance();
+        }
 
         transferTx = TransferTransaction.builder(transferTo, amount)
                 .attachment(base58StringAttachment)
                 .version(version)
-                .sender(from.publicKey())
+                .sender(sender.publicKey())
                 .fee(fee)
-                .getSignedWith(from.privateKey());
+                .getSignedWith(sender.privateKey());
         node().waitForTransaction(node().broadcast(transferTx).id());
         txInfo = node().getTransactionInfo(transferTx.id());
     }
@@ -42,6 +49,14 @@ public class TransferTransactionSender extends BaseTransactionSender {
 
     public static long getRecipientBalanceAfterTransaction() {
         return recipientBalanceAfterTransaction;
+    }
+
+    public static long getSenderWavesBalanceAfterTransaction() {
+        return senderWavesBalanceAfterTransaction;
+    }
+
+    public static long getRecipientWavesBalanceAfterTransaction() {
+        return recipientWavesBalanceAfterTransaction;
     }
 
     public static TransferTransaction getTransferTx() {

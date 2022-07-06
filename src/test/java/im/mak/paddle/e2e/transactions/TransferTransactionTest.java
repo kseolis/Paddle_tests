@@ -4,6 +4,7 @@ import com.wavesplatform.transactions.common.Amount;
 import com.wavesplatform.transactions.common.AssetId;
 import im.mak.paddle.Account;
 
+import im.mak.paddle.dapps.DefaultDApp420Complexity;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -27,7 +28,7 @@ public class TransferTransactionTest {
     private static Account bob;
     private static long bobBalance;
 
-    private static Account acc;
+    private static DefaultDApp420Complexity dAppAccount;
 
     private static AssetId issuedAssetId;
     private static AssetId issuedSmartAssetId;
@@ -47,9 +48,9 @@ public class TransferTransactionTest {
                     bobBalance = bob.getWavesBalance() - MIN_FEE;
                 },
                 () -> {
-                    acc = new Account(DEFAULT_FAUCET);
-                    acc.createAlias(randomNumAndLetterString(15));
-                    issuedSmartAssetId = acc.issue(i -> i.name("T_smart")
+                    dAppAccount = new DefaultDApp420Complexity(DEFAULT_FAUCET);
+                    dAppAccount.createAlias(randomNumAndLetterString(15));
+                    issuedSmartAssetId = dAppAccount.issue(i -> i.name("T_smart")
                             .quantity(1000)
                             .decimals(8)
                             .script(SCRIPT_PERMITTING_OPERATIONS)).tx().assetId();
@@ -103,20 +104,20 @@ public class TransferTransactionTest {
     }
 
     @Test
-    @DisplayName("transfer minimum smart asset on address")
+    @DisplayName("transfer minimum smart asset on address from dAppAccount high complexity")
     void transferMinSmartAsset() {
         Amount amount = Amount.of(MIN_TRANSACTION_SUM, issuedSmartAssetId);
-        transferTransactionSender(amount, acc, alice, ADDRESS, SUM_FEE, 2);
-        checkTransferTransaction(amount, acc, alice, SUM_FEE);
+        transferTransactionSender(amount, dAppAccount, alice, ADDRESS, FEE_FOR_DAPP_ACC, 2);
+        checkTransferTransaction(amount, dAppAccount, alice, FEE_FOR_DAPP_ACC);
     }
 
     @Test
-    @DisplayName("transfer almost all smart asset on alias")
+    @DisplayName("transfer almost all smart asset on alias for smart account")
     void transferMaxSmartAsset() {
-        long transferSum = acc.getBalance(issuedSmartAssetId) - MIN_TRANSACTION_SUM;
+        long transferSum = dAppAccount.getBalance(issuedSmartAssetId) - MIN_TRANSACTION_SUM;
         Amount amount = Amount.of(transferSum, issuedSmartAssetId);
-        transferTransactionSender(amount, acc, alice, ALIAS, SUM_FEE, 1);
-        checkTransferTransaction(amount, acc, alice, SUM_FEE);
+        transferTransactionSender(amount, dAppAccount, alice, ALIAS, FEE_FOR_DAPP_ACC, 2);
+        checkTransferTransaction(amount, dAppAccount, alice, FEE_FOR_DAPP_ACC);
     }
 
     private void checkTransferTransaction(Amount amount, Account from, Account to, long fee) {
