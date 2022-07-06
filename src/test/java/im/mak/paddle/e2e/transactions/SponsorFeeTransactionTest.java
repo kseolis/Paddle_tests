@@ -24,7 +24,7 @@ public class SponsorFeeTransactionTest {
     private static Account acc;
 
     private static AssetId aliceAssetId;
-    private static AssetId bobAssetId;
+    private static AssetId dAppAssetId;
 
     @BeforeAll
     static void before() {
@@ -35,12 +35,12 @@ public class SponsorFeeTransactionTest {
                 },
                 () -> {
                     dAppAcc = new DefaultDApp420Complexity(DEFAULT_FAUCET);
-                    bobAssetId = dAppAcc.issue(i -> i.name("Bob_Asset").quantity(1000L).decimals(8)).tx().assetId();
+                    dAppAssetId = dAppAcc.issue(i -> i.name("Bob_Asset").quantity(1000L).decimals(8)).tx().assetId();
                 },
                 () -> acc = new Account(DEFAULT_FAUCET)
         );
         alice.transfer(dAppAcc, alice.getBalance(aliceAssetId) / 2, aliceAssetId);
-        dAppAcc.transfer(acc, dAppAcc.getBalance(bobAssetId) / 2, bobAssetId);
+        dAppAcc.transfer(acc, dAppAcc.getBalance(dAppAssetId) / 2, dAppAssetId);
     }
 
     @Test
@@ -64,15 +64,15 @@ public class SponsorFeeTransactionTest {
     void sponsorDAppAccAssets() {
         for (int v = 1; v <= LATEST_VERSION; v++) {
             long sponsorFee = getRandomInt(10, 50);
-            long amountValue = acc.getBalance(bobAssetId) - sponsorFee;
-            Amount amount = Amount.of(amountValue, bobAssetId);
+            long amountValue = acc.getBalance(dAppAssetId) - sponsorFee;
+            Amount amount = Amount.of(amountValue, dAppAssetId);
 
-            sponsorFeeTransactionSender(dAppAcc, sponsorFee, bobAssetId, SUM_FEE, v);
+            sponsorFeeTransactionSender(dAppAcc, sponsorFee, dAppAssetId, SUM_FEE, v);
             transferTransactionSender(amount, acc, alice, ADDRESS, SUM_FEE, v);
-            checkSponsorTransaction(dAppAcc, acc, alice, sponsorFee, SUM_FEE, bobAssetId);
+            checkSponsorTransaction(dAppAcc, acc, alice, sponsorFee, SUM_FEE, dAppAssetId);
 
-            dAppAcc.reissue(500, bobAssetId);
-            dAppAcc.transfer(acc, dAppAcc.getBalance(bobAssetId) / 2, bobAssetId);
+            dAppAcc.reissue(500, dAppAssetId);
+            dAppAcc.transfer(acc, dAppAcc.getBalance(dAppAssetId) / 2, dAppAssetId);
         }
     }
 
