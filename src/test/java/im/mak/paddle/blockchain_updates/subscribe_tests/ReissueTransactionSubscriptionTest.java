@@ -65,14 +65,13 @@ public class ReissueTransactionSubscriptionTest extends BaseTest {
     void subscribeTestForReissueAsset() {
         wavesAmountAfterReissue = wavesAmountBeforeReissue - SUM_FEE;
         compileScript = new byte[0];
-        final boolean reissue = true;
 
         IssueTransaction issueTx = account.issue(i -> i
                 .name(assetName)
                 .quantity(assetQuantity)
                 .description(assetDescription)
                 .decimals(assetDecimals)
-                .reissuable(reissue)).tx();
+                .reissuable(true)).tx();
 
         AssetId assetId = issueTx.assetId();
         amount = Amount.of(getRandomInt(100, 10000000), assetId);
@@ -81,21 +80,20 @@ public class ReissueTransactionSubscriptionTest extends BaseTest {
         height = node().getHeight();
 
         subscribeResponseHandler(channel, account, height, height);
-        checkReissueSubscribe(assetId.toString(), amount.value(), reissue);
+        checkReissueSubscribe(assetId.toString(), amount.value());
     }
 
     @Test
     @DisplayName("Check subscription on reissue smart asset transaction")
     void subscribeTestForReissueSmartAsset() {
         wavesAmountAfterReissue = wavesAmountBeforeReissue - SUM_FEE;
-        final boolean reissue = true;
 
         IssueTransaction issueTx = account.issue(i -> i
                 .name(assetName)
                 .quantity(assetQuantity)
                 .description(assetDescription)
                 .decimals(assetDecimals)
-                .reissuable(reissue)
+                .reissuable(true)
                 .script(SCRIPT_PERMITTING_OPERATIONS)).tx();
 
         AssetId assetId = issueTx.assetId();
@@ -105,10 +103,10 @@ public class ReissueTransactionSubscriptionTest extends BaseTest {
         height = node().getHeight();
 
         subscribeResponseHandler(channel, account, height, height);
-        checkReissueSubscribe(assetId.toString(), amount.value(), reissue);
+        checkReissueSubscribe(assetId.toString(), amount.value());
     }
 
-    private void checkReissueSubscribe(String assetId, long amount, boolean reissueAfter) {
+    private void checkReissueSubscribe(String assetId, long amount) {
         assertAll(
                 () -> assertThat(getChainId(0)).isEqualTo(DEVNET_CHAIN_ID),
                 () -> assertThat(getTransactionFeeAmount(0)).isEqualTo(SUM_FEE),
@@ -123,7 +121,7 @@ public class ReissueTransactionSubscriptionTest extends BaseTest {
                 () -> assertThat(getAmountAfter(0, 0)).isEqualTo(wavesAmountAfterReissue),
                 // check asset balance
                 () -> assertThat(getAddress(0, 1)).isEqualTo(address),
-                () -> assertThat(getIssuedAssetIdAmountAfter(0, 1)).isEqualTo(assetId),
+                () -> assertThat(getAssetIdAmountAfter(0, 1)).isEqualTo(assetId),
                 () -> assertThat(getAmountBefore(0, 1)).isEqualTo(assetQuantity),
                 () -> assertThat(getAmountAfter(0, 1)).isEqualTo(quantityAfterReissue),
                 // check asset before reissue
@@ -139,7 +137,7 @@ public class ReissueTransactionSubscriptionTest extends BaseTest {
                 () -> assertThat(getAssetIdFromAssetAfter(0, 0)).isEqualTo(assetId),
                 () -> assertThat(getIssuerAfter(0, 0)).isEqualTo(publicKey),
                 () -> assertThat(getQuantityAfter(0, 0)).isEqualTo(quantityAfterReissue),
-                () -> assertThat(getReissuableAfter(0, 0)).isEqualTo(reissueAfter),
+                () -> assertThat(getReissuableAfter(0, 0)).isEqualTo(true),
                 () -> assertThat(getNameAfter(0, 0)).isEqualTo(assetName),
                 () -> assertThat(getDescriptionAfter(0, 0)).isEqualTo(assetDescription),
                 () -> assertThat(getDecimalsAfter(0, 0)).isEqualTo(assetDecimals),

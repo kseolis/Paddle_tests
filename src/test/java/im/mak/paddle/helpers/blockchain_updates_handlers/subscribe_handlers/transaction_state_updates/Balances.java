@@ -16,7 +16,7 @@ public class Balances {
                 .toByteArray());
     }
 
-    public static String getIssuedAssetIdAmountAfter(int txStateUpdIndex, int balanceUpdIndex) {
+    public static String getAssetIdAmountAfter(int txStateUpdIndex, int balanceUpdIndex) {
         return Base58.encode(getBalanceUpdate(txStateUpdIndex, balanceUpdIndex)
                 .getAmountAfter()
                 .getAssetId()

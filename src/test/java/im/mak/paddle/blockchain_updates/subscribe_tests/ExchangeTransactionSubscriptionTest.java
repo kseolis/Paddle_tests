@@ -190,7 +190,7 @@ public class ExchangeTransactionSubscriptionTest extends BaseTest {
         assertThat(getAddress(0, 1)).isEqualTo(buyerAddress);
         assertThat(getAmountBefore(0, 1)).isEqualTo(assetQuantity);
         assertThat(getAmountAfter(0, 1)).isEqualTo(getBuyerBalanceAfterTransactionPriceAsset());
-        assertThat(getIssuedAssetIdAmountAfter(0, 1)).isEqualTo(assetId.toString());
+        assertThat(getAssetIdAmountAfter(0, 1)).isEqualTo(assetId.toString());
         // check waves balance from balances seller
         assertThat(getAddress(0, 2)).isEqualTo(sellerAddress);
         assertThat(getAmountBefore(0, 2)).isEqualTo(DEFAULT_FAUCET);
@@ -199,7 +199,7 @@ public class ExchangeTransactionSubscriptionTest extends BaseTest {
         assertThat(getAddress(0, 3)).isEqualTo(sellerAddress);
         assertThat(getAmountBefore(0, 3)).isEqualTo(0);
         assertThat(getAmountAfter(0, 3)).isEqualTo(getSellerBalanceAfterTransactionPriceAsset());
-        assertThat(getIssuedAssetIdAmountAfter(0, 3)).isEqualTo(assetId.toString());
+        assertThat(getAssetIdAmountAfter(0, 3)).isEqualTo(assetId.toString());
     }
 
     private void checkBalancesForExchangeWithAssets(long wavesBuyerAmountBefore, long wavesSellerAmountBefore, long tokenTypeFee) {
@@ -211,12 +211,12 @@ public class ExchangeTransactionSubscriptionTest extends BaseTest {
         assertThat(getAddress(0, 1)).isEqualTo(buyerAddress);
         assertThat(getAmountBefore(0, 1)).isEqualTo(assetQuantity);
         assertThat(getAmountAfter(0, 1)).isEqualTo(getBuyerBalanceAfterTransactionPriceAsset());
-        assertThat(getIssuedAssetIdAmountAfter(0, 1)).isEqualTo(getPriceAssetId().toString());
+        assertThat(getAssetIdAmountAfter(0, 1)).isEqualTo(getPriceAssetId().toString());
         // check asset balance from balances
         assertThat(getAddress(0, 2)).isEqualTo(buyerAddress);
         assertThat(getAmountBefore(0, 2)).isEqualTo(0);
         assertThat(getAmountAfter(0, 2)).isEqualTo(getBuyerBalanceAfterTransactionAmountAsset());
-        assertThat(getIssuedAssetIdAmountAfter(0, 2)).isEqualTo(getAmountAssetId().toString());
+        assertThat(getAssetIdAmountAfter(0, 2)).isEqualTo(getAmountAssetId().toString());
         // check asset balance from balances seller
         assertThat(getAddress(0, 3)).isEqualTo(sellerAddress);
         assertThat(getAmountBefore(0, 3)).isEqualTo(wavesSellerAmountBefore);
@@ -225,11 +225,11 @@ public class ExchangeTransactionSubscriptionTest extends BaseTest {
         assertThat(getAddress(0, 4)).isEqualTo(sellerAddress);
         assertThat(getAmountBefore(0, 4)).isEqualTo(0);
         assertThat(getAmountAfter(0, 4)).isEqualTo(getSellerBalanceAfterTransactionPriceAsset());
-        assertThat(getIssuedAssetIdAmountAfter(0, 4)).isEqualTo(getPriceAssetId().toString());
+        assertThat(getAssetIdAmountAfter(0, 4)).isEqualTo(getPriceAssetId().toString());
         // check asset balance from balances
         assertThat(getAddress(0, 5)).isEqualTo(sellerAddress);
         assertThat(getAmountBefore(0, 5)).isEqualTo(assetQuantity);
         assertThat(getAmountAfter(0, 5)).isEqualTo(getSellerBalanceAfterTransactionAmountAsset());
-        assertThat(getIssuedAssetIdAmountAfter(0, 5)).isEqualTo(getAmountAssetId().toString());
+        assertThat(getAssetIdAmountAfter(0, 5)).isEqualTo(getAmountAssetId().toString());
     }
 }

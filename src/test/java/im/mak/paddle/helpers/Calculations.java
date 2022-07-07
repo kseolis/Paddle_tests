@@ -4,7 +4,7 @@ import com.wavesplatform.transactions.common.AssetId;
 import com.wavesplatform.transactions.exchange.Order;
 import im.mak.paddle.Account;
 
-import static com.wavesplatform.transactions.common.AssetId.WAVES;
+import static im.mak.paddle.Node.node;
 import static im.mak.paddle.util.Constants.*;
 
 public class Calculations {
@@ -37,21 +37,29 @@ public class Calculations {
         }
     }
 
-    public static long calculateSenderBalanceAfterMassTransfer
-            (Account account, AssetId assetId, long amount, int numberOfAccounts) {
-        long senderBalance = account.getBalance(assetId);
+    public static long calculateSenderBalanceAfterMassTransfer(Account account, AssetId id, long amount, int numAcc) {
+        long senderBalance = account.getBalance(id);
         long numForRoundCheck = 100000;
-        long additionalFeeForMassTransfer = FEE_FOR_MASS_TRANSFER * numberOfAccounts;
+        long transactionSum = amount * numAcc;
+        long additionalFeeForMassTransfer = FEE_FOR_MASS_TRANSFER * numAcc;
+
         if (additionalFeeForMassTransfer % numForRoundCheck != 0) { // The fee value is rounded up to three decimals.
             additionalFeeForMassTransfer = (long) Math.ceil(
                     (float) additionalFeeForMassTransfer / numForRoundCheck
             ) * numForRoundCheck;
         }
 
-        long transactionSum = amount * numberOfAccounts;
         transactionCommission = MIN_FEE + additionalFeeForMassTransfer;
 
-        if (assetId.equals(WAVES)) {
+        if (account.getScriptInfo().extraFee() == EXTRA_FEE) {
+            transactionCommission += EXTRA_FEE;
+        }
+
+        if (!id.isWaves() && node().getAssetDetails(id).isScripted()) {
+            transactionCommission += EXTRA_FEE;
+        }
+
+        if (id.isWaves()) {
             return senderBalance - transactionSum - transactionCommission;
         }
         return senderBalance - transactionSum;
