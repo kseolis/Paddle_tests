@@ -1,6 +1,8 @@
 package im.mak.paddle.util;
 
 public class Constants {
+    public static final int MAX_LIB_VERSION = 6;
+
     public static final byte ASSET_QUANTITY_MIN = 1;
     public static final long ASSET_QUANTITY_MAX = 9_223_372_036_854_775_807L;
 

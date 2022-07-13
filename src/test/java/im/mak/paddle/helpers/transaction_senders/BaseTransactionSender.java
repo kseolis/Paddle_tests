@@ -11,6 +11,10 @@ public class BaseTransactionSender {
         return balanceAfterTransaction;
     }
 
+    public static void setBalanceAfterTransaction(long balanceAfterTransaction) {
+        BaseTransactionSender.balanceAfterTransaction = balanceAfterTransaction;
+    }
+
     public static long getAccountWavesBalance() {
         return accountWavesBalance;
     }

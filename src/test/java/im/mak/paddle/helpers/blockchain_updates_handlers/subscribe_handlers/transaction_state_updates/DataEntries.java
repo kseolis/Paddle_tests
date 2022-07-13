@@ -36,6 +36,10 @@ public class DataEntries {
         return getBeforeDataEntries(0, 0).getIntValue();
     }
 
+    public static String getBeforeDataEntriesStringValue(int txStateUpdIndex, int index) {
+        return getBeforeDataEntries(0, 0).getStringValue();
+    }
+
     public static String getBeforeDataEntriesKey(int txStateUpdIndex, int index) {
         return getBeforeDataEntries(0, 0).getKey();
     }

@@ -21,10 +21,16 @@ public class InvokeScriptTransactionHandler {
         );
     }
 
-    public static long getInvokeTransactionAmount(int txIndex, int paymentIndex) {
-        return getTransactionAtIndex(txIndex)
-                .getInvokeScript()
-                .getPayments(paymentIndex)
-                .getAmount();
+    public static long getInvokeTransactionPaymentAmount(int txIndex, int paymentIndex) {
+        long amount;
+        try {
+            amount = getTransactionAtIndex(txIndex)
+                    .getInvokeScript()
+                    .getPayments(paymentIndex)
+                    .getAmount();
+        } catch (IndexOutOfBoundsException e) {
+            return 0;
+        }
+        return amount;
     }
 }

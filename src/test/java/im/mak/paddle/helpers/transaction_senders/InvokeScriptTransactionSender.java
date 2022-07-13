@@ -4,10 +4,8 @@ import com.wavesplatform.transactions.InvokeScriptTransaction;
 import com.wavesplatform.transactions.common.Amount;
 import im.mak.paddle.Account;
 import im.mak.paddle.dapp.DAppCall;
-import im.mak.paddle.dapps.IntDApp;
 
 import static im.mak.paddle.Node.node;
-import static im.mak.paddle.helpers.Randomizer.getRandomInt;
 
 public class InvokeScriptTransactionSender extends BaseTransactionSender {
     private static InvokeScriptTransaction invokeScriptTx;
@@ -15,20 +13,37 @@ public class InvokeScriptTransactionSender extends BaseTransactionSender {
     private static long dAppAccountBalance;
     private static long dAppAccountBalanceAfterTransaction;
 
-    public static void invokeIntDAppSender(Account account, IntDApp dAppAccount, Amount amount, int version, long fee) {
-        accountWavesBalance = account.getWavesBalance();
-        balanceAfterTransaction = account.getWavesBalance() - fee - amount.value();
+    public static void invokeSenderWithPayment(Account payer, Account dAppAccount, DAppCall call, Amount amount, int version, long fee) {
+        accountWavesBalance = payer.getWavesBalance();
+        balanceAfterTransaction = payer.getWavesBalance() - fee - amount.value();
         dAppAccountBalance = dAppAccount.getWavesBalance();
         dAppAccountBalanceAfterTransaction = dAppAccountBalance + amount.value();
-
-        dAppCall = dAppAccount.setInt(getRandomInt(1, 500));
+        dAppCall = call;
 
         invokeScriptTx = InvokeScriptTransaction
                 .builder(dAppAccount.address(), dAppCall.getFunction())
                 .payments(amount)
                 .version(version)
-                .getSignedWith(account.privateKey());
+                .getSignedWith(payer.privateKey());
 
+        node().waitForTransaction(node().broadcast(invokeScriptTx).id());
+
+        txInfo = node().getTransactionInfo(invokeScriptTx.id());
+    }
+
+
+    public static void invokeSender(Account dAppAccount, DAppCall call, int version, long fee, long extraFee) {
+        accountWavesBalance = dAppAccount.getWavesBalance();
+        balanceAfterTransaction = dAppAccount.getWavesBalance() - fee - extraFee;
+        dAppAccountBalance = dAppAccount.getWavesBalance();
+        dAppAccountBalanceAfterTransaction = dAppAccountBalance;
+        dAppCall = call;
+
+        invokeScriptTx = InvokeScriptTransaction
+                .builder(dAppAccount.address(), dAppCall.getFunction())
+                .version(version)
+                .extraFee(extraFee)
+                .getSignedWith(dAppAccount.privateKey());
         node().waitForTransaction(node().broadcast(invokeScriptTx).id());
 
         txInfo = node().getTransactionInfo(invokeScriptTx.id());
