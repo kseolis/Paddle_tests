@@ -6,13 +6,12 @@ public class BaseTransactionSender {
     protected static long balanceAfterTransaction;
     protected static long accountWavesBalance;
     protected static TransactionInfo txInfo;
+    protected static int version;
+    protected static long fee;
+    protected static long extraFee;
 
     public static long getBalanceAfterTransaction() {
         return balanceAfterTransaction;
-    }
-
-    public static void setBalanceAfterTransaction(long balanceAfterTransaction) {
-        BaseTransactionSender.balanceAfterTransaction = balanceAfterTransaction;
     }
 
     public static long getAccountWavesBalance() {
@@ -21,6 +20,19 @@ public class BaseTransactionSender {
 
     public static TransactionInfo getTxInfo() {
         return txInfo;
+    }
+
+
+    public static void setVersion(int version) {
+        BaseTransactionSender.version = version;
+    }
+
+    public static void setFee(long fee) {
+        BaseTransactionSender.fee = fee;
+    }
+
+    public static void setExtraFee(long extraFee) {
+        BaseTransactionSender.extraFee = extraFee;
     }
 
 }

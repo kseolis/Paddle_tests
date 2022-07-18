@@ -2,29 +2,33 @@ package im.mak.paddle.helpers.transaction_senders;
 
 import com.wavesplatform.transactions.InvokeScriptTransaction;
 import com.wavesplatform.transactions.common.Amount;
+import com.wavesplatform.transactions.common.AssetId;
 import im.mak.paddle.Account;
 import im.mak.paddle.dapp.DAppCall;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static im.mak.paddle.Node.node;
 
 public class InvokeScriptTransactionSender extends BaseTransactionSender {
     private static InvokeScriptTransaction invokeScriptTx;
     private static DAppCall dAppCall;
-    private static long dAppAccountBalance;
-    private static long dAppAccountBalanceAfterTransaction;
 
-    public static void invokeSenderWithPayment(Account payer, Account dAppAccount, DAppCall call, Amount amount, int version, long fee) {
-        accountWavesBalance = payer.getWavesBalance();
-        balanceAfterTransaction = payer.getWavesBalance() - fee - amount.value();
-        dAppAccountBalance = dAppAccount.getWavesBalance();
-        dAppAccountBalanceAfterTransaction = dAppAccountBalance + amount.value();
+    private static long callerBalanceWavesAfterTransaction;
+    private static long callerBalanceIssuedAssetsAfterTransaction;
+    private static long dAppBalanceWavesAfterTransaction;
+    private static long dAppBalanceIssuedAssetsAfterTransaction;
+
+    public static void invokeSenderWithPayment(Account caller, Account dAppAccount, DAppCall call, List<Amount> amounts) {
         dAppCall = call;
 
         invokeScriptTx = InvokeScriptTransaction
                 .builder(dAppAccount.address(), dAppCall.getFunction())
-                .payments(amount)
+                .payments(amounts)
                 .version(version)
-                .getSignedWith(payer.privateKey());
+                .extraFee(extraFee)
+                .getSignedWith(caller.privateKey());
 
         node().waitForTransaction(node().broadcast(invokeScriptTx).id());
 
@@ -32,11 +36,7 @@ public class InvokeScriptTransactionSender extends BaseTransactionSender {
     }
 
 
-    public static void invokeSender(Account dAppAccount, DAppCall call, int version, long fee, long extraFee) {
-        accountWavesBalance = dAppAccount.getWavesBalance();
-        balanceAfterTransaction = dAppAccount.getWavesBalance() - fee - extraFee;
-        dAppAccountBalance = dAppAccount.getWavesBalance();
-        dAppAccountBalanceAfterTransaction = dAppAccountBalance;
+    public static void invokeSender(Account caller, Account dAppAccount, DAppCall call) {
         dAppCall = call;
 
         invokeScriptTx = InvokeScriptTransaction
@@ -61,12 +61,41 @@ public class InvokeScriptTransactionSender extends BaseTransactionSender {
         return invokeScriptTx.id().toString();
     }
 
-    public static long getDAppAccountBalance() {
-        return dAppAccountBalance;
+    public static long getCallerBalanceWavesAfterTransaction() {
+        return callerBalanceWavesAfterTransaction;
     }
 
-    public static long getDAppAccountBalanceAfterTransaction() {
-        return dAppAccountBalanceAfterTransaction;
+    public static long getCallerBalanceIssuedAssetsAfterTransaction() {
+        return callerBalanceIssuedAssetsAfterTransaction;
     }
 
+    public static long getDAppBalanceWavesAfterTransaction() {
+        return dAppBalanceWavesAfterTransaction;
+    }
+
+    public static long getDAppBalanceIssuedAssetsAfterTransaction() {
+        return dAppBalanceIssuedAssetsAfterTransaction;
+    }
+
+    public static void calculateBalancesAfterInvoke(Account caller, Account dApp, List<Amount> amounts, AssetId id) {
+        callerBalanceWavesAfterTransaction = caller.getWavesBalance() - fee - extraFee;
+        callerBalanceIssuedAssetsAfterTransaction = caller.getBalance(id);
+
+        dAppBalanceWavesAfterTransaction = dApp.getWavesBalance();
+        dAppBalanceIssuedAssetsAfterTransaction = dApp.getBalance(id);
+
+        if (!amounts.isEmpty()) {
+            amounts.forEach(
+                    a -> {
+                        if (a.assetId().isWaves()) {
+                            callerBalanceWavesAfterTransaction -= a.value();
+                            dAppBalanceWavesAfterTransaction += a.value();
+                        } else if (a.assetId().equals(id)) {
+                            callerBalanceIssuedAssetsAfterTransaction = caller.getBalance(id) + a.value();
+                            dAppBalanceIssuedAssetsAfterTransaction = dApp.getBalance(id) + a.value();
+                        }
+                    }
+            );
+        }
+    }
 }

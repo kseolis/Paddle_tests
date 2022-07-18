@@ -17,7 +17,7 @@ public class Calculations {
 
     private static long transactionCommission;
 
-    public static void calculateBalancesAfterTransaction(Account from, Account to, Order buy, long amount, int decimals) {
+    public static void calculateBalancesAfterExchange(Account from, Account to, Order buy, long amount, int decimals) {
         amountAssetId = buy.assetPair().left();
         priceAssetId = buy.assetPair().right();
 
@@ -64,7 +64,6 @@ public class Calculations {
         }
         return senderBalance - transactionSum;
     }
-
 
     public static AssetId getAmountAssetId() {
         return amountAssetId;
