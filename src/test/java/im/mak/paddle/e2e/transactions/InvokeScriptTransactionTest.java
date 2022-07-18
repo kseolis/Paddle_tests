@@ -93,9 +93,9 @@ public class InvokeScriptTransactionTest {
     void invokeScriptDeleteEntryTest() {
         amounts.clear();
         amounts.add(Amount.of(199_000));
+
         final String functionArgs = "intVal:Int";
-        final String functions = "\tIntegerEntry(\"int\", intVal),\n" +
-                "\tDeleteEntry(\"int\")";
+        final String functions = "\tIntegerEntry(\"int\", intVal),\n\tDeleteEntry(\"int\")";
         final String script = defaultFunctionBuilder(functionArgs, functions, getRandomInt(4, MAX_LIB_VERSION));
         dAppAccount.setScript(script);
         DAppCall dAppCall = dAppAccount.setData(intArg);
@@ -104,7 +104,7 @@ public class InvokeScriptTransactionTest {
 
         for (int v = 1; v <= LATEST_VERSION; v++) {
             setVersion(v);
-            calculateBalancesAfterInvoke(callerAccount, assetDAppAccount, amounts, assetId);
+            calculateBalancesAfterInvoke(callerAccount, dAppAccount, amounts, assetId);
             invokeSenderWithPayment(callerAccount, dAppAccount, dAppCall, amounts);
             checkInvokeTransaction(callerAccount, dAppAccount, SUM_FEE);
         }
@@ -166,7 +166,8 @@ public class InvokeScriptTransactionTest {
         final String functions = "\tLease(Address(address), 1_000_000)";
         final String script = defaultFunctionBuilder(functionArgs, functions, getRandomInt(5, MAX_LIB_VERSION));
 
-        dAppAccount = new DataDApp(DEFAULT_FAUCET, script);
+        dAppAccount.setScript(script);
+
         final DAppCall dAppCall = dAppAccount.setData(callerAddress);
 
         setFee(SUM_FEE);
