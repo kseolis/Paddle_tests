@@ -79,10 +79,8 @@ public class InvokeScriptTransactionSender extends BaseTransactionSender {
     public static void balancesAfterPaymentInvoke(Account caller, Account dApp, List<Amount> amounts, AssetId id) {
         callerBalanceWavesAfterTransaction = caller.getWavesBalance() - fee - extraFee;
         callerBalanceIssuedAssetsAfterTransaction = caller.getBalance(id);
-
         dAppBalanceWavesAfterTransaction = dApp.getWavesBalance();
         dAppBalanceIssuedAssetsAfterTransaction = dApp.getBalance(id);
-        System.out.println("balance before " + callerBalanceWavesAfterTransaction);
 
         if (!amounts.isEmpty()) {
             amounts.forEach(
@@ -102,7 +100,6 @@ public class InvokeScriptTransactionSender extends BaseTransactionSender {
     public static void balancesAfterBurnAssetInvoke(Account caller, Account dApp, List<Amount> amounts, AssetId id) {
         callerBalanceWavesAfterTransaction = caller.getWavesBalance() - fee - extraFee;
         callerBalanceIssuedAssetsAfterTransaction = caller.getBalance(id);
-
         dAppBalanceWavesAfterTransaction = dApp.getWavesBalance();
         dAppBalanceIssuedAssetsAfterTransaction = dApp.getBalance(id);
 
@@ -123,7 +120,6 @@ public class InvokeScriptTransactionSender extends BaseTransactionSender {
     public static void balancesAfterReissueAssetInvoke(Account caller, Account dApp, List<Amount> amounts, AssetId id) {
         callerBalanceWavesAfterTransaction = caller.getWavesBalance() - fee - extraFee;
         callerBalanceIssuedAssetsAfterTransaction = caller.getBalance(id);
-
         dAppBalanceWavesAfterTransaction = dApp.getWavesBalance();
         dAppBalanceIssuedAssetsAfterTransaction = dApp.getBalance(id);
 
@@ -141,10 +137,9 @@ public class InvokeScriptTransactionSender extends BaseTransactionSender {
         }
     }
 
-    public static void balancesAfterScriptTransferInvoke(Account caller, Account dApp, List<Amount> amounts, AssetId id) {
+    public static void balancesAfterCallerInvokeAsset(Account caller, Account dApp, List<Amount> amounts, AssetId id) {
         callerBalanceWavesAfterTransaction = caller.getWavesBalance() - fee - extraFee;
         callerBalanceIssuedAssetsAfterTransaction = caller.getBalance(id);
-
         dAppBalanceWavesAfterTransaction = dApp.getWavesBalance();
         dAppBalanceIssuedAssetsAfterTransaction = dApp.getBalance(id);
 

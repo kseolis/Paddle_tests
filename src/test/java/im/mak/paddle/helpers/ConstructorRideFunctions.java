@@ -45,9 +45,7 @@ public class ConstructorRideFunctions {
                 .append("@Callable(i)\n")
                 .append("func setData(").append(funcArgs).append(")={\n");
 
-        sb.append("[\n")
-                .append(functions)
-                .append("\n]\n")
+        sb.append(functions)
                 .append("}");
         System.out.println(sb);
         return sb.toString();

@@ -34,7 +34,6 @@ public class InvokeScriptTransactionTest {
     private static byte[] dAppAddress;
 
     private static AssetDAppAccount assetDAppAccount;
-    private static byte[] assetDAppAddress;
 
     private static AssetId assetId;
 
@@ -64,7 +63,6 @@ public class InvokeScriptTransactionTest {
                 },
                 () -> {
                     assetDAppAccount = new AssetDAppAccount(DEFAULT_FAUCET, "true");
-                    assetDAppAddress = Base58.decode(assetDAppAccount.address().toString());
                     assetId = assetDAppAccount.issue(i -> i.name("outside Asset").quantity(900_000_000L))
                             .tx().assetId();
                 },
@@ -82,14 +80,19 @@ public class InvokeScriptTransactionTest {
     @Test
     @DisplayName("invoke transaction with DataDApp and issue asset payment")
     void invokeScriptWithDataDAppTest() {
+        final int libVersion = getRandomInt(4, MAX_LIB_VERSION);
+
+        final String functionArgs = "intVal:Int, binVal:ByteVector, boolVal:Boolean, strVal:String";
+        final String functions = "[\n\tIntegerEntry(\"int\", intVal),\n\tBinaryEntry(\"byte\", binVal),\n" +
+                "\tBooleanEntry(\"bool\", boolVal),\n\tStringEntry(\"str\", strVal)\n]\n";
+        final String script = defaultFunctionBuilder(functionArgs, functions, libVersion);
+        dAppAccount.setScript(script);
+
+        final DAppCall dAppCall = dAppAccount.setData(intArg, binArg, boolArg, stringArg);
+
         amounts.clear();
         amounts.add(wavesAmount);
-        final String functionArgs = "intVal:Int, binVal:ByteVector, boolVal:Boolean, strVal:String";
-        final String functions = "\tIntegerEntry(\"int\", intVal),\n\tBinaryEntry(\"byte\", binVal),\n" +
-                "\tBooleanEntry(\"bool\", boolVal),\n\tStringEntry(\"str\", strVal)";
-        final String script = defaultFunctionBuilder(functionArgs, functions, getRandomInt(4, MAX_LIB_VERSION));
-        dAppAccount.setScript(script);
-        final DAppCall dAppCall = dAppAccount.setData(intArg, binArg, boolArg, stringArg);
+
         setFee(SUM_FEE);
         setExtraFee(0);
 
@@ -104,14 +107,18 @@ public class InvokeScriptTransactionTest {
     @Test
     @DisplayName("invoke transaction with DeleteEntry")
     void invokeScriptDeleteEntryTest() {
+        final int libVersion = getRandomInt(4, MAX_LIB_VERSION);
+
+        final String functionArgs = "intVal:Int";
+        final String functions = "[\n\tIntegerEntry(\"int\", intVal),\n\tDeleteEntry(\"int\")\n]\n";
+        final String script = defaultFunctionBuilder(functionArgs, functions, libVersion);
+        dAppAccount.setScript(script);
+
+        DAppCall dAppCall = dAppAccount.setData(intArg);
+
         amounts.clear();
         amounts.add(wavesAmount);
 
-        final String functionArgs = "intVal:Int";
-        final String functions = "\tIntegerEntry(\"int\", intVal),\n\tDeleteEntry(\"int\")";
-        final String script = defaultFunctionBuilder(functionArgs, functions, getRandomInt(4, MAX_LIB_VERSION));
-        dAppAccount.setScript(script);
-        DAppCall dAppCall = dAppAccount.setData(intArg);
         setFee(SUM_FEE);
         setExtraFee(0);
 
@@ -126,18 +133,17 @@ public class InvokeScriptTransactionTest {
     @Test
     @DisplayName("invoke transaction with Burn transaction")
     void invokeScriptWithBurn() {
-        amounts.clear();
-        amounts.add(assetAmount);
-
         long fee = ONE_WAVES + SUM_FEE;
         final int libVersion = getRandomInt(4, MAX_LIB_VERSION);
 
         final String functions = "Burn(assetId, " + assetAmount.value() + "),\n\tBurn(issueAssetId, 1)";
-
         final String script = assetsFunctionBuilder(libVersion, "unit", functions, args);
         assetDAppAccount.setScript(script);
 
         final DAppCall dAppCall = assetDAppAccount.setDataAssetId(Base58.decode(assetId.toString()));
+
+        amounts.clear();
+        amounts.add(assetAmount);
 
         setFee(SUM_FEE);
         setExtraFee(ONE_WAVES);
@@ -156,14 +162,14 @@ public class InvokeScriptTransactionTest {
         long fee = ONE_WAVES + SUM_FEE;
         final int libVersion = getRandomInt(4, MAX_LIB_VERSION);
 
-        amounts.clear();
-        amounts.add(assetAmount);
-
         final String functions = "Reissue(assetId," + assetAmount.value() + ",true),\n\tReissue(issueAssetId,1,true)";
         final String script = assetsFunctionBuilder(libVersion, "unit", functions, args);
-
         assetDAppAccount.setScript(script);
+
         final DAppCall dAppCall = assetDAppAccount.setDataAssetId(Base58.decode(assetId.toString()));
+
+        amounts.clear();
+        amounts.add(assetAmount);
 
         setFee(SUM_FEE);
         setExtraFee(ONE_WAVES);
@@ -179,22 +185,25 @@ public class InvokeScriptTransactionTest {
     @Test
     @DisplayName("invoke with Lease Transaction and WAVES payment")
     void invokeScriptWithLease() {
-        amounts.clear();
-        amounts.add(Amount.of(199_000));
+        final int libVersion = getRandomInt(5, MAX_LIB_VERSION);
 
         final String functionArgs = "address:ByteVector";
-        final String functions = "\tLease(Address(address), 1_000_000)";
-        final String script = defaultFunctionBuilder(functionArgs, functions, getRandomInt(5, MAX_LIB_VERSION));
+        final String functions = "[\n\tLease(Address(address), " + wavesAmount.value() + ")\n]\n";
+        final String script = defaultFunctionBuilder(functionArgs, functions, libVersion);
 
         dAppAccount.setScript(script);
 
         final DAppCall dAppCall = dAppAccount.setData(callerAddress);
+
+        amounts.clear();
+        amounts.add(wavesAmount);
 
         setFee(SUM_FEE);
         setExtraFee(0);
 
         for (int v = 1; v <= LATEST_VERSION; v++) {
             setVersion(v);
+            balancesAfterPaymentInvoke(callerAccount, dAppAccount, amounts, assetId);
             invokeSenderWithPayment(callerAccount, dAppAccount, dAppCall, amounts);
             checkInvokeTransaction(callerAccount, dAppAccount, SUM_FEE);
         }
@@ -203,17 +212,22 @@ public class InvokeScriptTransactionTest {
     @Test
     @DisplayName("invoke with LeaseCancel Transaction and WAVES payment")
     void invokeScriptWithLeaseCancel() {
-        amounts.clear();
-        amounts.add(Amount.of(199_000));
+        final int libVersion = getRandomInt(5, MAX_LIB_VERSION);
+
         final String functionArgs = "leaseId:ByteVector";
-        final String functions = "\tLeaseCancel(leaseId)";
-        final String script = defaultFunctionBuilder(functionArgs, functions, getRandomInt(5, MAX_LIB_VERSION));
+        final String functions = "[\n\tLeaseCancel(leaseId)\n]\n";
+        final String script = defaultFunctionBuilder(functionArgs, functions, libVersion);
+
         dAppAccount.setScript(script);
+
+        amounts.clear();
+        amounts.add(wavesAmount);
+
         setFee(SUM_FEE);
         setExtraFee(0);
 
         for (int v = 1; v <= LATEST_VERSION; v++) {
-            byte[] leaseId = Base58.decode(dAppAccount.lease(callerAccount, getRandomInt(1, 9999)).tx().id().toString());
+            byte[] leaseId = Base58.decode(dAppAccount.lease(callerAccount, wavesAmount.value()).tx().id().toString());
             final DAppCall dAppCall = dAppAccount.setData(leaseId);
             setVersion(v);
             balancesAfterPaymentInvoke(callerAccount, dAppAccount, amounts, assetId);
@@ -225,14 +239,17 @@ public class InvokeScriptTransactionTest {
     @Test
     @DisplayName("invoke transaction with SponsorFee Transaction")
     void invokeScriptWithSponsorFee() {
-        amounts.clear();
         long fee = ONE_WAVES + SUM_FEE;
         final int libVersion = getRandomInt(4, MAX_LIB_VERSION);
-        final String functions = "SponsorFee(assetId, 500),\n\tSponsorFee(issueAssetId, 500)";
+
+        final String functions = "SponsorFee(assetId, " + assetAmount.value() + "),\n\tSponsorFee(issueAssetId, 500)";
         final String script = assetsFunctionBuilder(libVersion, "unit", functions, args);
         assetDAppAccount.setScript(script);
-        amounts.add(Amount.of(500, assetId));
+
         final DAppCall dAppCall = assetDAppAccount.setDataAssetId(Base58.decode(assetId.toString()));
+
+        amounts.clear();
+
         setFee(SUM_FEE);
         setExtraFee(ONE_WAVES);
 
@@ -250,10 +267,6 @@ public class InvokeScriptTransactionTest {
         final long fee = ONE_WAVES + SUM_FEE;
         final int libVersion = getRandomInt(4, MAX_LIB_VERSION);
 
-        amounts.clear();
-        amounts.add(wavesAmount);
-        amounts.add(assetAmount);
-
         final String currentArgs = args + ", " + "address:ByteVector";
         final String functions = "ScriptTransfer(Address(address), " + assetAmount.value() + ", assetId),\n" +
                 "\tScriptTransfer(Address(address), 500, issueAssetId),\n" +
@@ -264,12 +277,16 @@ public class InvokeScriptTransactionTest {
 
         final DAppCall dAppCall = assetDAppAccount.setDataAssetAndAddress(Base58.decode(assetId.toString()), dAppAddress);
 
+        amounts.clear();
+        amounts.add(wavesAmount);
+        amounts.add(assetAmount);
+
         setFee(SUM_FEE);
         setExtraFee(ONE_WAVES);
 
         for (int v = 1; v <= LATEST_VERSION; v++) {
             setVersion(v);
-            balancesAfterScriptTransferInvoke(assetDAppAccount, dAppAccount, amounts, assetId);
+            balancesAfterCallerInvokeAsset(assetDAppAccount, dAppAccount, amounts, assetId);
             invokeSender(assetDAppAccount, assetDAppAccount, dAppCall);
             checkInvokeTransaction(assetDAppAccount, dAppAccount, fee);
         }
@@ -279,22 +296,53 @@ public class InvokeScriptTransactionTest {
     @DisplayName("invoke with payments")
     void invokeScriptPayments() {
         final long fee = ONE_WAVES + SUM_FEE;
-        final String arg = "intVal:Int";
         final int libVersion = getRandomInt(4, MAX_LIB_VERSION);
+
+        final String arg = "intVal:Int";
         final String functions = "IntegerEntry(\"int\", intVal)";
         final String script = assetsFunctionBuilder(libVersion, "unit", functions, arg);
         dAppAccount = new DataDApp(DEFAULT_FAUCET, script);
+
         final DAppCall dAppCall = dAppAccount.setData(getRandomInt(1, 1000));
-        AssetId callerAssetId = callerAccount.issue(i -> i.name("is_asset").quantity(324_993_000)).tx().assetId();
-        amounts.add(Amount.of(500, callerAssetId));
+
+        amounts.clear();
+        amounts.add(wavesAmount);
+        amounts.add(assetAmount);
+
         setFee(SUM_FEE);
         setExtraFee(ONE_WAVES);
 
         for (int v = 1; v <= LATEST_VERSION; v++) {
             setVersion(v);
-            balancesAfterPaymentInvoke(callerAccount, dAppAccount, amounts, assetId);
+            balancesAfterCallerInvokeAsset(callerAccount, dAppAccount, amounts, assetId);
             invokeSenderWithPayment(callerAccount, dAppAccount, dAppCall, amounts);
             checkInvokeTransaction(callerAccount, dAppAccount, fee);
+        }
+    }
+
+    @Test
+    @DisplayName("invoke dApp to dApp")
+    void invokeDAppToDApp() {
+        long fee = ONE_WAVES + SUM_FEE;
+        final int libVersion = getRandomInt(4, MAX_LIB_VERSION);
+
+        final String functionArgs = "dapp2:String, a:Int, key1:String, key2:String";
+        final String functions = "strict res = invoke(addressFromStringValue(dapp2),\"bar\",[a],[AttachedPayment('address',1000000)])\n" +
+                "[\n\tLease(Address(address), " + wavesAmount.value() + ")\n]\n";        final String script = assetsFunctionBuilder(libVersion, "unit", functions, args);
+        assetDAppAccount.setScript(script);
+
+        final DAppCall dAppCall = assetDAppAccount.setDataAssetId(Base58.decode(assetId.toString()));
+
+        amounts.clear();
+
+        setFee(SUM_FEE);
+        setExtraFee(ONE_WAVES);
+
+        for (int v = 1; v <= LATEST_VERSION; v++) {
+            setVersion(v);
+            balancesAfterPaymentInvoke(callerAccount, assetDAppAccount, amounts, assetId);
+            invokeSender(callerAccount, assetDAppAccount, dAppCall);
+            checkInvokeTransaction(callerAccount, assetDAppAccount, fee);
         }
     }
 
