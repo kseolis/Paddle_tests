@@ -46,7 +46,7 @@ public class ConstructorRideFunctions {
                 .append("func setData(").append(funcArgs).append(")={\n");
 
         sb.append(functions)
-                .append("}");
+                .append("}\n\n\n");
         System.out.println(sb);
         return sb.toString();
     }

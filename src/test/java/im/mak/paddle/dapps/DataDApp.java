@@ -32,4 +32,16 @@ public class DataDApp extends DApp {
         Function function = Function.as("setData", BinaryArg.as(base58String));
         return new DAppCall(address(), function);
     }
+
+    public DAppCall setData(byte[] dApp2, int a, String key1, String key2, byte[] base58String) {
+        Function function = Function.as(
+                "setData",
+                BinaryArg.as(dApp2),
+                IntegerArg.as(a),
+                StringArg.as(key1),
+                StringArg.as(key2),
+                BinaryArg.as(base58String)
+        );
+        return new DAppCall(address(), function);
+    }
 }

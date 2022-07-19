@@ -12,6 +12,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.wavesplatform.transactions.InvokeScriptTransaction.LATEST_VERSION;
@@ -34,6 +35,7 @@ public class InvokeScriptTransactionTest {
     private static byte[] dAppAddress;
 
     private static AssetDAppAccount assetDAppAccount;
+    private static byte[] assetDAppAddress;
 
     private static AssetId assetId;
 
@@ -63,6 +65,7 @@ public class InvokeScriptTransactionTest {
                 },
                 () -> {
                     assetDAppAccount = new AssetDAppAccount(DEFAULT_FAUCET, "true");
+                    assetDAppAddress = Base58.decode(assetDAppAccount.address().toString());
                     assetId = assetDAppAccount.issue(i -> i.name("outside Asset").quantity(900_000_000L))
                             .tx().assetId();
                 },
@@ -301,7 +304,7 @@ public class InvokeScriptTransactionTest {
         final String arg = "intVal:Int";
         final String functions = "IntegerEntry(\"int\", intVal)";
         final String script = assetsFunctionBuilder(libVersion, "unit", functions, arg);
-        dAppAccount = new DataDApp(DEFAULT_FAUCET, script);
+        dAppAccount.setScript(script);
 
         final DAppCall dAppCall = dAppAccount.setData(getRandomInt(1, 1000));
 
@@ -324,15 +327,34 @@ public class InvokeScriptTransactionTest {
     @DisplayName("invoke dApp to dApp")
     void invokeDAppToDApp() {
         long fee = ONE_WAVES + SUM_FEE;
-        final int libVersion = getRandomInt(4, MAX_LIB_VERSION);
+        final int libVersion = getRandomInt(5, MAX_LIB_VERSION);
 
-        final String functionArgs = "dapp2:String, a:Int, key1:String, key2:String";
-        final String functions = "strict res = invoke(addressFromStringValue(dapp2),\"bar\",[a],[AttachedPayment('address',1000000)])\n" +
-                "[\n\tLease(Address(address), " + wavesAmount.value() + ")\n]\n";        final String script = assetsFunctionBuilder(libVersion, "unit", functions, args);
-        assetDAppAccount.setScript(script);
+        final String functionArgsDApp1 = "dapp2:ByteVector, a:Int, key1:String, key2:String, address:ByteVector";
+        final String dApp1Body =
+                "strict res = invoke(Address(dapp2),\"bar\",[a],[AttachedPayment(address,1000000)])\n" +
+                "match res {\n\tcase r : Int => \n\t(\n\t\t[\n" +
+                    "\t\t\tIntegerEntry(key1, r),\n" +
+                    "\t\t\tIntegerEntry(key2, wavesBalance(Address(dapp2)).regular)\n" +
+                "\t\t],\n\t\tunit\n\t)\n\tcase _ => throw(\"Incorrect invoke result\") }\n";
+        final String dApp1 = defaultFunctionBuilder(functionArgsDApp1, dApp1Body, libVersion);
 
-        final DAppCall dAppCall = assetDAppAccount.setDataAssetId(Base58.decode(assetId.toString()));
+        final String dApp2 =
+                "{-# STDLIB_VERSION 5 #-}\n{-# CONTENT_TYPE DAPP #-}\n{-# SCRIPT_TYPE ACCOUNT #-}\n" +
+                "\n@Callable(i)\n" +
+                "func bar(a: Int) = {\n" +
+                "   (\n" +
+                "      [\n" +
+                "         ScriptTransfer(i.caller, 100000000, unit)\n" +
+                "      ],\n" +
+                "      a*2\n" +
+                "   )\n" +
+                "}";
 
+        dAppAccount.setScript(dApp1);
+        assetDAppAccount.setScript(dApp2);
+
+        final DAppCall dAppCall = dAppAccount
+                .setData(assetDAppAddress, 121, "bar", "balance", dAppAddress);
         amounts.clear();
 
         setFee(SUM_FEE);
@@ -340,9 +362,9 @@ public class InvokeScriptTransactionTest {
 
         for (int v = 1; v <= LATEST_VERSION; v++) {
             setVersion(v);
-            balancesAfterPaymentInvoke(callerAccount, assetDAppAccount, amounts, assetId);
-            invokeSender(callerAccount, assetDAppAccount, dAppCall);
-            checkInvokeTransaction(callerAccount, assetDAppAccount, fee);
+            balancesAfterPaymentInvoke(assetDAppAccount, dAppAccount, amounts, assetId);
+            invokeSender(assetDAppAccount, dAppAccount, dAppCall);
+            checkInvokeTransaction(assetDAppAccount, dAppAccount, fee);
         }
     }
 
