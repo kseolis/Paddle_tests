@@ -10,7 +10,7 @@ public class ScriptUtil {
 
     public static String fromFile(String path) {
         try {
-            return Files.toString(new File("src/test/resources/ride_scripts/" + path), StandardCharsets.UTF_8);
+            return Files.toString(new File("src/test/resources/" + path), StandardCharsets.UTF_8);
         } catch(IOException e) {
             throw new Error(e);
         }

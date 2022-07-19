@@ -1,12 +1,10 @@
 package im.mak.paddle.e2e.transactions;
 
-import com.wavesplatform.transactions.TransferTransaction;
 import com.wavesplatform.transactions.common.Amount;
 import com.wavesplatform.transactions.common.AssetId;
-import com.wavesplatform.transactions.common.Base58String;
-import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
 
+import im.mak.paddle.dapps.DefaultDApp420Complexity;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,6 +14,8 @@ import static com.wavesplatform.transactions.common.AssetId.WAVES;
 import static com.wavesplatform.wavesj.ApplicationStatus.SUCCEEDED;
 import static im.mak.paddle.Node.node;
 import static im.mak.paddle.helpers.Randomizer.randomNumAndLetterString;
+import static im.mak.paddle.helpers.transaction_senders.BaseTransactionSender.getTxInfo;
+import static im.mak.paddle.helpers.transaction_senders.TransferTransactionSender.*;
 import static im.mak.paddle.util.Async.async;
 import static im.mak.paddle.util.Constants.*;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -28,15 +28,13 @@ public class TransferTransactionTest {
     private static Account bob;
     private static long bobBalance;
 
-    private static Account acc;
+    private static DefaultDApp420Complexity dAppAccount;
 
     private static AssetId issuedAssetId;
     private static AssetId issuedSmartAssetId;
-    private static Base58String base58StringAttachment;
 
     @BeforeAll
     static void before() {
-        base58StringAttachment = new Base58String("attachment");
         async(
                 () -> {
                     alice = new Account(DEFAULT_FAUCET);
@@ -50,12 +48,12 @@ public class TransferTransactionTest {
                     bobBalance = bob.getWavesBalance() - MIN_FEE;
                 },
                 () -> {
-                    acc = new Account(DEFAULT_FAUCET);
-                    acc.createAlias(randomNumAndLetterString(15));
-                    issuedSmartAssetId = acc.issue(i -> i.name("T_smart")
+                    dAppAccount = new DefaultDApp420Complexity(DEFAULT_FAUCET);
+                    dAppAccount.createAlias(randomNumAndLetterString(15));
+                    issuedSmartAssetId = dAppAccount.issue(i -> i.name("T_smart")
                             .quantity(1000)
                             .decimals(8)
-                            .script("{-# SCRIPT_TYPE ASSET #-} true")).tx().assetId();
+                            .script(SCRIPT_PERMITTING_OPERATIONS)).tx().assetId();
                 }
         );
     }
@@ -63,18 +61,20 @@ public class TransferTransactionTest {
     @Test
     @DisplayName("min transfer issued asset on address")
     void transferTransactionIssuedAssetByAddressTest() {
-        Amount amount = Amount.of(MIN_TRANSFER_SUM, issuedAssetId);
+        Amount amount = Amount.of(MIN_TRANSACTION_SUM, issuedAssetId);
         for (int v = 1; v <= LATEST_VERSION; v++) {
-            transferTransaction(amount, alice, bob, ADDRESS, MIN_FEE, v);
+            transferTransactionSender(amount, alice, bob, ADDRESS, MIN_FEE, v);
+            checkTransferTransaction(amount, alice, bob, MIN_FEE);
         }
     }
 
     @Test
     @DisplayName("min transfer WAVES on alias")
     void transferTransactionWavesByAliasTest() {
-        Amount amount = Amount.of(MIN_TRANSFER_SUM, WAVES);
+        Amount amount = Amount.of(MIN_TRANSACTION_SUM, WAVES);
         for (int v = 1; v <= LATEST_VERSION; v++) {
-            transferTransaction(amount, alice, bob, ALIAS, MIN_FEE, v);
+            transferTransactionSender(amount, alice, bob, ALIAS, MIN_FEE, v);
+            checkTransferTransaction(amount, alice, bob, MIN_FEE);
         }
     }
 
@@ -83,69 +83,57 @@ public class TransferTransactionTest {
     void transferTransactionWavesByAddressTest() {
         node().faucet().transfer(alice, DEFAULT_FAUCET, WAVES);
         Amount amount = Amount.of(aliceBalance - MIN_FEE, WAVES);
-        transferTransaction(amount, alice, bob, ADDRESS, MIN_FEE, 1);
+        transferTransactionSender(amount, alice, bob, ADDRESS, MIN_FEE, 1);
+        checkTransferTransaction(amount, alice, bob, MIN_FEE);
     }
 
     @Test
     @DisplayName("transfer all issued asset on alias")
     void transferTransactionIssuedAssetByAliasTest() {
         Amount amount = Amount.of(alice.getBalance(issuedAssetId), issuedAssetId);
-        transferTransaction(amount, alice, bob, ALIAS, MIN_FEE, 3);
+        transferTransactionSender(amount, alice, bob, ALIAS, MIN_FEE, 3);
+        checkTransferTransaction(amount, alice, bob, MIN_FEE);
     }
 
     @Test
     @DisplayName("transfer all WAVES on alias")
     void transferTransactionAllWavesByAliasTest() {
         Amount amount = Amount.of(bobBalance - MIN_FEE, WAVES);
-        transferTransaction(amount, bob, alice, ALIAS, MIN_FEE, LATEST_VERSION);
+        transferTransactionSender(amount, bob, alice, ALIAS, MIN_FEE, LATEST_VERSION);
+        checkTransferTransaction(amount, bob, alice, MIN_FEE);
     }
 
     @Test
-    @DisplayName("transfer minimum smart asset on address")
+    @DisplayName("transfer minimum smart asset on address from dAppAccount high complexity")
     void transferMinSmartAsset() {
-        long fee = MIN_FEE + EXTRA_FEE;
-        Amount amount = Amount.of(MIN_TRANSFER_SUM, issuedSmartAssetId);
-        transferTransaction(amount, acc, alice, ADDRESS, fee, 2);
+        Amount amount = Amount.of(MIN_TRANSACTION_SUM, issuedSmartAssetId);
+        transferTransactionSender(amount, dAppAccount, alice, ADDRESS, FEE_FOR_DAPP_ACC, 2);
+        checkTransferTransaction(amount, dAppAccount, alice, FEE_FOR_DAPP_ACC);
     }
 
     @Test
-    @DisplayName("transfer almost all smart asset on alias")
+    @DisplayName("transfer almost all smart asset on alias for smart account")
     void transferMaxSmartAsset() {
-        long transferSum = acc.getBalance(issuedSmartAssetId) - MIN_TRANSFER_SUM;
-        long fee = MIN_FEE + EXTRA_FEE;
+        long transferSum = dAppAccount.getBalance(issuedSmartAssetId) - MIN_TRANSACTION_SUM;
         Amount amount = Amount.of(transferSum, issuedSmartAssetId);
-        transferTransaction(amount, acc, alice, ALIAS, fee, 1);
+        transferTransactionSender(amount, dAppAccount, alice, ALIAS, FEE_FOR_DAPP_ACC, 2);
+        checkTransferTransaction(amount, dAppAccount, alice, FEE_FOR_DAPP_ACC);
     }
 
-    private void transferTransaction
-            (Amount amount, Account from, Account to, String addressOrAlias, long fee, int version) {
-        AssetId asset = amount.assetId();
-        long senderBalanceAfterTransaction = from.getBalance(asset) - amount.value() - (asset.isWaves() ? MIN_FEE : 0);
-        long recipientBalanceAfterTransaction = to.getBalance(asset) + amount.value();
-        var transferTo = addressOrAlias.equals(ADDRESS) ? to.address() : to.getAliases().get(0);
-
-        TransferTransaction tx = TransferTransaction.builder(transferTo, amount)
-                .attachment(base58StringAttachment)
-                .version(version)
-                .sender(from.publicKey())
-                .fee(fee)
-                .getSignedWith(from.privateKey());
-        node().waitForTransaction(node().broadcast(tx).id());
-        TransactionInfo transactionInfo = node().getTransactionInfo(tx.id());
-
+    private void checkTransferTransaction(Amount amount, Account from, Account to, long fee) {
         aliceBalance = alice.getWavesBalance();
         bobBalance = bob.getWavesBalance();
 
         assertAll(
-                () -> assertThat(transactionInfo.applicationStatus()).isEqualTo(SUCCEEDED),
-                () -> assertThat(from.getBalance(asset)).isEqualTo(senderBalanceAfterTransaction),
-                () -> assertThat(to.getBalance(asset)).isEqualTo(recipientBalanceAfterTransaction),
-                () -> assertThat(tx.fee().value()).isEqualTo(fee),
-                () -> assertThat(tx.fee().assetId()).isEqualTo(WAVES),
-                () -> assertThat(tx.attachment()).isEqualTo(base58StringAttachment),
-                () -> assertThat(tx.sender()).isEqualTo(from.publicKey()),
-                () -> assertThat(tx.amount()).isEqualTo(amount),
-                () -> assertThat(tx.type()).isEqualTo(4)
+                () -> assertThat(getTxInfo().applicationStatus()).isEqualTo(SUCCEEDED),
+                () -> assertThat(from.getBalance(getAsset())).isEqualTo(getSenderBalanceAfterTransaction()),
+                () -> assertThat(to.getBalance(getAsset())).isEqualTo(getRecipientBalanceAfterTransaction()),
+                () -> assertThat(getTransferTx().fee().value()).isEqualTo(fee),
+                () -> assertThat(getTransferTx().fee().assetId()).isEqualTo(WAVES),
+                () -> assertThat(getTransferTx().attachment()).isEqualTo(getBase58StringAttachment()),
+                () -> assertThat(getTransferTx().sender()).isEqualTo(from.publicKey()),
+                () -> assertThat(getTransferTx().amount()).isEqualTo(amount),
+                () -> assertThat(getTransferTx().type()).isEqualTo(4)
         );
     }
 }

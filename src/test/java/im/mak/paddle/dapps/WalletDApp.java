@@ -9,7 +9,7 @@ import static im.mak.paddle.util.ScriptUtil.fromFile;
 
 public class WalletDApp extends DApp {
 
-    public static final String INITIAL_SCRIPT = fromFile("/wallet.ride");
+    public static final String INITIAL_SCRIPT = fromFile("ride_scripts/wallet.ride");
 
     public WalletDApp(long initialBalance) {
         super(initialBalance, INITIAL_SCRIPT);

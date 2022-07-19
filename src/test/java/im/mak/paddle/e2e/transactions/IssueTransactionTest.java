@@ -5,7 +5,7 @@ import com.wavesplatform.transactions.common.AssetId;
 import com.wavesplatform.transactions.common.Base64String;
 import com.wavesplatform.wavesj.info.TransactionInfo;
 import im.mak.paddle.Account;
-import im.mak.paddle.dapps.defaultDApp420Complexity;
+import im.mak.paddle.dapps.DefaultDApp420Complexity;
 import im.mak.paddle.exceptions.ApiError;
 import org.junit.jupiter.api.*;
 
@@ -25,13 +25,13 @@ class IssueTransactionTest {
     @BeforeAll
     static void before() {
         normalAccount = new Account(DEFAULT_FAUCET);
-        dAppAccount = new defaultDApp420Complexity(DEFAULT_FAUCET);
+        dAppAccount = new DefaultDApp420Complexity(DEFAULT_FAUCET);
     }
 
     @Test
     @DisplayName("min assets, for all script version")
     void issueMinimumAssetsTransactionTest() {
-        Base64String script = node().compileScript(fromFile("/permissionOnUpdatingKeyValues.ride")).script();
+        Base64String script = node().compileScript(fromFile("ride_scripts/permissionOnUpdatingKeyValues.ride")).script();
         long fee = ONE_WAVES;
         boolean isReissue = true;
 
